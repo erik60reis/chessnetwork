@@ -1,5 +1,6 @@
 const { createCanvas, loadImage } = require('canvas');
 const path = require('path');
+const fs = require('fs');
 
 global.utils = {};
 
@@ -252,7 +253,7 @@ function BoardToPng(board, isflipped = false, white = {}, black = {}, gametype =
     }
     
     let buffer = canvas.toBuffer('image/png');
-    //fs.writeFileSync('board.png', buffer)
+    fs.writeFileSync('board.png', buffer)
     return buffer;
 }
 

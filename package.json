@@ -18,6 +18,8 @@
     "html": "^1.0.0",
     "image-data-uri": "^2.0.1",
     "path": "^0.12.7",
-    "socket.io": "^4.7.4"
+    "qrcode-terminal": "^0.12.0",
+    "socket.io": "^4.7.4",
+    "whatsapp-web.js": "^1.23.0"
   }
 }

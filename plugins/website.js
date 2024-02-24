@@ -3,7 +3,7 @@ const { createServer } = require('node:http');
 const { join } = require('node:path');
 const { Server } = require('socket.io');
 const fs = require('fs');
-const imageDataURI = require('image-data-uri')
+const imageDataURI = require('image-data-uri');
 
 const expressHandlebars = require('express-handlebars');
 
