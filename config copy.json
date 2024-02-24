@@ -1,6 +1,7 @@
 {
     "discordbot": {
         "prefix": "chess ",
-        "token": ""
+        "token": "",
+        "support_server": "bafBEF6r4R"
     }
 }

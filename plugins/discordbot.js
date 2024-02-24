@@ -35,6 +35,7 @@ function getPlayerRoom(playerId) {
 }
 bot.on("ready", () => {
     console.log("discord bot ready!");
+    console.log("guilds: " + bot.guilds.baseObject.length);
 });
 
 bot.on("error", (err) => {
@@ -73,16 +74,14 @@ bot.on("messageCreate", (msg) => {
             }else{
                 bot.createMessage(msg.channel.id, "you are already in another room");
             }
-        }
-        else if (command == "quit") {
+        } else if (command == "quit") {
             let playerRoom = getPlayerRoom(msg.author.id);
             if (playerRoom) {
                 if (!rooms[playerRoom.roomId].isStarted) {
                     rooms[playerRoom.roomId].end();
                 }
             }
-        }
-        else if (command == "join") {
+        }else if (command == "join") {
             if (args.length >= 2) {
                 roomId = parseInt(args[1]);
                 if (rooms[roomId]) {
@@ -102,8 +101,7 @@ bot.on("messageCreate", (msg) => {
                     bot.createMessage(msg.channel.id, "room does not exist");
                 }
             }
-        }
-        else if (command == "move") {
+        } else if (command == "move") {
             if (args.length >= 2) {
                 let move = args[1];
                 let room = getPlayerRoom(msg.author.id);
@@ -115,6 +113,18 @@ bot.on("messageCreate", (msg) => {
                     }
                 }
             }
+        } else if (command == "help") {
+            let botprefix = config.discordbot.prefix;
+            let helpmessage = `# commands:
+**${botprefix}help** ===== shows this message
+**${botprefix}create [variant]** ===== creates a room (eg. ${botprefix}create checkers   or   ${botprefix}create racingkings)
+**${botprefix}join <id>** ===== joins a room
+**${botprefix}quit** ===== quits the current room
+**${botprefix}move <movement>** ===== plays a move (eg. ${botprefix}move e2e4   or   ${botprefix}move 21-17 )
+
+support: https://discord.gg/${config.discordbot.support_server}
+            `;
+            bot.createMessage(msg.channel.id, helpmessage);
         }
     }
 });
