@@ -41,6 +41,7 @@ roomFunctions.createRoom = function(gametype = 'chess', variant = 'chess') {
         game: (gametype == 'checkers' ? Checkers() : new ffish.Board(variant)),
         winner: '',
         isStarted: false,
+        inactive_time_remaining: config.room_autodelete_inactivity_time, 
         white: {
             name: 'white',
             time: 1800,
@@ -142,7 +143,6 @@ setInterval(() => {
     Object.keys(rooms).forEach(function(roomId) {
         roomId = parseInt(roomId);
         if (rooms[roomId].isStarted) {
-
             if (rooms[roomId].gametype == 'checkers') {
                 if (rooms[roomId].game.turn().toLowerCase() == 'w') {
                     rooms[roomId].white.time -= 0.2;
@@ -162,6 +162,11 @@ setInterval(() => {
                 rooms[roomId].end();
             }else if (rooms[roomId].black.time <= 0) {
                 rooms[roomId].winner = 'w';
+                rooms[roomId].end();
+            }
+        }else{
+            rooms[roomId].inactive_time_remaining -= 0.2;
+            if (rooms[roomId].inactive_time_remaining <= 0) {
                 rooms[roomId].end();
             }
         }

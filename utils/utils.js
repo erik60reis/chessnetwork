@@ -43,14 +43,18 @@ async function loadImages() {
 }
 loadImages();
 
-function indexToBoard(index, rankCount = 8, fileCount = 8) {
+function indexToBoard(index, rankCount = 8, fileCount = 8, returnjson = false) {
     const row = rankCount - Math.floor(index / fileCount);
     const col = String.fromCharCode(97 + (index % fileCount));
 
-    return col + row;
+    if (returnjson) {
+        return {col, row};
+    }else{
+        return col + row;
+    }
 }
 
-function indexToCheckersBoard(index, rankCount = 8, fileCount = 8) {
+function indexToCheckersBoard(index, rankCount = 8, fileCount = 8, returnjson = false) {
     let oldindex = index;
     index = 1;
     for (let newindex = 0; newindex < oldindex; newindex++) {
@@ -63,7 +67,11 @@ function indexToCheckersBoard(index, rankCount = 8, fileCount = 8) {
         col = String.fromCharCode((97 + (index % fileCount)) - 1);
     }
 
-    return col + row;
+    if (returnjson) {
+        return {col, row};
+    }else{
+        return col + row;
+    }
 }
 
 function isNumeric(char) {
@@ -190,7 +198,13 @@ function BoardToPng(board, isflipped = false, white = {}, black = {}, gametype =
             squareindex += 1;
         }
         if (gametype == 'chess') {
-            ctx.fillText(indexToBoard(isflipped ? 64 - squareindex : squareindex - 1, boardranks, boardfiles), j * squaresizeX, 50 + (i * squaresizeY));
+            if (i == 7 && j == 0) {
+                ctx.fillText(indexToBoard(isflipped ? 64 - squareindex : squareindex - 1, boardranks, boardfiles), j * squaresizeX, 50 + (i * squaresizeY));
+            }else if (i == 7) {
+                ctx.fillText(indexToBoard(isflipped ? 64 - squareindex : squareindex - 1, boardranks, boardfiles, true).col, j * squaresizeX, 50 + (i * squaresizeY));
+            }else if (j == 0) {
+                ctx.fillText(indexToBoard(isflipped ? 64 - squareindex : squareindex - 1, boardranks, boardfiles, true).row, j * squaresizeX, 50 + (i * squaresizeY));
+            }
             squareindex += 1;
         }
 

@@ -3,5 +3,6 @@
         "prefix": "chess ",
         "token": "",
         "support_server": "bafBEF6r4R"
-    }
+    },
+    "room_autodelete_inactivity_time": 600
 }
