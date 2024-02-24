@@ -15,6 +15,10 @@ global.roomEvents = {
     onMoveMade: [],
 }
 
+global.avaliablegametypes = ['chess', 'checkers'];
+
+global.avaliablevariants = ['chess', 'racingkings', '3check', 'horde', 'amazon', 'gothic', 'amazons'];
+
 global.roomFunctions = {};
 
 global.config = require('./config.json');
@@ -41,12 +45,14 @@ roomFunctions.createRoom = function(gametype = 'chess', variant = 'chess') {
         game: (gametype == 'checkers' ? Checkers() : new ffish.Board(variant)),
         winner: '',
         isStarted: false,
-        inactive_time_remaining: config.room_autodelete_inactivity_time, 
+        inactive_time_remaining: config.room_autodelete_inactivity_time,
         white: {
+            isAvaliable: true,
             name: 'white',
             time: 1800,
         },
         black: {
+            isAvaliable: true,
             name: 'black',
             time: 1800,
         },
@@ -116,7 +122,7 @@ roomFunctions.createRoom = function(gametype = 'chess', variant = 'chess') {
                 }
             }catch(e) {
                 console.log(e);
-            }           
+            }
         }
     };
     return roomId;

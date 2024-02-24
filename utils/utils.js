@@ -199,11 +199,11 @@ function BoardToPng(board, isflipped = false, white = {}, black = {}, gametype =
         }
         if (gametype == 'chess') {
             if (i == 7 && j == 0) {
-                ctx.fillText(indexToBoard(isflipped ? 64 - squareindex : squareindex - 1, boardranks, boardfiles), j * squaresizeX, 50 + (i * squaresizeY));
+                ctx.fillText(indexToBoard(isflipped ? (boardranks * boardfiles) - squareindex : squareindex - 1, boardranks, boardfiles), j * squaresizeX, 50 + (i * squaresizeY));
             }else if (i == 7) {
-                ctx.fillText(indexToBoard(isflipped ? 64 - squareindex : squareindex - 1, boardranks, boardfiles, true).col, j * squaresizeX, 50 + (i * squaresizeY));
+                ctx.fillText(indexToBoard(isflipped ? (boardranks * boardfiles) - squareindex : squareindex - 1, boardranks, boardfiles, true).col, j * squaresizeX, 50 + (i * squaresizeY));
             }else if (j == 0) {
-                ctx.fillText(indexToBoard(isflipped ? 64 - squareindex : squareindex - 1, boardranks, boardfiles, true).row, j * squaresizeX, 50 + (i * squaresizeY));
+                ctx.fillText(indexToBoard(isflipped ? (boardranks * boardfiles) - squareindex : squareindex - 1, boardranks, boardfiles, true).row, j * squaresizeX, 50 + (i * squaresizeY));
             }
             squareindex += 1;
         }

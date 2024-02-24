@@ -4,5 +4,8 @@
         "token": "",
         "support_server": "bafBEF6r4R"
     },
+    "website": {
+        "port": 3000
+    },
     "room_autodelete_inactivity_time": 600
 }

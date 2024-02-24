@@ -55,11 +55,10 @@ bot.on("messageCreate", (msg) => {
             let variant = 'chess';
             let gametype = 'chess';
             if (args.length >= 2) {
-                if (args[1] == "checkers") {
-                    gametype = "checkers";
-                    variant = "checkers";
+                if (avaliablegametypes.includes(args[1])) {
+                    gametype = args[1];
+                    variant = args[1];
                 } else {
-                    let avaliablevariants = ['chess', 'racingkings', '3check', 'horde', 'amazon', 'gothic', 'amazons'];
                     if (avaliablevariants.includes(args[1])) {
                         variant = args[1];
                     }
@@ -67,6 +66,7 @@ bot.on("messageCreate", (msg) => {
             }
             if (!getPlayerRoom(msg.author.id)) {                            
                 roomId = roomFunctions.createRoom(gametype, variant);
+                rooms[roomId].white.isAvaliable = false;
                 rooms[roomId].white.discordChannelId = msg.channel.id;
                 rooms[roomId].white.name = msg.author.globalName;
                 rooms[roomId].white.discordId = msg.author.id;
@@ -85,17 +85,22 @@ bot.on("messageCreate", (msg) => {
             if (args.length >= 2) {
                 roomId = parseInt(args[1]);
                 if (rooms[roomId]) {
-                    if (rooms[roomId].white.id != msg.author.id) {
-                        if (!getPlayerRoom(msg.author.id)) {                            
-                            rooms[roomId].black.discordChannelId = msg.channel.id;
-                            rooms[roomId].black.name = msg.author.globalName;
-                            rooms[roomId].black.discordId = msg.author.id;
-                            rooms[roomId].start();
+                    if (!rooms[roomId].isStarted) {
+                        if (rooms[roomId].white.discordId != msg.author.id) {
+                            if (!getPlayerRoom(msg.author.id)) {                            
+                                rooms[roomId].black.isAvaliable = false;
+                                rooms[roomId].black.discordChannelId = msg.channel.id;
+                                rooms[roomId].black.name = msg.author.globalName;
+                                rooms[roomId].black.discordId = msg.author.id;
+                                rooms[roomId].start();
+                            }else{
+                                bot.createMessage(msg.channel.id, "you are already in another room");
+                            }
                         }else{
-                            bot.createMessage(msg.channel.id, "you are already in another room");
+                            bot.createMessage(msg.channel.id, "you are already in this room");
                         }
                     }else{
-                        bot.createMessage(msg.channel.id, "you are already in this room");
+                        bot.createMessage(msg.channel.id, "room is already started");
                     }
                 }else{
                     bot.createMessage(msg.channel.id, "room does not exist");
@@ -108,7 +113,7 @@ bot.on("messageCreate", (msg) => {
                 if (room) {
                     roomId = room.roomId;
 
-                    if ((roomFunctions.colorNameToColorLetter(room.color) == 'w') == rooms[roomId].turn()) {
+                    if (rooms[roomId].isStarted && (roomFunctions.colorNameToColorLetter(room.color) == 'w') == rooms[roomId].turn()) {
                         rooms[roomId].makeMove(move);
                     }
                 }
