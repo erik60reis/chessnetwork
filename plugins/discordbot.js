@@ -70,6 +70,17 @@ bot.on("messageCreate", (msg) => {
                 rooms[roomId].white.discordChannelId = msg.channel.id;
                 rooms[roomId].white.name = msg.author.globalName;
                 rooms[roomId].white.discordId = msg.author.id;
+                if (sequelizedb) {
+                    databaseFunctions.getUserElo({discordId: rooms[roomId].white.discordId}).then((userelo) => {
+                        if (userelo !== undefined) {
+                            rooms[roomId].white.elo = userelo;
+                        }else{
+                            databaseFunctions.addUser({username: rooms[roomId].white.name, discordId: rooms[roomId].white.discordId, elo: 1500});
+                            rooms[roomId].white.elo = 1500;
+                        }
+                        rooms[roomId].start();
+                    });
+                }
                 bot.createMessage(msg.channel.id, "Room created\n**Id**: 0");
             }else{
                 bot.createMessage(msg.channel.id, "you are already in another room");
@@ -92,7 +103,19 @@ bot.on("messageCreate", (msg) => {
                                 rooms[roomId].black.discordChannelId = msg.channel.id;
                                 rooms[roomId].black.name = msg.author.globalName;
                                 rooms[roomId].black.discordId = msg.author.id;
-                                rooms[roomId].start();
+                                if (sequelizedb) {
+                                    databaseFunctions.getUserElo({discordId: rooms[roomId].black.discordId}).then((userelo) => {
+                                        if (userelo !== undefined) {
+                                            rooms[roomId].black.elo = userelo;
+                                        }else{
+                                            databaseFunctions.addUser({username: rooms[roomId].black.name, discordId: rooms[roomId].black.discordId, elo: 1500});
+                                            rooms[roomId].black.elo = 1500;
+                                        }
+                                        rooms[roomId].start();
+                                    });
+                                }else{
+                                    rooms[roomId].start();
+                                }
                             }else{
                                 bot.createMessage(msg.channel.id, "you are already in another room");
                             }
@@ -163,9 +186,40 @@ function displayBoard(roomId) {
 
 roomEvents.onGameStart.push(onGameStart);
 
-function onGameEnd(roomId) {
+ function onGameEnd(roomId) {
     let isDraw = rooms[roomId].winner == '';
-    let winnerUsername = isDraw ? "" : rooms[roomId][roomFunctions.colorLetterToColorName(rooms[roomId].winner)].name;
+    let winner = isDraw ? "" : rooms[roomId][roomFunctions.colorLetterToColorName(rooms[roomId].winner)];
+    const gametype = rooms[roomId].gametype;
+    const variant = rooms[roomId].variant;
+    const white = rooms[roomId].white;
+    const black = rooms[roomId].black;
+    const winnerUsername = isDraw ? "" : winner.name;
+    const winnerDiscordId = isDraw ? "" : winner.discordId;
+
+    if (!isDraw) {
+        if (sequelizedb) {
+            if (white.discordId && gametype == "chess" && variant == "chess") {
+                databaseFunctions.getUserElo({discordId: white.discordId}).then((userelo) => {
+                    if (userelo !== undefined) {
+                        databaseFunctions.addUserElo({discordId: white.discordId}, 10);
+                    }else{
+                        databaseFunctions.addUser({username: white.name, discordId: white.discordId, elo: 1500});
+                    }
+                });
+            }
+
+            if (black.discordId && gametype == "chess" && variant == "chess") {
+                databaseFunctions.getUserElo({discordId: black.discordId}).then((userelo) => {
+                    if (userelo !== undefined) {
+                        databaseFunctions.addUserElo({discordId: black.discordId}, 10);
+                    }else{
+                        databaseFunctions.addUser({username: black.name, discordId: black.discordId, elo: 1500});
+                    }
+                });
+            }
+        }
+    }
+
     if (rooms[roomId].white.discordChannelId) {
         if (isDraw) {
             bot.createMessage(rooms[roomId].white.discordChannelId, `Game Ended in a draw`);

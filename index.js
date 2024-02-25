@@ -43,6 +43,7 @@ roomFunctions.createRoom = function(gametype = 'chess', variant = 'chess') {
     rooms[roomId] = {
         gametype: gametype,
         game: (gametype == 'checkers' ? Checkers() : new ffish.Board(variant)),
+        variant: variant,
         winner: '',
         isStarted: false,
         inactive_time_remaining: config.room_autodelete_inactivity_time,
@@ -190,6 +191,7 @@ function nextRoomId() {
 
 
 require('./utils/utils.js');
+require('./utils/database.js');
 
 fs.readdir('./plugins/', (err, files) => {
     files.forEach(file => {

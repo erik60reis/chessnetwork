@@ -244,12 +244,12 @@ function BoardToPng(board, isflipped = false, white = {}, black = {}, gametype =
 
     ctx.fillStyle = '#f0d9b5';
     if (white.name) {
-        ctx.fillText(white.name.substring(0, 26), 0, (isflipped ? 20 : 450));
+        ctx.fillText(white.name.substring(0, 18) + (white.elo && gametype == 'chess' ? ` (${white.elo})` : ""), 0, (isflipped ? 20 : 450));
     }
 
     ctx.fillStyle = '#b58863';
     if (black.name) {
-        ctx.fillText(black.name.substring(0, 26), 0, (isflipped ? 450 : 20));
+        ctx.fillText(black.name.substring(0, 18) + (black.elo && gametype == 'chess' ? ` (${black.elo})` : ""), 0, (isflipped ? 450 : 20));
     }
     
     let buffer = canvas.toBuffer('image/png');

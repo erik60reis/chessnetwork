@@ -19,7 +19,9 @@
     "image-data-uri": "^2.0.1",
     "path": "^0.12.7",
     "qrcode-terminal": "^0.12.0",
+    "sequelize": "^6.37.1",
     "socket.io": "^4.7.4",
+    "sqlite3": "^5.1.7",
     "whatsapp-web.js": "^1.23.0"
   }
 }

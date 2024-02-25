@@ -5,7 +5,7 @@ const imageDataURI = require('image-data-uri');
 const bot = new Client({
     puppeteer: { 
         args: ['--no-sandbox'],
-        headless: false
+        headless: true
     }
 });
 
