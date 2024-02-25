@@ -41,6 +41,7 @@ function getPlayerRoom(playerId) {
 bot.on('message', async (msg) => {
     let prefix = config.discordbot.prefix || "chess ";
     let chatId = msg.from;
+    let contactname = (await msg.getContact()).pushname;
     if(msg.body.toLowerCase().startsWith(prefix.toLowerCase())) {
         let textwithoutprefix = msg.body.replace(prefix, "");
         let args = textwithoutprefix.split(' ');
@@ -65,7 +66,7 @@ bot.on('message', async (msg) => {
                 roomId = roomFunctions.createRoom(gametype, variant);
                 rooms[roomId].white.isAvaliable = false;
                 rooms[roomId].white.whatsappChannelId = chatId;
-                rooms[roomId].white.name = msg.author;
+                rooms[roomId].white.name = contactname;
                 rooms[roomId].white.whatsappId = msg.from;
                 bot.sendMessage(chatId, "Room created\n*Id*: " + roomId);
             }else{
@@ -78,15 +79,15 @@ bot.on('message', async (msg) => {
                     rooms[playerRoom.roomId].end();
                 }
             }
-        }else if (command == "join") {
+        } else if (command == "join") {
             if (args.length >= 2) {
                 roomId = parseInt(args[1]);
                 if (rooms[roomId]) {
                     if (!rooms[roomId].isStarted) {
-                        if (!getPlayerRoom(msg.from)) {                            
+                        if (!getPlayerRoom(msg.from)) {
                             rooms[roomId].black.isAvaliable = false;
                             rooms[roomId].black.whatsappChannelId = chatId;
-                            rooms[roomId].black.name = msg.author;
+                            rooms[roomId].black.name = contactname;
                             rooms[roomId].black.whatsappId = msg.from;
                             rooms[roomId].start();
                         }else{
@@ -111,9 +112,35 @@ bot.on('message', async (msg) => {
                     }
                 }
             }
-        } else if (command == "help") {
+        } /*else if (command == "autojoin") {
+            for (let roomId2 of Object.keys(rooms)) {
+                roomId = parseInt(roomId2);
+                if (rooms[roomId].black.isAvaliable) {
+                    if (!getPlayerRoom(msg.from)) {
+                        rooms[roomId].black.isAvaliable = false;
+                        rooms[roomId].black.whatsappChannelId = chatId;
+                        rooms[roomId].black.name = contactname;
+                        rooms[roomId].black.whatsappId = msg.from;
+                        rooms[roomId].start();
+                    }else{
+                        bot.sendMessage(chatId, "you are already in another room");
+                    }
+                    break;
+                }
+            }
+            if (!getPlayerRoom(msg.from)) {
+                roomId = roomFunctions.createRoom('chess', 'chess');
+                rooms[roomId].white.isAvaliable = false;
+                rooms[roomId].white.whatsappChannelId = chatId;
+                rooms[roomId].white.name = contactname;
+                rooms[roomId].white.whatsappId = msg.from;
+                bot.sendMessage(chatId, "Room created\n*Id*: " + roomId);
+            }else{
+                bot.sendMessage(chatId, "you are already in another room");
+            }
+        }*/ else if (command == "help") {
             let botprefix = config.discordbot.prefix;
-            let helpmessage = `# commands:
+            let helpmessage = `-----commands-----:
 
 
 *${botprefix}help* ===== shows this message
@@ -121,6 +148,8 @@ bot.on('message', async (msg) => {
 *${botprefix}create [variant]* ===== creates a room (eg. ${botprefix}create checkers   or   ${botprefix}create racingkings)
 
 *${botprefix}join <id>* ===== joins a room
+
+*${botprefix}autojoin* ===== tries to join a random room, if not posssible, creates a new room
 
 *${botprefix}quit* ===== quits the current room
 
@@ -156,7 +185,7 @@ function displayBoard(roomId) {
                 'board.png',
                 {unsafeMime: true}
             );
-            bot.sendMessage(rooms[roomId].white.whatsappChannelId, media);
+            bot.sendMessage(rooms[roomId].black.whatsappChannelId, media);
         }
     }
 }

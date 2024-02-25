@@ -35,7 +35,7 @@ function getPlayerRoom(playerId) {
 }
 bot.on("ready", () => {
     console.log("discord bot ready!");
-    console.log("guilds: " + bot.guilds.baseObject.length);
+    console.log("guilds: " + Object.keys(bot.guilds).length);
 });
 
 bot.on("error", (err) => {
@@ -78,7 +78,6 @@ bot.on("messageCreate", (msg) => {
                             databaseFunctions.addUser({username: rooms[roomId].white.name, discordId: rooms[roomId].white.discordId, elo: 1500});
                             rooms[roomId].white.elo = 1500;
                         }
-                        rooms[roomId].start();
                     });
                 }
                 bot.createMessage(msg.channel.id, "Room created\n**Id**: " + roomId);
@@ -141,12 +140,59 @@ bot.on("messageCreate", (msg) => {
                     }
                 }
             }
+        } else if (command == "autojoin") {
+            for (let roomId2 of Object.keys(rooms)) {
+                roomId = parseInt(roomId2);
+                if (rooms[roomId].black.isAvaliable) {
+                    if (!getPlayerRoom(msg.author.id)) {                      
+                        rooms[roomId].black.isAvaliable = false;
+                        rooms[roomId].black.discordChannelId = msg.channel.id;
+                        rooms[roomId].black.name = msg.author.globalName;
+                        rooms[roomId].black.discordId = msg.author.id;
+                        if (sequelizedb) {
+                            databaseFunctions.getUserElo({discordId: rooms[roomId].black.discordId}).then((userelo) => {
+                                if (userelo !== undefined) {
+                                    rooms[roomId].black.elo = userelo;
+                                }else{
+                                    databaseFunctions.addUser({username: rooms[roomId].black.name, discordId: rooms[roomId].black.discordId, elo: 1500});
+                                    rooms[roomId].black.elo = 1500;
+                                }
+                                rooms[roomId].start();
+                            });
+                        }else{
+                            rooms[roomId].start();
+                        }
+                    }else{
+                        bot.createMessage(msg.channel.id, "you are already in another room");
+                    }
+                    break;
+                }
+                if (!getPlayerRoom(msg.author.id)) {
+                    roomId = roomFunctions.createRoom('chess', 'chess');
+                    rooms[roomId].white.isAvaliable = false;
+                    rooms[roomId].white.discordChannelId = msg.channel.id;
+                    rooms[roomId].white.name = msg.author.globalName;
+                    rooms[roomId].white.discordId = msg.author.id;
+                    if (sequelizedb) {
+                        databaseFunctions.getUserElo({discordId: rooms[roomId].white.discordId}).then((userelo) => {
+                            if (userelo !== undefined) {
+                                rooms[roomId].white.elo = userelo;
+                            }else{
+                                databaseFunctions.addUser({username: rooms[roomId].white.name, discordId: rooms[roomId].white.discordId, elo: 1500});
+                                rooms[roomId].white.elo = 1500;
+                            }
+                        });
+                    }
+                    bot.createMessage(msg.channel.id, "Room created\n**Id**: " + roomId);
+                }
+            }
         } else if (command == "help") {
             let botprefix = config.discordbot.prefix;
             let helpmessage = `# commands:
 **${botprefix}help** ===== shows this message
 **${botprefix}create [variant]** ===== creates a room (eg. ${botprefix}create checkers   or   ${botprefix}create racingkings)
 **${botprefix}join <id>** ===== joins a room
+**${botprefix}autojoin** ===== tries to join a random room, if not posssible, creates a new room
 **${botprefix}quit** ===== quits the current room
 **${botprefix}move <movement>** ===== plays a move (eg. ${botprefix}move e2e4   or   ${botprefix}move 21-17 )
 
@@ -186,7 +232,7 @@ function displayBoard(roomId) {
 
 roomEvents.onGameStart.push(onGameStart);
 
- function onGameEnd(roomId) {
+function onGameEnd(roomId) {
     let isDraw = rooms[roomId].winner == '';
     let winner = isDraw ? "" : rooms[roomId][roomFunctions.colorLetterToColorName(rooms[roomId].winner)];
     const gametype = rooms[roomId].gametype;
