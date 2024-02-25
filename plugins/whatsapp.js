@@ -22,13 +22,13 @@ bot.on('ready', () => {
 function getPlayerRoom(playerId) {
     for (let roomId of Object.keys(rooms)) {
         roomId = parseInt(roomId);
-        if (rooms[roomId].white.socketId == playerId) {
+        if (rooms[roomId].white.whatsappId == playerId) {
             return {
                 color: 'white',
                 roomId: parseInt(roomId)
             };
         }
-        if (rooms[roomId].black.socketId == playerId) {
+        if (rooms[roomId].black.whatsappId == playerId) {
             return {
                 color: 'black',
                 roomId: parseInt(roomId)
@@ -61,13 +61,13 @@ bot.on('message', async (msg) => {
                     }
                 }
             }
-            if (!getPlayerRoom(msg.from)) {                            
+            if (!getPlayerRoom(msg.from)) {
                 roomId = roomFunctions.createRoom(gametype, variant);
                 rooms[roomId].white.isAvaliable = false;
                 rooms[roomId].white.whatsappChannelId = chatId;
                 rooms[roomId].white.name = msg.author;
                 rooms[roomId].white.whatsappId = msg.from;
-                bot.sendMessage(chatId, "Room created\n*Id*: 0");
+                bot.sendMessage(chatId, "Room created\n*Id*: " + roomId);
             }else{
                 bot.sendMessage(chatId, "you are already in another room");
             }
@@ -83,18 +83,14 @@ bot.on('message', async (msg) => {
                 roomId = parseInt(args[1]);
                 if (rooms[roomId]) {
                     if (!rooms[roomId].isStarted) {
-                        if (rooms[roomId].white.discordId != msg.from) {
-                            if (!getPlayerRoom(msg.from)) {                            
-                                rooms[roomId].black.isAvaliable = false;
-                                rooms[roomId].black.whatsappChannelId = chatId;
-                                rooms[roomId].black.name = msg.author;
-                                rooms[roomId].black.whatsappId = msg.from;
-                                rooms[roomId].start();
-                            }else{
-                                bot.sendMessage(chatId, "you are already in another room");
-                            }
+                        if (!getPlayerRoom(msg.from)) {                            
+                            rooms[roomId].black.isAvaliable = false;
+                            rooms[roomId].black.whatsappChannelId = chatId;
+                            rooms[roomId].black.name = msg.author;
+                            rooms[roomId].black.whatsappId = msg.from;
+                            rooms[roomId].start();
                         }else{
-                            bot.sendMessage(chatId, "you are already in this room");
+                            bot.sendMessage(chatId, "you are already in another room");
                         }
                     }else{
                         bot.sendMessage(chatId, "room is already started");

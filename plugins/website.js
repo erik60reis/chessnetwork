@@ -106,14 +106,29 @@ io.on('connection', (socket) => {
 
 function onMoveMade(roomId, move) {
     if (rooms[roomId].white.socketId) {
-        rooms[roomId].white.socket.emit('moveMade', imageDataURI.encode(utils.BoardToPng(rooms[roomId].game, false, rooms[roomId].white, rooms[roomId].black, rooms[roomId].gametype), 'png'));
+        rooms[roomId].white.socket.emit('moveMade', imageDataURI.encode(utils.BoardToPng(rooms[roomId].game, false, rooms[roomId].white, rooms[roomId].black, rooms[roomId].gametype), 'png'), (rooms[roomId].turn() ? "Your Turn" : "Black's Turn"));
     }
     if (rooms[roomId].black.socketId) {
-        rooms[roomId].black.socket.emit('moveMade', imageDataURI.encode(utils.BoardToPng(rooms[roomId].game, true, rooms[roomId].white, rooms[roomId].black, rooms[roomId].gametype), 'png'));
+        rooms[roomId].black.socket.emit('moveMade', imageDataURI.encode(utils.BoardToPng(rooms[roomId].game, true, rooms[roomId].white, rooms[roomId].black, rooms[roomId].gametype), 'png'), (rooms[roomId].turn() ? "White's Turn" : "Your Turn"));
     }
 }
 
 roomEvents.onMoveMade.push(onMoveMade);
+
+function onGameEnd(roomId) {
+    let isDraw = rooms[roomId].winner == '';
+    let winnerColor = roomFunctions.colorLetterToColorName(rooms[roomId].winner);
+    //let winner = isDraw ? "" : rooms[roomId][winnerColor];
+    if (rooms[roomId].white.socketId) {
+        rooms[roomId].white.socket.emit('moveMade', imageDataURI.encode(utils.BoardToPng(rooms[roomId].game, false, rooms[roomId].white, rooms[roomId].black, rooms[roomId].gametype), 'png'), (isDraw ? "Game Ended in a draw" : "Game ended, " + winnerColor + " won the game" ));
+    }
+    if (rooms[roomId].black.socketId) {
+        rooms[roomId].black.socket.emit('moveMade', imageDataURI.encode(utils.BoardToPng(rooms[roomId].game, true, rooms[roomId].white, rooms[roomId].black, rooms[roomId].gametype), 'png'), (isDraw ? "Game Ended in a draw" : "Game ended, " + winnerColor + " won the game" ));
+    }
+}
+
+
+roomEvents.onGameEnd.push(onGameEnd);
 
 server.listen(config.website.port, () => {
   console.log('website running at http://localhost:' + config.website.port);

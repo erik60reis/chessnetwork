@@ -81,7 +81,7 @@ bot.on("messageCreate", (msg) => {
                         rooms[roomId].start();
                     });
                 }
-                bot.createMessage(msg.channel.id, "Room created\n**Id**: 0");
+                bot.createMessage(msg.channel.id, "Room created\n**Id**: " + roomId);
             }else{
                 bot.createMessage(msg.channel.id, "you are already in another room");
             }
@@ -201,7 +201,7 @@ roomEvents.onGameStart.push(onGameStart);
             if (white.discordId && gametype == "chess" && variant == "chess") {
                 databaseFunctions.getUserElo({discordId: white.discordId}).then((userelo) => {
                     if (userelo !== undefined) {
-                        databaseFunctions.addUserElo({discordId: white.discordId}, 10);
+                        databaseFunctions.addUserElo({discordId: white.discordId}, (!isDraw ? (winnerDiscordId == white.discordId ? 10 : -10) : 0));
                     }else{
                         databaseFunctions.addUser({username: white.name, discordId: white.discordId, elo: 1500});
                     }
@@ -211,7 +211,7 @@ roomEvents.onGameStart.push(onGameStart);
             if (black.discordId && gametype == "chess" && variant == "chess") {
                 databaseFunctions.getUserElo({discordId: black.discordId}).then((userelo) => {
                     if (userelo !== undefined) {
-                        databaseFunctions.addUserElo({discordId: black.discordId}, 10);
+                        databaseFunctions.addUserElo({discordId: black.discordId}, (!isDraw ? (winnerDiscordId == black.discordId ? 10 : -10) : 0));
                     }else{
                         databaseFunctions.addUser({username: black.name, discordId: black.discordId, elo: 1500});
                     }
