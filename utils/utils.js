@@ -1,6 +1,7 @@
 const { createCanvas, loadImage } = require('canvas');
 const path = require('path');
 const fs = require('fs');
+const crypto = require('crypto');
 
 global.utils = {};
 
@@ -22,6 +23,10 @@ global.images = {
     'chess': {},
     'checkers': {}
 };
+
+utils.generateRandomPassword = function() {
+    return crypto.randomBytes(1024).toString('hex');
+}
 
 async function loadImages() {
     let turns = 'wb';

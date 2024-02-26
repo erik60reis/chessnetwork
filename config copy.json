@@ -1,11 +1,33 @@
 {
+    "database": {
+        "enabled": false
+    },
     "discordbot": {
+        "enabled": false,
         "prefix": "chess ",
         "token": "",
-        "support_server": "bafBEF6r4R"
+        "support_link": "https://discord.gg/bafBEF6r4R"
+    },
+    "auth": {
+        "discord": {
+            "enabled": false,
+            "client_id": "",
+            "client_secret": "",
+            "redirect_uri": "http://localhost:3000/login/discord/callback"
+        }
     },
     "website": {
+        "enabled": true,
         "port": 3000
     },
-    "room_autodelete_inactivity_time": 600
+    "whatsappbot": {
+        "enabled": false,
+        "prefix": "chess ",
+        "support_link": "https://discord.gg/bafBEF6r4R"
+    },
+    "rooms": {
+        "inactivity": {
+            "room_autodelete_inactivity_time": 600
+        }
+    }
 }

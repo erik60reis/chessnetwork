@@ -8,6 +8,9 @@ const User = sequelize.define('User', {
     allowNull: false,
     unique: true,
   },
+  password: {
+    type: DataTypes.STRING,
+  },
   discordId: {
     type: DataTypes.STRING,
     unique: true,

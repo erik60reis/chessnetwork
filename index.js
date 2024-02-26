@@ -2,7 +2,6 @@ const fs = require('fs');
 const ffish = require('./ffish');
 const Checkers = require('./checkers');
 
-
 global.plugins = {};
 
 global.rootpath = __dirname;
@@ -21,7 +20,7 @@ global.avaliablevariants = ['chess', 'racingkings', '3check', 'horde', 'amazon',
 
 global.roomFunctions = {};
 
-global.config = require('./config.json');
+global.appconfig = require('./config.json');
 /*
 || Internal numbering       External Numbering
 || --------------------     --------------------
@@ -46,7 +45,7 @@ roomFunctions.createRoom = function(gametype = 'chess', variant = 'chess') {
         variant: variant,
         winner: '',
         isStarted: false,
-        inactive_time_remaining: config.room_autodelete_inactivity_time,
+        inactive_time_remaining: appconfig.rooms.inactivity.room_autodelete_inactivity_time,
         white: {
             isAvaliable: true,
             name: 'white',
@@ -65,8 +64,8 @@ roomFunctions.createRoom = function(gametype = 'chess', variant = 'chess') {
             }
         },
         start: function() {
+            rooms[roomId].isStarted = true;
             roomEvents.onGameStart.forEach((event) => {
-                rooms[roomId].isStarted = true;
                 event(roomId);
             });
         },

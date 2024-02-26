@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chess</title>
+    <style>
+        .game-container {
+            width: 100%;
+            height: 100%;
+            justify-content: center;
+            text-align: center;
+        }
+
+        #gameimage {
+            width: 85%;
+            height: auto;
+        }
+
+        input {
+            border-radius: 5px;
+            width: 200px;
+        }
+
+        @media (min-width: 600px) {
+            #gameimage {
+                width: auto;
+                height: 85vh;
+            }
+            input {
+                width: 500px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <div id="gamestatus"> ---- </div>
+        <img id="gameimage">
+        <br/>
+        <br/>
+        <input id="moveinput" type="text" placeholder="Enter move... (eg. e2e4 or 21-17)"/> <button id="movebutton">MOVE</button>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    </div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        let roomId = {{roomId}};
+
+        let socket = io();
+
+        socket.once('connect', () => {
+            socket.emit('joinRoom', roomId, window.localStorage.getItem('authid'), window.localStorage.getItem('authpassword'));
+        });
+
+        document.getElementById('gamestatus').innerHTML = "Room {{RoomId}}";
+
+
+        document.getElementById("movebutton").addEventListener('click', () => {
+            socket.emit('makeMove', document.getElementById("moveinput").value);
+            document.getElementById("moveinput").value = "";
+        });
+
+        socket.on('moveMade', (newimagedatauri, newGameStatus) => {
+            document.getElementById("gameimage").src = newimagedatauri;
+            document.getElementById('gamestatus').innerHTML = newGameStatus;
+        });
+    </script>
+</body>
+</html>
