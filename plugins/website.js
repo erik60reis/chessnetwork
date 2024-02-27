@@ -184,7 +184,9 @@ if (appconfig.website.enabled) {
                                 blackTimeFormatted: utils.formatTime(rooms[roomId].black.time),
                             };
                             if (playercolor == 'black') {
-                                rooms[roomId].white.socket.emit('moveMade', imageDataURI.encode(utils.BoardToPng(rooms[roomId].game, false, rooms[roomId].white, rooms[roomId].black, rooms[roomId].gametype), 'png'), '', gameInfo, 'white');
+                                if (rooms[roomId].white.socketId) {
+                                    rooms[roomId].white.socket.emit('moveMade', imageDataURI.encode(utils.BoardToPng(rooms[roomId].game, false, rooms[roomId].white, rooms[roomId].black, rooms[roomId].gametype), 'png'), '', gameInfo, 'white');
+                                }
                                 rooms[roomId].start();
                             }
                             socket.emit('moveMade', imageDataURI.encode(utils.BoardToPng(rooms[roomId].game, playercolor == 'black', rooms[roomId].white, rooms[roomId].black, rooms[roomId].gametype), 'png'), '', gameInfo, playercolor);
