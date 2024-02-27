@@ -64,7 +64,7 @@ if (appconfig.website.enabled) {
     });
 
     app.get('/', (req, res) => {
-        res.render(join(rootpath, 'assets', 'website', 'index.html'), {roomId: parseInt(req.params.roomId)});
+        res.render(join(rootpath, 'assets', 'website', 'index.html'), {roomId: parseInt(req.params.roomId), discord_bot_addition_link: appconfig.discordbot.bot_addition_link});
     });
 
     if (discordOauth2) {
