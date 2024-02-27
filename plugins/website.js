@@ -1,11 +1,10 @@
-const { constrainedMemory } = require('node:process');
-
 if (appconfig.website.enabled) {
     const express = require('express');
     const { createServer } = require('node:http');
     const { join } = require('node:path');
     const { Server } = require('socket.io');
     const fs = require('fs');
+    const path = require('path');
     const imageDataURI = require('image-data-uri');
     const DiscordOAuth2Constructor = require('discord-oauth2');
     const session = require('express-session');
@@ -32,6 +31,11 @@ if (appconfig.website.enabled) {
 
     app.engine('.html', handlebars.engine);
     app.set('view engine', '.html');
+
+    app.use('/assets/chesspieces', express.static(path.join(rootpath, 'assets', 'chesspieces')));
+    app.use('/assets/chessgroundx', express.static(path.join(rootpath, 'assets', 'chessgroundx')));
+    app.use('/assets/stylesheets', express.static(path.join(rootpath, 'assets', 'stylesheets')));
+    app.use('/assets/checkerspieces', express.static(path.join(rootpath, 'assets', 'checkerspieces')));
 
     const server = createServer(app);
     const io = new Server(server);
@@ -164,10 +168,26 @@ if (appconfig.website.enabled) {
                                 rooms[roomId][playercolor].name = userdata.username;
                                 rooms[roomId][playercolor].elo = userdata.elo;
                             }
+                            let gameInfo = {
+                                gametype: rooms[roomId].gametype,
+                                variant: rooms[roomId].variant,
+                                fen: rooms[roomId].game.fen(),
+                                boardDimensions: utils.getBoardDimensions(rooms[roomId].game.fen()),
+                                turn: rooms[roomId].turn(),
+                                whiteName: rooms[roomId].white.name,
+                                whiteElo: rooms[roomId].white.elo,
+                                whiteTime: rooms[roomId].white.time,
+                                whiteTimeFormatted: utils.formatTime(rooms[roomId].white.time),
+                                blackName: rooms[roomId].black.name,
+                                blackElo: rooms[roomId].black.elo,
+                                blackTime: rooms[roomId].black.time,
+                                blackTimeFormatted: utils.formatTime(rooms[roomId].black.time),
+                            };
                             if (playercolor == 'black') {
+                                rooms[roomId].white.socket.emit('moveMade', imageDataURI.encode(utils.BoardToPng(rooms[roomId].game, false, rooms[roomId].white, rooms[roomId].black, rooms[roomId].gametype), 'png'), '', gameInfo, 'white');
                                 rooms[roomId].start();
                             }
-                            socket.emit('moveMade', imageDataURI.encode(utils.BoardToPng(rooms[roomId].game, playercolor == 'black', rooms[roomId].white, rooms[roomId].black, rooms[roomId].gametype), 'png'));
+                            socket.emit('moveMade', imageDataURI.encode(utils.BoardToPng(rooms[roomId].game, playercolor == 'black', rooms[roomId].white, rooms[roomId].black, rooms[roomId].gametype), 'png'), '', gameInfo, playercolor);
                         }
                     }
                 }
@@ -176,25 +196,55 @@ if (appconfig.website.enabled) {
     });
 
     function onMoveMade(roomId, move) {
+        let gameInfo = {
+            gametype: rooms[roomId].gametype,
+            variant: rooms[roomId].variant,
+            fen: rooms[roomId].game.fen(),
+            boardDimensions: utils.getBoardDimensions(rooms[roomId].game.fen()),
+            turn: rooms[roomId].turn(),
+            whiteName: rooms[roomId].white.name,
+            whiteElo: rooms[roomId].white.elo,
+            whiteTime: rooms[roomId].white.time,
+            whiteTimeFormatted: utils.formatTime(rooms[roomId].white.time),
+            blackName: rooms[roomId].black.name,
+            blackElo: rooms[roomId].black.elo,
+            blackTime: rooms[roomId].black.time,
+            blackTimeFormatted: utils.formatTime(rooms[roomId].black.time),
+        };
         if (rooms[roomId].white.socketId) {
-            rooms[roomId].white.socket.emit('moveMade', imageDataURI.encode(utils.BoardToPng(rooms[roomId].game, false, rooms[roomId].white, rooms[roomId].black, rooms[roomId].gametype), 'png'), (rooms[roomId].turn() ? "Your Turn" : "Black's Turn"));
+            rooms[roomId].white.socket.emit('moveMade', imageDataURI.encode(utils.BoardToPng(rooms[roomId].game, false, rooms[roomId].white, rooms[roomId].black, rooms[roomId].gametype), 'png'), (rooms[roomId].turn() ? "Your Turn" : "Black's Turn"), gameInfo, 'white');
         }
         if (rooms[roomId].black.socketId) {
-            rooms[roomId].black.socket.emit('moveMade', imageDataURI.encode(utils.BoardToPng(rooms[roomId].game, true, rooms[roomId].white, rooms[roomId].black, rooms[roomId].gametype), 'png'), (rooms[roomId].turn() ? "White's Turn" : "Your Turn"));
+            rooms[roomId].black.socket.emit('moveMade', imageDataURI.encode(utils.BoardToPng(rooms[roomId].game, true, rooms[roomId].white, rooms[roomId].black, rooms[roomId].gametype), 'png'), (rooms[roomId].turn() ? "White's Turn" : "Your Turn"), gameInfo, 'black');
         }
     }
 
     roomEvents.onMoveMade.push(onMoveMade);
 
     function onGameEnd(roomId) {
+        let gameInfo = {
+            gametype: rooms[roomId].gametype,
+            variant: rooms[roomId].variant,
+            fen: rooms[roomId].game.fen(),
+            boardDimensions: utils.getBoardDimensions(rooms[roomId].game.fen()),
+            turn: rooms[roomId].turn(),
+            whiteName: rooms[roomId].white.name,
+            whiteElo: rooms[roomId].white.elo,
+            whiteTime: rooms[roomId].white.time,
+            whiteTimeFormatted: utils.formatTime(rooms[roomId].white.time),
+            blackName: rooms[roomId].black.name,
+            blackElo: rooms[roomId].black.elo,
+            blackTime: rooms[roomId].black.time,
+            blackTimeFormatted: utils.formatTime(rooms[roomId].black.time),
+        };
         let isDraw = rooms[roomId].winner == '';
         let winnerColor = roomFunctions.colorLetterToColorName(rooms[roomId].winner);
         //let winner = isDraw ? "" : rooms[roomId][winnerColor];
         if (rooms[roomId].white.socketId) {
-            rooms[roomId].white.socket.emit('moveMade', imageDataURI.encode(utils.BoardToPng(rooms[roomId].game, false, rooms[roomId].white, rooms[roomId].black, rooms[roomId].gametype), 'png'), (isDraw ? "Game Ended in a draw" : "Game ended, " + winnerColor + " won the game" ));
+            rooms[roomId].white.socket.emit('moveMade', imageDataURI.encode(utils.BoardToPng(rooms[roomId].game, false, rooms[roomId].white, rooms[roomId].black, rooms[roomId].gametype), 'png'), (isDraw ? "Game Ended in a draw" : "Game ended, " + winnerColor + " won the game" ), gameInfo, 'white');
         }
         if (rooms[roomId].black.socketId) {
-            rooms[roomId].black.socket.emit('moveMade', imageDataURI.encode(utils.BoardToPng(rooms[roomId].game, true, rooms[roomId].white, rooms[roomId].black, rooms[roomId].gametype), 'png'), (isDraw ? "Game Ended in a draw" : "Game ended, " + winnerColor + " won the game" ));
+            rooms[roomId].black.socket.emit('moveMade', imageDataURI.encode(utils.BoardToPng(rooms[roomId].game, true, rooms[roomId].white, rooms[roomId].black, rooms[roomId].gametype), 'png'), (isDraw ? "Game Ended in a draw" : "Game ended, " + winnerColor + " won the game" ), gameInfo, 'black');
         }
     }
 

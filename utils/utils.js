@@ -44,7 +44,7 @@ async function loadImages() {
         }
     }
 
-    images['barrier'] = await loadImage(path.join(rootpath, `assets/barrier.png`).split('\\').join('/'));
+    images['barrier'] = await loadImage(path.join(rootpath, `assets/chesspieces/barrier.png`).split('\\').join('/'));
     images['logobanner'] = await loadImage(path.join(rootpath, `assets/logobanner.png`).split('\\').join('/'));
 }
 loadImages();
@@ -149,6 +149,23 @@ function checkersFenToJson(fen) {
 }
 
 utils.checkersFenToJson = checkersFenToJson;
+
+
+utils.getBoardDimensions = function(fen) {
+    const fenBoard = fen.split(" ")[0];
+    const ranks = fenBoard.split("/").length;
+    const lastRank = fenBoard.split("/")[0].replace(/[^0-9a-z*]/gi, "");
+    let files = lastRank.length;
+
+    for (const match of lastRank.matchAll(/\d+/g)) {
+      files += parseInt(match[0]) - match[0].length;
+    }
+
+    return {
+      width: files,
+      height: ranks,
+    };
+  }
 
 function BoardToPng(board, isflipped = false, white = {}, black = {}, gametype = 'chess') {
     let canvas = createCanvas(400, 450);

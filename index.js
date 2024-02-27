@@ -37,11 +37,15 @@ global.coordToExternalNumbering = {
     
 };
 
+function generateGame(gametype = 'chess', variant = 'chess') {
+    return (gametype == 'checkers' ? Checkers() : new ffish.Board(variant));
+}
+
 roomFunctions.createRoom = function(gametype = 'chess', variant = 'chess') {
     let roomId = nextRoomId();
     rooms[roomId] = {
         gametype: gametype,
-        game: (gametype == 'checkers' ? Checkers() : new ffish.Board(variant)),
+        game: generateGame(gametype, variant),
         variant: variant,
         winner: '',
         isStarted: false,

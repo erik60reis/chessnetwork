@@ -9,6 +9,7 @@
             width: 100%;
             height: 100%;
             justify-content: center;
+            align-items: center;
             text-align: center;
         }
 
@@ -17,14 +18,26 @@
             height: auto;
         }
 
+        #gameboard {
+            width: 85%;
+        }
+
         input {
             border-radius: 5px;
             width: 200px;
         }
 
+        cg-container {
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+        }
+
         @media (min-width: 600px) {
             #gameimage {
-                width: auto;
+                height: 85vh;
+            }
+            #gameboard {
                 height: 85vh;
             }
             input {
@@ -32,39 +45,177 @@
             }
         }
     </style>
+    <link rel="stylesheet" href="/assets/stylesheets/chessground.base.min.css">
+    <link rel="stylesheet" href="/assets/stylesheets/chessground.board.css">
+    <link rel="stylesheet" href="/assets/stylesheets/chessground.pieces.css">
 </head>
 <body>
     <div class="game-container">
         <div id="gamestatus"> ---- </div>
         <img id="gameimage">
+        <div id="otherData"></div>
+        <div id="gameboard"></div>
+        <div id="yourData"></div>
         <br/>
         <br/>
         <input id="moveinput" type="text" placeholder="Enter move... (eg. e2e4 or 21-17)"/> <button id="movebutton">MOVE</button>
         <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
     </div>
 
+    <script>
+        var ChessgroundJS = null;
+    </script>
+    <script type="module">
+        import { Chessground } from "/assets/chessgroundx/chessground.js"
+        ChessgroundJS = Chessground;
+    </script>
     <script src="/socket.io/socket.io.js"></script>
     <script>
         let roomId = {{roomId}};
 
-        let socket = io();
+        let board = null;
+        
+        let socket;
 
-        socket.once('connect', () => {
-            socket.emit('joinRoom', roomId, window.localStorage.getItem('authid'), window.localStorage.getItem('authpassword'));
-        });
+        var chessgroundconfig = {
 
-        document.getElementById('gamestatus').innerHTML = "Room {{RoomId}}";
+            fen: 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1', // starting FEN
+
+            orientation: 'white', // board orientation
+
+            turnColor: 'white', // board orientation
+
+            coordinates: true, // show ranks and files
+
+            autoCastle: true, // automatically castle when king/rook move
+
+            viewOnly: false, // restrict premoves, clicks, drag pieces
+
+            disableContextMenu: false, // disable right click
+
+            resizable: true, // allow resize
+
+            animation: {
+                enabled: true,
+                duration: 200
+            }, 
+
+            movable: {
+                free: true, // true for now // all moves are valid - no validation
+                color: 'both', // allow both whites and blacks to move
+                showDests: false, //false for now // highlight destinations
+                dests: null,
+                rookCastle: true
+            },
+
+            drawable: {
+                enabled: true,
+                visible: true,
+            },
+
+            premovable: {
+                enabled: false, // false for now
+                events: {
+                    set: function(orig, dest) {
+                        selectedpremove = {
+                            from: orig,
+                            to: dest,
+                            promotion: promotion
+                        };
+                    },
+                    unset: function() {
+                        selectedpremove = null;
+                    }
+                }
+            },
+
+            predroppable: {
+                enabled: false // disable predrops
+            },
+
+            highlight: {
+                lastMove: true, // highlight last move
+                check: true // highlight checks
+            },
+
+            events: {
+                move: (orig, dest) => {
+                    socket.emit('makeMove', orig + dest);
+                    socket.emit('makeMove', orig + dest + 'q');
+                },
+                dropNewPiece: (role, key) => {
+                    // called when a new piece is dropped from pocket
+                    // add to position
+                }
+            }
+
+        };
+
+        function loadMainScript() {
+            socket = io();
+
+            socket.once('connect', () => {
+                socket.emit('joinRoom', roomId, window.localStorage.getItem('authid'), window.localStorage.getItem('authpassword'));
+            });
+
+            document.getElementById('gamestatus').innerHTML = "Room {{RoomId}}";
 
 
-        document.getElementById("movebutton").addEventListener('click', () => {
-            socket.emit('makeMove', document.getElementById("moveinput").value);
-            document.getElementById("moveinput").value = "";
-        });
+            document.getElementById("movebutton").addEventListener('click', () => {
+                socket.emit('makeMove', document.getElementById("moveinput").value);
+                document.getElementById("moveinput").value = "";
+            });
 
-        socket.on('moveMade', (newimagedatauri, newGameStatus) => {
-            document.getElementById("gameimage").src = newimagedatauri;
-            document.getElementById('gamestatus').innerHTML = newGameStatus;
-        });
+            let oldDimensions = {width: 8, height: 8};
+
+            socket.on('moveMade', (newimagedatauri, newGameStatusText, gameInfo, yourTeam) => {
+                if (gameInfo.gametype === "chess") {
+                    document.getElementById("moveinput").style.display = "none";
+                    document.getElementById("movebutton").style.display = "none";
+                    document.getElementById("gameimage").style.display = "none";
+                    document.getElementById("gameboard").style.display = "block";
+                    document.getElementById("yourData").style.display = "block";
+                    document.getElementById("otherData").style.display = "block";
+                    chessgroundconfig.fen = gameInfo.fen;
+                    chessgroundconfig.orientation = yourTeam;
+                    chessgroundconfig.movable.color = yourTeam;
+                    chessgroundconfig.turnColor = (gameInfo.turn ? "white" : "black");
+                    board = new ChessgroundJS(document.getElementById("gameboard"), chessgroundconfig);
+                    let otherTeam = (yourTeam == "white" ? "black" : "white")
+                    document.getElementById("otherData").innerText = gameInfo[otherTeam + "Name"] + " (" + gameInfo[otherTeam + "Elo"] + ") " + gameInfo[otherTeam + "TimeFormatted"];
+                    document.getElementById("yourData").innerText = gameInfo[yourTeam + "Name"] + " (" + gameInfo[yourTeam + "Elo"] + ") " + gameInfo[yourTeam + "TimeFormatted"];;
+                    if (gameInfo.boardDimensions != oldDimensions) {
+                        if (document.getElementById("gameboard").classList.contains(`board${oldDimensions.width}x${oldDimensions.height}`)) {
+                            document.getElementById("gameboard").classList.remove(`board${oldDimensions.width}x${oldDimensions.height}`);
+                        }
+                        document.getElementById("gameboard").classList.add(`board${gameInfo.boardDimensions.width}x${gameInfo.boardDimensions.height}`);
+                    }
+                }else{
+                    document.getElementById("moveinput").style.display = "block";
+                    document.getElementById("movebutton").style.display = "block";
+                    document.getElementById("gameimage").style.display = "block";
+                    document.getElementById("gameboard").style.display = "none";
+                    document.getElementById("yourData").style.display = "none";
+                    document.getElementById("otherData").style.display = "none";
+                }
+                document.getElementById("gameimage").src = newimagedatauri;
+                document.getElementById('gamestatus').innerHTML = newGameStatusText;
+            });
+        }
+
+
+
+        let interval = setInterval(() => {
+            if (ChessgroundJS != null) {
+                if (window.innerWidth >= 600) {
+                    document.getElementById("gameboard").style.width = document.getElementById("gameboard").clientHeight + "px";
+                }else{
+                    document.getElementById("gameboard").style.height = document.getElementById("gameboard").clientWidth + "px";
+                }
+                loadMainScript();
+                clearInterval(interval);
+            }
+        }, 500);
     </script>
 </body>
 </html>

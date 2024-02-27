@@ -1,0 +1,127 @@
+ .cg-wrap piece.p-piece.white {
+  background-image: url('/assets/chesspieces/wP.png');
+}
+ .cg-wrap piece.b-piece.white {
+  background-image: url('/assets/chesspieces/wB.png');
+}
+ .cg-wrap piece.n-piece.white {
+  background-image: url('/assets/chesspieces/wN.png');
+}
+ .cg-wrap piece.r-piece.white {
+  background-image: url('/assets/chesspieces/wR.png');
+}
+ .cg-wrap piece.q-piece.white {
+  background-image: url('/assets/chesspieces/wQ.png');
+}
+ .cg-wrap piece.k-piece.white {
+  background-image: url('/assets/chesspieces/wK.png');
+}
+ .cg-wrap piece.a-piece.white {
+  background-image: url('/assets/chesspieces/wA.png');
+}
+ .cg-wrap piece.c-piece.white {
+  background-image: url('/assets/chesspieces/wC.png');
+}
+ .cg-wrap piece.m-piece.white {
+  background-image: url('/assets/chesspieces/wM.png');
+}
+ .cg-wrap piece.f-piece.white {
+  background-image: url('/assets/chesspieces/wF.png');
+}
+ .cg-wrap piece.s-piece.white {
+  background-image: url('/assets/chesspieces/wS.png');
+}
+ .cg-wrap piece.e-piece.white {
+  background-image: url('/assets/chesspieces/wE.png');
+}
+ .cg-wrap piece.h-piece.white {
+  background-image: url('/assets/chesspieces/wH.png');
+}
+ .cg-wrap piece.l-piece.white {
+  background-image: url('/assets/chesspieces/wL.png');
+}
+ .cg-wrap piece.g-piece.white {
+  background-image: url('/assets/chesspieces/wG.png');
+}
+ .cg-wrap piece.w-piece.white {
+  background-image: url('/assets/chesspieces/wW.png');
+}
+ .cg-wrap piece.j-piece.white {
+  background-image: url('/assets/chesspieces/wJ.png');
+}
+
+ .cg-wrap piece.p-piece.black {
+  background-image: url('/assets/chesspieces/bP.png');
+}
+ .cg-wrap piece.b-piece.black {
+  background-image: url('/assets/chesspieces/bB.png');
+}
+ .cg-wrap piece.n-piece.black {
+  background-image: url('/assets/chesspieces/bN.png');
+}
+ .cg-wrap piece.r-piece.black {
+  background-image: url('/assets/chesspieces/bR.png');
+}
+ .cg-wrap piece.q-piece.black {
+  background-image: url('/assets/chesspieces/bQ.png');
+}
+ .cg-wrap piece.k-piece.black {
+  background-image: url('/assets/chesspieces/bK.png');
+}
+ .cg-wrap piece.a-piece.black {
+  background-image: url('/assets/chesspieces/bA.png');
+}
+ .cg-wrap piece.c-piece.black {
+  background-image: url('/assets/chesspieces/bC.png');
+}
+ .cg-wrap piece.m-piece.black {
+  background-image: url('/assets/chesspieces/bM.png');
+}
+ .cg-wrap piece.f-piece.black {
+  background-image: url('/assets/chesspieces/bF.png');
+}
+ .cg-wrap piece.s-piece.black {
+  background-image: url('/assets/chesspieces/bS.png');
+}
+ .cg-wrap piece.e-piece.black {
+  background-image: url('/assets/chesspieces/bE.png');
+}
+ .cg-wrap piece.h-piece.black {
+  background-image: url('/assets/chesspieces/bH.png');
+}
+ .cg-wrap piece.l-piece.black {
+  background-image: url('/assets/chesspieces/bL.png');
+}
+ .cg-wrap piece.g-piece.black {
+  background-image: url('/assets/chesspieces/bG.png');
+}
+ .cg-wrap piece.w-piece.black {
+  background-image: url('/assets/chesspieces/bW.png');
+}
+ .cg-wrap piece.j-piece.black {
+  background-image: url('/assets/chesspieces/bJ.png');
+}
+
+ .cg-wrap piece._-piece {
+  background-image: url('/assets/chesspieces/barrier.png');
+}
+
+
+.board9x10 .cg-wrap piece.a-piece.white {
+  background-image: url('/assets/chesspieces/wS.png');
+}
+.board9x10 .cg-wrap piece.b-piece.white {
+  background-image: url('/assets/chesspieces/wE.png');
+}
+.board9x10 .cg-wrap piece.c-piece.white {
+  background-image: url('/assets/chesspieces/wCa.png');
+}
+.board9x10 .cg-wrap piece.a-piece.black {
+  background-image: url('/assets/chesspieces/bS.png');
+}
+.board9x10 .cg-wrap piece.b-piece.black {
+  background-image: url('/assets/chesspieces/bE.png');
+}
+.board9x10 .cg-wrap piece.c-piece.black {
+  background-image: url('/assets/chesspieces/bCa.png');
+}
