@@ -219,6 +219,14 @@
                     }else{
                         gameBoard.style.height = ((gameBoard.clientWidth / oldDimensions.width) * oldDimensions.height) + "px";
                     }
+
+                    let pieces = document.getElementsByTagName("piece");
+                    for (let index = 0; index < pieces.length; index++) {
+                        const element = pieces[index];
+                        let piecesize = (gameBoard.clientWidth > gameBoard.clientHeight ?  (gameBoard.clientHeight / oldDimensions.height) + "px" : (gameBoard.clientWidth / oldDimensions.width) + "px");
+                        element.style.width = piecesize;
+                        element.style.height = piecesize;
+                    }
                 }else{
                     document.getElementById("moveinput").style.display = "block";
                     document.getElementById("movebutton").style.display = "block";
@@ -240,6 +248,16 @@
                 clearInterval(interval);
             }
         }, 500);
+
+        setInterval(() => {
+            let squares = document.getElementsByTagName("square");
+            for (let index = 0; index < squares.length; index++) {
+                const element = squares[index];
+                let squaresize = (gameBoard.clientWidth > gameBoard.clientHeight ?  (gameBoard.clientHeight / oldDimensions.height) + "px" : (gameBoard.clientWidth / oldDimensions.width) + "px");
+                element.style.width = squaresize;
+                element.style.height = squaresize;
+            }
+        }, 400);
     </script>
 </body>
 </html>

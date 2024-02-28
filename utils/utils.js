@@ -30,7 +30,7 @@ utils.generateRandomPassword = function() {
 
 async function loadImages() {
     let turns = 'wb';
-    let pieces = 'a b c k n p q r'.split(' ');
+    let pieces = 'a b c k n p q r e f m w'.split(' ');
     for (let turn of turns) {
         for (let piece of pieces) {
             images['chess'][turn + piece] = await loadImage(path.join(rootpath, `assets/chesspieces/${turn}${piece.toUpperCase()}.png`).split('\\').join('/'));
@@ -44,7 +44,7 @@ async function loadImages() {
         }
     }
 
-    images['barrier'] = await loadImage(path.join(rootpath, `assets/chesspieces/barrier.png`).split('\\').join('/'));
+    images['chess']['barrier'] = await loadImage(path.join(rootpath, `assets/chesspieces/barrier.png`).split('\\').join('/'));
     images['logobanner'] = await loadImage(path.join(rootpath, `assets/logobanner.png`).split('\\').join('/'));
 }
 loadImages();

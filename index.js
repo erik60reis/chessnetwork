@@ -16,7 +16,7 @@ global.roomEvents = {
 
 global.avaliablegametypes = ['chess', 'checkers'];
 
-global.avaliablevariants = ['chess', 'racingkings', '3check', 'horde', 'amazon', 'gothic', 'amazons'];
+global.avaliablevariants = ['chess', 'racingkings', '3check', 'horde', 'amazon', 'gothic', 'amazons', 'courier'];
 
 global.roomFunctions = {};
 
