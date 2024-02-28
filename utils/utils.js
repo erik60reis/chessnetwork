@@ -150,6 +150,27 @@ function checkersFenToJson(fen) {
 
 utils.checkersFenToJson = checkersFenToJson;
 
+utils.getGameInfo = (roomId) => {
+    let gameInfo = {
+        gametype: rooms[roomId].gametype,
+        variant: rooms[roomId].variant,
+        turn: rooms[roomId].turn(),
+        whiteName: rooms[roomId].white.name,
+        whiteElo: rooms[roomId].white.elo,
+        whiteTime: rooms[roomId].white.time,
+        whiteTimeFormatted: utils.formatTime(rooms[roomId].white.time),
+        blackName: rooms[roomId].black.name,
+        blackElo: rooms[roomId].black.elo,
+        blackTime: rooms[roomId].black.time,
+        blackTimeFormatted: utils.formatTime(rooms[roomId].black.time),
+    };
+    if (gameInfo.gametype === 'chess') {
+        gameInfo.fen =  rooms[roomId].game.fen();
+        gameInfo.boardDimensions =  utils.getBoardDimensions(rooms[roomId].game.fen());
+        gameInfo.legalMoves = rooms[roomId].game.legalMoves().split(" ");
+    }
+    return gameInfo;
+}
 
 utils.getBoardDimensions = function(fen) {
     const fenBoard = fen.split(" ")[0];
@@ -221,9 +242,9 @@ function BoardToPng(board, isflipped = false, white = {}, black = {}, gametype =
             squareindex += 1;
         }
         if (gametype == 'chess') {
-            if (i == 7 && j == 0) {
+            if (i == boardranks - 1 && j == 0) {
                 ctx.fillText(indexToBoard(isflipped ? (boardranks * boardfiles) - squareindex : squareindex - 1, boardranks, boardfiles), j * squaresizeX, 50 + (i * squaresizeY));
-            }else if (i == 7) {
+            }else if (i == boardranks - 1) {
                 ctx.fillText(indexToBoard(isflipped ? (boardranks * boardfiles) - squareindex : squareindex - 1, boardranks, boardfiles, true).col, j * squaresizeX, 50 + (i * squaresizeY));
             }else if (j == 0) {
                 ctx.fillText(indexToBoard(isflipped ? (boardranks * boardfiles) - squareindex : squareindex - 1, boardranks, boardfiles, true).row, j * squaresizeX, 50 + (i * squaresizeY));

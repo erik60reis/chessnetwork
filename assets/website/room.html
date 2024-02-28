@@ -72,6 +72,23 @@
     </script>
     <script src="/socket.io/socket.io.js"></script>
     <script>
+        function getDests(legalMoves, boardranks) {
+            var moves = new Map();
+            var letters = 'abcdefghijklmnopqrstuvwxyz';
+            letters.split("").forEach((letter) => {
+                for (let number = 1; number <= boardranks; number++) {
+                    let legalMovesFormatted = [];
+                    legalMoves.forEach(legalMove => {
+                        if (legalMove.startsWith((letter + number))) {
+                            legalMovesFormatted.push(legalMove[2] + legalMove[3]);
+                        }
+                    });
+                    moves.set((letter + number), legalMovesFormatted);
+                }
+            });
+            return moves;
+        }
+
         let roomId = {{roomId}};
 
         let board = null;
@@ -102,9 +119,9 @@
             }, 
 
             movable: {
-                free: true, // true for now // all moves are valid - no validation
+                free: false, // all moves are valid - no validation
                 color: 'both', // allow both whites and blacks to move
-                showDests: false, //false for now // highlight destinations
+                showDests: true, // highlight destinations
                 dests: null,
                 rookCastle: true
             },
@@ -152,6 +169,10 @@
 
         };
 
+        let gameBoard = document.getElementById("gameboard");
+        let gameBoardInside = document.getElementsByTagName("cg-board")[0];
+        let oldDimensions = {width: 8, height: 8};
+
         function loadMainScript() {
             socket = io();
 
@@ -167,35 +188,42 @@
                 document.getElementById("moveinput").value = "";
             });
 
-            let oldDimensions = {width: 8, height: 8};
 
             socket.on('moveMade', (newimagedatauri, newGameStatusText, gameInfo, yourTeam) => {
-                if (gameInfo.gametype === "chess") {
+                if (gameInfo.gametype === "chess" && !["amazons"].includes(gameInfo.variant)) {
                     document.getElementById("moveinput").style.display = "none";
                     document.getElementById("movebutton").style.display = "none";
                     document.getElementById("gameimage").style.display = "none";
-                    document.getElementById("gameboard").style.display = "block";
+                    gameBoard.style.display = "block";
                     document.getElementById("yourData").style.display = "block";
                     document.getElementById("otherData").style.display = "block";
                     chessgroundconfig.fen = gameInfo.fen;
                     chessgroundconfig.orientation = yourTeam;
                     chessgroundconfig.movable.color = yourTeam;
+                    chessgroundconfig.movable.dests = getDests(gameInfo.legalMoves, gameInfo.boardDimensions.height);
                     chessgroundconfig.turnColor = (gameInfo.turn ? "white" : "black");
-                    board = new ChessgroundJS(document.getElementById("gameboard"), chessgroundconfig);
+                    chessgroundconfig.dimensions = gameInfo.boardDimensions;
+                    board = new ChessgroundJS(gameBoard, chessgroundconfig);
                     let otherTeam = (yourTeam == "white" ? "black" : "white")
                     document.getElementById("otherData").innerText = gameInfo[otherTeam + "Name"] + " (" + gameInfo[otherTeam + "Elo"] + ") " + gameInfo[otherTeam + "TimeFormatted"];
                     document.getElementById("yourData").innerText = gameInfo[yourTeam + "Name"] + " (" + gameInfo[yourTeam + "Elo"] + ") " + gameInfo[yourTeam + "TimeFormatted"];;
                     if (gameInfo.boardDimensions != oldDimensions) {
-                        if (document.getElementById("gameboard").classList.contains(`board${oldDimensions.width}x${oldDimensions.height}`)) {
-                            document.getElementById("gameboard").classList.remove(`board${oldDimensions.width}x${oldDimensions.height}`);
+                        if (gameBoard.classList.contains(`board${oldDimensions.width}x${oldDimensions.height}`)) {
+                            gameBoard.classList.remove(`board${oldDimensions.width}x${oldDimensions.height}`);
                         }
-                        document.getElementById("gameboard").classList.add(`board${gameInfo.boardDimensions.width}x${gameInfo.boardDimensions.height}`);
+                        gameBoard.classList.add(`board${gameInfo.boardDimensions.width}x${gameInfo.boardDimensions.height}`);
+                        oldDimensions = gameInfo.boardDimensions;
+                    }
+                    if (window.innerWidth >= 600) {
+                        gameBoard.style.width = ((gameBoard.clientHeight / oldDimensions.height) * oldDimensions.width) + "px";
+                    }else{
+                        gameBoard.style.height = ((gameBoard.clientWidth / oldDimensions.width) * oldDimensions.height) + "px";
                     }
                 }else{
                     document.getElementById("moveinput").style.display = "block";
                     document.getElementById("movebutton").style.display = "block";
                     document.getElementById("gameimage").style.display = "block";
-                    document.getElementById("gameboard").style.display = "none";
+                    gameBoard.style.display = "none";
                     document.getElementById("yourData").style.display = "none";
                     document.getElementById("otherData").style.display = "none";
                 }
@@ -208,11 +236,6 @@
 
         let interval = setInterval(() => {
             if (ChessgroundJS != null) {
-                if (window.innerWidth >= 600) {
-                    document.getElementById("gameboard").style.width = document.getElementById("gameboard").clientHeight + "px";
-                }else{
-                    document.getElementById("gameboard").style.height = document.getElementById("gameboard").clientWidth + "px";
-                }
                 loadMainScript();
                 clearInterval(interval);
             }

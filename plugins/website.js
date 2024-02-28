@@ -168,21 +168,7 @@ if (appconfig.website.enabled) {
                                 rooms[roomId][playercolor].name = userdata.username;
                                 rooms[roomId][playercolor].elo = userdata.elo;
                             }
-                            let gameInfo = {
-                                gametype: rooms[roomId].gametype,
-                                variant: rooms[roomId].variant,
-                                fen: rooms[roomId].game.fen(),
-                                boardDimensions: utils.getBoardDimensions(rooms[roomId].game.fen()),
-                                turn: rooms[roomId].turn(),
-                                whiteName: rooms[roomId].white.name,
-                                whiteElo: rooms[roomId].white.elo,
-                                whiteTime: rooms[roomId].white.time,
-                                whiteTimeFormatted: utils.formatTime(rooms[roomId].white.time),
-                                blackName: rooms[roomId].black.name,
-                                blackElo: rooms[roomId].black.elo,
-                                blackTime: rooms[roomId].black.time,
-                                blackTimeFormatted: utils.formatTime(rooms[roomId].black.time),
-                            };
+                            let gameInfo = utils.getGameInfo(roomId);
                             if (playercolor == 'black') {
                                 if (rooms[roomId].white.socketId) {
                                     rooms[roomId].white.socket.emit('moveMade', imageDataURI.encode(utils.BoardToPng(rooms[roomId].game, false, rooms[roomId].white, rooms[roomId].black, rooms[roomId].gametype), 'png'), '', gameInfo, 'white');
@@ -198,21 +184,7 @@ if (appconfig.website.enabled) {
     });
 
     function onMoveMade(roomId, move) {
-        let gameInfo = {
-            gametype: rooms[roomId].gametype,
-            variant: rooms[roomId].variant,
-            fen: rooms[roomId].game.fen(),
-            boardDimensions: utils.getBoardDimensions(rooms[roomId].game.fen()),
-            turn: rooms[roomId].turn(),
-            whiteName: rooms[roomId].white.name,
-            whiteElo: rooms[roomId].white.elo,
-            whiteTime: rooms[roomId].white.time,
-            whiteTimeFormatted: utils.formatTime(rooms[roomId].white.time),
-            blackName: rooms[roomId].black.name,
-            blackElo: rooms[roomId].black.elo,
-            blackTime: rooms[roomId].black.time,
-            blackTimeFormatted: utils.formatTime(rooms[roomId].black.time),
-        };
+        let gameInfo = utils.getGameInfo(roomId);
         if (rooms[roomId].white.socketId) {
             rooms[roomId].white.socket.emit('moveMade', imageDataURI.encode(utils.BoardToPng(rooms[roomId].game, false, rooms[roomId].white, rooms[roomId].black, rooms[roomId].gametype), 'png'), (rooms[roomId].turn() ? "Your Turn" : "Black's Turn"), gameInfo, 'white');
         }
@@ -224,21 +196,7 @@ if (appconfig.website.enabled) {
     roomEvents.onMoveMade.push(onMoveMade);
 
     function onGameEnd(roomId) {
-        let gameInfo = {
-            gametype: rooms[roomId].gametype,
-            variant: rooms[roomId].variant,
-            fen: rooms[roomId].game.fen(),
-            boardDimensions: utils.getBoardDimensions(rooms[roomId].game.fen()),
-            turn: rooms[roomId].turn(),
-            whiteName: rooms[roomId].white.name,
-            whiteElo: rooms[roomId].white.elo,
-            whiteTime: rooms[roomId].white.time,
-            whiteTimeFormatted: utils.formatTime(rooms[roomId].white.time),
-            blackName: rooms[roomId].black.name,
-            blackElo: rooms[roomId].black.elo,
-            blackTime: rooms[roomId].black.time,
-            blackTimeFormatted: utils.formatTime(rooms[roomId].black.time),
-        };
+        let gameInfo = utils.getGameInfo(roomId);
         let isDraw = rooms[roomId].winner == '';
         let winnerColor = roomFunctions.colorLetterToColorName(rooms[roomId].winner);
         //let winner = isDraw ? "" : rooms[roomId][winnerColor];
