@@ -80,6 +80,27 @@ function indexToCheckersBoard(index, rankCount = 8, fileCount = 8, returnjson = 
     }
 }
 
+function chessSquareToCheckersIndex(chessNotation, rankCount = 8, fileCount = 8) {
+    const col = chessNotation.charAt(0).toLowerCase();
+    const row = parseInt(chessNotation.charAt(1), 10);
+
+    let index = (((rankCount - row) * fileCount));
+
+    if ((rankCount - row) % 2 !== 0) {
+        index += col.charCodeAt(0) - 97 + 1;
+    } else {
+        index += col.charCodeAt(0) - 97;
+    }
+
+    index /= 2;
+    index += 1;
+
+    return index;
+}
+
+utils.chessSquareToCheckersIndex = chessSquareToCheckersIndex;
+
+
 function isNumeric(char) {
     return /^\d+$/.test(char);
 }
@@ -120,6 +141,52 @@ function fenToJson(fen, rankCount, fileCount) {
 
 utils.fenToJson = fenToJson;
 
+function jsonToFen(jsonBoard, rankCount = 8, fileCount = 8) {
+    let fen = '';
+    let emptySquares = 0;
+
+    for (let row = rankCount; row >= 1; row--) {
+        for (let col = 1; col <= fileCount; col++) {
+            const square = indexToBoard((rankCount - row) * fileCount + (col - 1), rankCount, fileCount);
+            const piece = jsonBoard[square];
+
+            if (!piece) {
+                // Empty square
+                emptySquares++;
+            } else {
+                // Piece present
+                if (emptySquares > 0) {
+                    fen += emptySquares;
+                    emptySquares = 0;
+                }
+
+                const type = piece.type;
+                const color = piece.color === 'w' ? type.toUpperCase() : type.toLowerCase();
+                if (piece.color === '') {
+                    fen += type;
+                }else{
+                    fen += color;
+                }
+            }
+        }
+
+        if (emptySquares > 0) {
+            fen += emptySquares;
+            emptySquares = 0;
+        }
+
+        if (row > 1) {
+            fen += '/';
+        }
+    }
+
+    //fen = fen.split("/").reverse().join("/");
+
+    return fen;
+}
+
+utils.jsonToFen = jsonToFen;
+
 
 function checkersFenToJson(fen) {
     let jsonBoard = {};
@@ -150,6 +217,19 @@ function checkersFenToJson(fen) {
 
 utils.checkersFenToJson = checkersFenToJson;
 
+utils.checkersFenToChessFen = function(checkersfen) {
+    return jsonToFen(checkersFenToJson(checkersfen));
+}
+
+utils.formatCheckersLegalMoves = function(checkersLegalMoves) {
+    let legalMoves = [];
+    checkersLegalMoves.forEach((legalMove) => {
+        legalMoves.push(indexToCheckersBoard(legalMove.from - 1) + indexToCheckersBoard(legalMove.to - 1));
+    });
+    return legalMoves;
+}
+
+
 utils.getGameInfo = (roomId) => {
     let gameInfo = {
         gametype: rooms[roomId].gametype,
@@ -166,8 +246,12 @@ utils.getGameInfo = (roomId) => {
     };
     if (gameInfo.gametype === 'chess') {
         gameInfo.fen =  rooms[roomId].game.fen();
-        gameInfo.boardDimensions =  utils.getBoardDimensions(rooms[roomId].game.fen());
+        gameInfo.boardDimensions = utils.getBoardDimensions(rooms[roomId].game.fen());
         gameInfo.legalMoves = rooms[roomId].game.legalMoves().split(" ");
+    } else if (gameInfo.gametype === 'checkers') {
+        gameInfo.fen = utils.checkersFenToChessFen(rooms[roomId].game.fen());
+        gameInfo.boardDimensions = {width: 8, height: 8};
+        gameInfo.legalMoves = utils.formatCheckersLegalMoves(rooms[roomId].game.moves());
     }
     return gameInfo;
 }
@@ -192,7 +276,6 @@ function BoardToPng(board, isflipped = false, white = {}, black = {}, gametype =
     let canvas = createCanvas(400, 450);
 
     let boardfen = board.fen();
-
 
     let boardranks = boardfen.split('/').length;
     let boardfiles = board.toString().split('\n')[0].split(' ').length;

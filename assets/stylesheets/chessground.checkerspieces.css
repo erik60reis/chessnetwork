@@ -1,0 +1,13 @@
+ .cg-wrap piece.p-piece.white {
+  background-image: url('/assets/checkerspieces/wP.png');
+}
+ .cg-wrap piece.k-piece.white {
+  background-image: url('/assets/checkerspieces/wK.png');
+}
+
+ .cg-wrap piece.p-piece.black {
+  background-image: url('/assets/checkerspieces/bP.png');
+}
+ .cg-wrap piece.k-piece.black {
+  background-image: url('/assets/checkerspieces/bK.png');
+ }

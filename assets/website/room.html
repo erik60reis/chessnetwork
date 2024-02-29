@@ -27,6 +27,10 @@
             width: 200px;
         }
 
+        .playerInfo {
+            font-size: 15px;
+        }
+
         cg-container {
             justify-content: center;
             align-items: center;
@@ -44,19 +48,22 @@
             input {
                 width: 500px;
             }
+            .playerInfo {
+                font-size: 25px;
+            }
         }
     </style>
-    <link rel="stylesheet" href="/assets/stylesheets/chessground.base.min.css">
+    <link rel="stylesheet" href="/assets/stylesheets/chessground.base.css">
     <link rel="stylesheet" href="/assets/stylesheets/chessground.board.css">
-    <link rel="stylesheet" href="/assets/stylesheets/chessground.pieces.css">
+    <span id="piecesstyle"></span>
 </head>
 <body>
     <div class="game-container">
         <div id="gamestatus"> ---- </div>
         <img id="gameimage">
-        <div id="otherData"></div>
+        <div class="playerInfo" id="otherData"></div>
         <div id="gameboard"></div>
-        <div id="yourData"></div>
+        <div class="playerInfo" id="yourData"></div>
         <br/>
         <br/>
         <input id="moveinput" type="text" placeholder="Enter move... (eg. e2e4 or 21-17)"/> <button id="movebutton">MOVE</button>
@@ -72,6 +79,24 @@
     </script>
     <script src="/socket.io/socket.io.js"></script>
     <script>
+        function chessSquareToCheckersIndex(chessNotation, rankCount = 8, fileCount = 8) {
+            const col = chessNotation.charAt(0).toLowerCase();
+            const row = parseInt(chessNotation.charAt(1), 10);
+
+            let index = (((rankCount - row) * fileCount));
+
+            if ((rankCount - row) % 2 !== 0) {
+                index += col.charCodeAt(0) - 97 + 1;
+            } else {
+                index += col.charCodeAt(0) - 97;
+            }
+
+            index /= 2;
+            index += 1;
+
+            return index;
+        }
+
         function getDests(legalMoves, boardranks) {
             var moves = new Map();
             var letters = 'abcdefghijklmnopqrstuvwxyz';
@@ -160,6 +185,7 @@
                 move: (orig, dest) => {
                     socket.emit('makeMove', orig + dest);
                     socket.emit('makeMove', orig + dest + 'q');
+                    socket.emit('makeMove', chessSquareToCheckersIndex(orig) + "-" + chessSquareToCheckersIndex(dest));
                 },
                 dropNewPiece: (role, key) => {
                     // called when a new piece is dropped from pocket
@@ -190,7 +216,14 @@
 
 
             socket.on('moveMade', (newimagedatauri, newGameStatusText, gameInfo, yourTeam) => {
-                if (gameInfo.gametype === "chess" && !["amazons"].includes(gameInfo.variant)) {
+                if (document.getElementById("piecesstyle").innerHTML === "") {
+                    if (gameInfo.gametype == "chess") {
+                        document.getElementById("piecesstyle").innerHTML = `<link rel="stylesheet" href="/assets/stylesheets/chessground.pieces.css">`;
+                    } else if (gameInfo.gametype == "checkers") {
+                        document.getElementById("piecesstyle").innerHTML = `<link rel="stylesheet" href="/assets/stylesheets/chessground.checkerspieces.css">`;
+                    }
+                }
+                if ((gameInfo.gametype === "chess" && !["amazons"].includes(gameInfo.variant)) || gameInfo.gametype === "checkers") {
                     document.getElementById("moveinput").style.display = "none";
                     document.getElementById("movebutton").style.display = "none";
                     document.getElementById("gameimage").style.display = "none";
@@ -204,9 +237,14 @@
                     chessgroundconfig.turnColor = (gameInfo.turn ? "white" : "black");
                     chessgroundconfig.dimensions = gameInfo.boardDimensions;
                     board = new ChessgroundJS(gameBoard, chessgroundconfig);
-                    let otherTeam = (yourTeam == "white" ? "black" : "white")
-                    document.getElementById("otherData").innerText = gameInfo[otherTeam + "Name"] + " (" + gameInfo[otherTeam + "Elo"] + ") " + gameInfo[otherTeam + "TimeFormatted"];
-                    document.getElementById("yourData").innerText = gameInfo[yourTeam + "Name"] + " (" + gameInfo[yourTeam + "Elo"] + ") " + gameInfo[yourTeam + "TimeFormatted"];;
+                    let otherTeam = (yourTeam == "white" ? "black" : "white");
+                    if (gameInfo.gametype === "chess" && gameInfo.variant === "chess") {
+                        document.getElementById("otherData").innerText = gameInfo[otherTeam + "Name"] + " (" + gameInfo[otherTeam + "Elo"] + ") " + gameInfo[otherTeam + "TimeFormatted"];
+                        document.getElementById("yourData").innerText = gameInfo[yourTeam + "Name"] + " (" + gameInfo[yourTeam + "Elo"] + ") " + gameInfo[yourTeam + "TimeFormatted"];
+                    } else {
+                        document.getElementById("otherData").innerText = gameInfo[otherTeam + "Name"] + " " + gameInfo[otherTeam + "TimeFormatted"];
+                        document.getElementById("yourData").innerText = gameInfo[yourTeam + "Name"] + " " + gameInfo[yourTeam + "TimeFormatted"];;
+                    }
                     if (gameInfo.boardDimensions != oldDimensions) {
                         if (gameBoard.classList.contains(`board${oldDimensions.width}x${oldDimensions.height}`)) {
                             gameBoard.classList.remove(`board${oldDimensions.width}x${oldDimensions.height}`);
@@ -227,7 +265,7 @@
                         element.style.width = piecesize;
                         element.style.height = piecesize;
                     }
-                }else{
+                } else {
                     document.getElementById("moveinput").style.display = "block";
                     document.getElementById("movebutton").style.display = "block";
                     document.getElementById("gameimage").style.display = "block";
@@ -235,6 +273,7 @@
                     document.getElementById("yourData").style.display = "none";
                     document.getElementById("otherData").style.display = "none";
                 }
+
                 document.getElementById("gameimage").src = newimagedatauri;
                 document.getElementById('gamestatus').innerHTML = newGameStatusText;
             });
@@ -257,6 +296,9 @@
                 element.style.width = squaresize;
                 element.style.height = squaresize;
             }
+            let margin = ((document.body.clientWidth - gameBoard.clientWidth) / 2) + "px";
+            gameBoard.style.marginLeft = margin;
+            gameBoard.style.marginRight = margin;
         }, 400);
     </script>
 </body>
