@@ -79,6 +79,44 @@
     </script>
     <script src="/socket.io/socket.io.js"></script>
     <script>
+        let yourTime = 1800;
+        let otherTime = 1800;
+        let oldGameInfo = {};
+        let isMyTurn = false;
+    
+        let globalYourTeam = "white";
+        let globalOtherTeam = "black";
+
+        function formatTime(timeseconds) {
+            var timeWithoutDecimals = Math.ceil(timeseconds);
+            var timeMinutes = Math.floor(timeWithoutDecimals / 60);
+            const timeHours = Math.floor(timeMinutes / 60);
+            timeMinutes = timeMinutes % 60;
+            if (timeHours > 0) {
+                return `${timeHours}:${(timeMinutes % 60).toString().padStart(2, '0')}:${(timeWithoutDecimals % 60).toString().padStart(2, '0')}`;
+            }else{
+                return timeMinutes + ":" + (timeWithoutDecimals % 60).toString().padStart(2, '0');
+            }
+        }
+
+        setInterval(() => {
+            if (oldGameInfo.isStarted) {
+                if (isMyTurn) {
+                    yourTime -= 0.2;
+                }else{
+                    otherTime -= 0.2;
+                }
+            }
+
+            if (oldGameInfo.gametype === "chess" && oldGameInfo.variant === "chess") {
+                document.getElementById("otherData").innerText = oldGameInfo[globalOtherTeam + "Name"] + " (" + oldGameInfo[globalOtherTeam + "Elo"] + ") " + formatTime(otherTime);
+                document.getElementById("yourData").innerText = oldGameInfo[globalYourTeam + "Name"] + " (" + oldGameInfo[globalYourTeam + "Elo"] + ") " + formatTime(yourTime);
+            } else {
+                document.getElementById("otherData").innerText = oldGameInfo[globalOtherTeam + "Name"] + " " + formatTime(otherTime);
+                document.getElementById("yourData").innerText = oldGameInfo[globalYourTeam + "Name"] + " " + formatTime(yourTime);
+            }
+        }, 200);
+
         function chessSquareToCheckersIndex(chessNotation, rankCount = 8, fileCount = 8) {
             const col = chessNotation.charAt(0).toLowerCase();
             const row = parseInt(chessNotation.charAt(1), 10);
@@ -237,14 +275,7 @@
                     chessgroundconfig.turnColor = (gameInfo.turn ? "white" : "black");
                     chessgroundconfig.dimensions = gameInfo.boardDimensions;
                     board = new ChessgroundJS(gameBoard, chessgroundconfig);
-                    let otherTeam = (yourTeam == "white" ? "black" : "white");
-                    if (gameInfo.gametype === "chess" && gameInfo.variant === "chess") {
-                        document.getElementById("otherData").innerText = gameInfo[otherTeam + "Name"] + " (" + gameInfo[otherTeam + "Elo"] + ") " + gameInfo[otherTeam + "TimeFormatted"];
-                        document.getElementById("yourData").innerText = gameInfo[yourTeam + "Name"] + " (" + gameInfo[yourTeam + "Elo"] + ") " + gameInfo[yourTeam + "TimeFormatted"];
-                    } else {
-                        document.getElementById("otherData").innerText = gameInfo[otherTeam + "Name"] + " " + gameInfo[otherTeam + "TimeFormatted"];
-                        document.getElementById("yourData").innerText = gameInfo[yourTeam + "Name"] + " " + gameInfo[yourTeam + "TimeFormatted"];;
-                    }
+                    globalOtherTeam = (yourTeam == "white" ? "black" : "white");
                     if (gameInfo.boardDimensions != oldDimensions) {
                         if (gameBoard.classList.contains(`board${oldDimensions.width}x${oldDimensions.height}`)) {
                             gameBoard.classList.remove(`board${oldDimensions.width}x${oldDimensions.height}`);
@@ -257,7 +288,8 @@
                     }else{
                         gameBoard.style.height = ((gameBoard.clientWidth / oldDimensions.width) * oldDimensions.height) + "px";
                     }
-
+                    yourTime = gameInfo[yourTeam + "Time"];
+                    otherTime = gameInfo[globalOtherTeam + "Time"];
                     let pieces = document.getElementsByTagName("piece");
                     for (let index = 0; index < pieces.length; index++) {
                         const element = pieces[index];
@@ -265,6 +297,9 @@
                         element.style.width = piecesize;
                         element.style.height = piecesize;
                     }
+                    oldGameInfo = gameInfo;
+                    isMyTurn = (yourTeam == 'white') == gameInfo.turn;
+                    globalYourTeam = yourTeam;
                 } else {
                     document.getElementById("moveinput").style.display = "block";
                     document.getElementById("movebutton").style.display = "block";

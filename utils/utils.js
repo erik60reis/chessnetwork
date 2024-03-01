@@ -235,6 +235,7 @@ utils.getGameInfo = (roomId) => {
         gametype: rooms[roomId].gametype,
         variant: rooms[roomId].variant,
         turn: rooms[roomId].turn(),
+        isStarted: rooms[roomId].isStarted,
         whiteName: rooms[roomId].white.name,
         whiteElo: rooms[roomId].white.elo,
         whiteTime: rooms[roomId].white.time,

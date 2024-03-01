@@ -133,6 +133,27 @@ if (appconfig.website.enabled) {
         }catch{}
     });
 
+    app.get('/new/:variant/:time', (req, res) => {
+        try {
+            let gametype = 'chess';
+            let variant = req.params.variant;
+
+            if (avaliablegametypes.includes(variant)) {
+                gametype = variant;
+            }else{
+                if (!avaliablevariants.includes(variant)) {
+                    variant = 'chess';
+                }
+            }
+            let roomId = roomFunctions.createRoom(gametype, variant);
+            try {
+                rooms[roomId].white.time = parseInt(req.params.time);
+                rooms[roomId].black.time = parseInt(req.params.time);
+            }catch{}
+            res.send(`<script>window.location.href = '/${roomId}'</script>`);
+        }catch{}
+    });
+
     io.on('connection', (socket) => {
 
         socket.on('makeMove', (move) => {
