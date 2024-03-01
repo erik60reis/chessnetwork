@@ -59,6 +59,22 @@ if (appconfig.website.enabled) {
         return undefined;
     }
 
+    function createRoomAndShowToClient(gametype, variant, res, time = 1800) {
+        if (avaliablegametypes.includes(variant)) {
+            gametype = variant;
+        }else{
+            if (!avaliablevariants.chess.includes(variant)) {
+                variant = 'chess';
+            }
+        }
+        let roomId = roomFunctions.createRoom(gametype, variant);
+        try {
+            rooms[roomId].white.time = parseInt(time);
+            rooms[roomId].black.time = parseInt(time);
+        }catch{}
+        res.send(`<script>window.location.href = '/${roomId}'</script>`);
+    }
+
     app.get('/:roomId', (req, res) => {
         res.render(join(rootpath, 'assets', 'website', 'room.html'), {roomId: parseInt(req.params.roomId)});
     });
@@ -116,41 +132,31 @@ if (appconfig.website.enabled) {
         });
     }
 
-    app.get('/new/:variant', (req, res) => {
+    app.get('/new/:gametype/:variant', (req, res) => {
         try {
-            let gametype = 'chess';
+            let gametype = req.params.gametype;
             let variant = req.params.variant;
 
-            if (avaliablegametypes.includes(variant)) {
-                gametype = variant;
-            }else{
-                if (!avaliablevariants.includes(variant)) {
-                    variant = 'chess';
-                }
-            }
-            let roomId = roomFunctions.createRoom(gametype, variant);
-            res.send(`<script>window.location.href = '/${roomId}'</script>`);
+            createRoomAndShowToClient(gametype, variant, res);
         }catch{}
     });
 
-    app.get('/new/:variant/:time', (req, res) => {
+    app.get('/new/:gametype/', (req, res) => {
         try {
-            let gametype = 'chess';
-            let variant = req.params.variant;
+            let gametype = req.params.gametype;
+            let variant = gametype;
 
-            if (avaliablegametypes.includes(variant)) {
-                gametype = variant;
-            }else{
-                if (!avaliablevariants.includes(variant)) {
-                    variant = 'chess';
-                }
-            }
-            let roomId = roomFunctions.createRoom(gametype, variant);
-            try {
-                rooms[roomId].white.time = parseInt(req.params.time);
-                rooms[roomId].black.time = parseInt(req.params.time);
-            }catch{}
-            res.send(`<script>window.location.href = '/${roomId}'</script>`);
+            createRoomAndShowToClient(gametype, variant, res);
+        }catch{}
+    });
+
+    app.get('/new/:gametype/:variant/:time', (req, res) => {
+        try {
+            let gametype = req.params.gametype;
+            let variant = req.params.variant;
+            let time = req.params.time;
+
+            createRoomAndShowToClient(gametype, variant, res, time);
         }catch{}
     });
 

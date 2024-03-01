@@ -56,9 +56,13 @@ if (appconfig.whatsappbot.enabled) {
                 if (args.length >= 2) {
                     if (avaliablegametypes.includes(args[1])) {
                         gametype = args[1];
-                        variant = args[1];
+                        if (args.length >= 3) {
+                            variant = args[2];
+                        }else{
+                            variant = args[1];
+                        }
                     } else {
-                        if (avaliablevariants.includes(args[1])) {
+                        if (avaliablevariants.chess.includes(args[1])) {
                             variant = args[1];
                         }
                     }

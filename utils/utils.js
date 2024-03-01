@@ -249,7 +249,7 @@ utils.getGameInfo = (roomId) => {
         gameInfo.fen =  rooms[roomId].game.fen();
         gameInfo.boardDimensions = utils.getBoardDimensions(rooms[roomId].game.fen());
         gameInfo.legalMoves = rooms[roomId].game.legalMoves().split(" ");
-    } else if (gameInfo.gametype === 'checkers') {
+    } else if (gameInfo.gametype == 'checkers') {
         gameInfo.fen = utils.checkersFenToChessFen(rooms[roomId].game.fen());
         gameInfo.boardDimensions = {width: 8, height: 8};
         gameInfo.legalMoves = utils.formatCheckersLegalMoves(rooms[roomId].game.moves());

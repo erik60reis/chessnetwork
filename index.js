@@ -1,6 +1,8 @@
 const fs = require('fs');
 const ffish = require('./ffish');
-const Checkers = require('./checkers');
+const Checkers = {
+    checkers: require('./checkers.js'),
+}
 
 global.plugins = {};
 
@@ -16,7 +18,11 @@ global.roomEvents = {
 
 global.avaliablegametypes = ['chess', 'checkers'];
 
-global.avaliablevariants = ['chess', 'racingkings', '3check', 'horde', 'amazon', 'gothic', 'amazons', 'courier'];
+global.avaliablevariants = {
+    chess: ['chess', 'racingkings', '3check', 'horde', 'amazon', 'gothic', 'amazons', 'courier'],
+    checkers: Object.keys(Checkers)
+};
+
 
 global.roomFunctions = {};
 
@@ -38,7 +44,17 @@ global.coordToExternalNumbering = {
 };
 
 function generateGame(gametype = 'chess', variant = 'chess') {
-    return (gametype == 'checkers' ? Checkers() : new ffish.Board(variant));
+    switch (gametype) {
+        case 'chess':
+            return new ffish.Board(variant);
+        case 'checkers':
+            if (avaliablevariants[gametype].includes(variant)) {
+                return Checkers[variant]();
+            }
+            return Checkers.checkers();
+        default:
+            return new ffish.Board('chess');
+    }
 }
 
 roomFunctions.createRoom = function(gametype = 'chess', variant = 'chess') {
