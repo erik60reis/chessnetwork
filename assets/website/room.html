@@ -5,7 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Chess</title>
     <style>
-        .game-container {
+        body {
+            background-repeat: no-repeat;
+            background-size: cover;
+            background-color: rgb(30, 30, 30);
+        }
+        #gameContainer {
             width: 100%;
             height: 100%;
             justify-content: center;
@@ -28,7 +33,32 @@
         }
 
         .playerInfo {
-            font-size: 15px;
+            font-size: 25px;
+            display: flex;
+            flex-grow: 1;
+        }
+
+        .username {
+            color: white;
+            text-align: left;
+            font-size: 25px;
+            width: 75%;
+        }
+
+        .elo {
+            text-align: left;
+            font-size: 40px;
+            color: lightgray;
+        }
+
+        .playertimer {
+            font-size: 30px;
+            border: 3px solid burlywood;
+            border-radius: 2px;
+            background-color: burlywood;
+            color: white;
+            text-align: right;
+            width: 15%;
         }
 
         cg-container {
@@ -43,13 +73,25 @@
                 width: auto;
             }
             #gameboard {
-                height: 85vh;
+                height: 80vh;
             }
             input {
                 width: 500px;
             }
             .playerInfo {
-                font-size: 25px;
+                font-size: 15px;
+            }
+
+            .username {
+                font-size: 15px;
+            }
+
+            .elo {
+                font-size: 10px;
+            }
+
+            .playertimer {
+                font-size: 30px;
             }
         }
     </style>
@@ -58,12 +100,19 @@
     <span id="piecesstyle"></span>
 </head>
 <body>
-    <div class="game-container">
+    <div id="gameContainer">
         <div id="gamestatus"> ---- </div>
         <img id="gameimage">
-        <div class="playerInfo" id="otherData"></div>
+        <div class="playerInfo" id="otherData">
+            <div class="username" id="otherUsername">User</div>
+            <div class="playertimer" id="otherTime">30:00</div>
+        </div>
         <div id="gameboard"></div>
-        <div class="playerInfo" id="yourData"></div>
+        <br/>
+        <div class="playerInfo" id="yourData">
+            <div class="username" id="yourUsername">User</div>
+            <div class="playertimer" id="yourTime">30:00</div>
+        </div>
         <br/>
         <br/>
         <input id="moveinput" type="text" placeholder="Enter move... (eg. e2e4 or 21-17)"/> <button id="movebutton">MOVE</button>
@@ -108,12 +157,24 @@
                 }
             }
 
+            document.getElementById("yourUsername").innerText = oldGameInfo[globalYourTeam + "Name"];
+            document.getElementById("yourTime").innerText = formatTime(yourTime);
+
+            document.getElementById("otherUsername").innerText = oldGameInfo[globalOtherTeam + "Name"];
+            document.getElementById("otherTime").innerText = formatTime(otherTime);
+            
             if (oldGameInfo.gametype === "chess" && oldGameInfo.variant === "chess") {
-                document.getElementById("otherData").innerText = oldGameInfo[globalOtherTeam + "Name"] + " (" + oldGameInfo[globalOtherTeam + "Elo"] + ") " + formatTime(otherTime);
-                document.getElementById("yourData").innerText = oldGameInfo[globalYourTeam + "Name"] + " (" + oldGameInfo[globalYourTeam + "Elo"] + ") " + formatTime(yourTime);
+                //document.getElementById("otherData").innerText = oldGameInfo[globalOtherTeam + "Name"] + " (" + oldGameInfo[globalOtherTeam + "Elo"] + ") " + formatTime(otherTime);
+                //document.getElementById("yourData").innerText = oldGameInfo[globalYourTeam + "Name"] + " (" + oldGameInfo[globalYourTeam + "Elo"] + ") " + formatTime(yourTime);
+                
+            
+                document.getElementById("otherUsername").innerHTML += ` <span class="elo" id="otherElo"></span>`;
+                document.getElementById("yourUsername").innerHTML += ` <span class="elo" id="yourElo"></span>`;
+                document.getElementById("yourElo").innerText = "(" + oldGameInfo[globalYourTeam + "Elo"] + ")";
+                document.getElementById("otherElo").innerText = "(" + oldGameInfo[globalOtherTeam + "Elo"] + ")";
             } else {
-                document.getElementById("otherData").innerText = oldGameInfo[globalOtherTeam + "Name"] + " " + formatTime(otherTime);
-                document.getElementById("yourData").innerText = oldGameInfo[globalYourTeam + "Name"] + " " + formatTime(yourTime);
+                //document.getElementById("otherData").innerText = oldGameInfo[globalOtherTeam + "Name"] + " " + formatTime(otherTime);
+                //document.getElementById("yourData").innerText = oldGameInfo[globalYourTeam + "Name"] + " " + formatTime(yourTime);
             }
         }, 200);
 
@@ -237,6 +298,21 @@
         let gameBoardInside = document.getElementsByTagName("cg-board")[0];
         let oldDimensions = {width: 8, height: 8};
 
+        function setGameBoardSize() {
+            if (window.innerWidth >= 600) {
+                gameBoard.style.width = ((gameBoard.clientHeight / oldDimensions.height) * oldDimensions.width) + "px";
+            }else{
+                gameBoard.style.height = ((gameBoard.clientWidth / oldDimensions.width) * oldDimensions.height) + "px";
+            }
+            let gameContainerMargin = ((document.body.clientWidth - gameBoard.clientWidth) / 2) + "px";
+            document.getElementById("gameContainer").style.marginLeft = gameContainerMargin;
+            document.getElementById("gameContainer").style.width = gameBoard.clientWidth + "px";
+
+        }
+
+        setGameBoardSize();
+
+
         function loadMainScript() {
             socket = io();
 
@@ -266,8 +342,8 @@
                     document.getElementById("movebutton").style.display = "none";
                     document.getElementById("gameimage").style.display = "none";
                     gameBoard.style.display = "block";
-                    document.getElementById("yourData").style.display = "block";
-                    document.getElementById("otherData").style.display = "block";
+                    document.getElementById("yourData").style.display = "flex";
+                    document.getElementById("otherData").style.display = "flex";
                     chessgroundconfig.fen = gameInfo.fen;
                     chessgroundconfig.orientation = yourTeam;
                     chessgroundconfig.movable.color = yourTeam;
@@ -283,11 +359,7 @@
                         gameBoard.classList.add(`board${gameInfo.boardDimensions.width}x${gameInfo.boardDimensions.height}`);
                         oldDimensions = gameInfo.boardDimensions;
                     }
-                    if (window.innerWidth >= 600) {
-                        gameBoard.style.width = ((gameBoard.clientHeight / oldDimensions.height) * oldDimensions.width) + "px";
-                    }else{
-                        gameBoard.style.height = ((gameBoard.clientWidth / oldDimensions.width) * oldDimensions.height) + "px";
-                    }
+                    setGameBoardSize();
                     yourTime = gameInfo[yourTeam + "Time"];
                     otherTime = gameInfo[globalOtherTeam + "Time"];
                     let pieces = document.getElementsByTagName("piece");
@@ -332,8 +404,8 @@
                 element.style.height = squaresize;
             }
             let margin = ((document.body.clientWidth - gameBoard.clientWidth) / 2) + "px";
-            gameBoard.style.marginLeft = margin;
-            gameBoard.style.marginRight = margin;
+            //gameBoard.style.marginLeft = margin;
+            //gameBoard.style.marginRight = margin;
         }, 400);
     </script>
 </body>

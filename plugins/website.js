@@ -60,6 +60,9 @@ if (appconfig.website.enabled) {
     }
 
     function createRoomAndShowToClient(gametype, variant, res, time = 1800) {
+        if (!avaliablegametypes.includes(gametype)) {
+            gametype = 'chess';
+        }
         if (avaliablegametypes.includes(variant)) {
             gametype = variant;
         }else{
