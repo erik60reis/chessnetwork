@@ -1,0 +1,9 @@
+type "npm install" or "npm i"
+
+rename "config copy.json" to "config.json"
+
+edit "config.json"
+
+type "node ."
+
+done!

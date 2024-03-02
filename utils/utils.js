@@ -3,11 +3,11 @@ const path = require('path');
 const fs = require('fs');
 const crypto = require('crypto');
 
-var videoshow = require('videoshow')
-
 global.utils = {};
 
-utils.boardsToVideo = async function(pngFrames, outputPath) {
+utils.boardsToVideo = function(pngFrames, outputPath) {
+    /*try {
+
     // Write each PNG frame to a temporary file
     
     let secondsToShowEachImage = 1;
@@ -36,35 +36,36 @@ utils.boardsToVideo = async function(pngFrames, outputPath) {
     
     // setup videoshow options
     let videoOptions = {
-      fps: 24,
+      fps: 5,
       transition: false,
-      videoBitrate: 1024 ,
-      videoCodec: 'libx264', 
-      size: '400x450',
+      videoBitrate: 256,
+      videoCodec: 'libx264',
+      size: '200x225',
       outputOptions: ['-pix_fmt yuv420p'],
       format: 'mp4'
     }
 
-    videoshow(images, videoOptions)
-        .save(finalVideoPath)
-        .on('error', function (err, stdout, stderr) {
-            return Promise.reject(new Error(err)) 
-        })
-        .on('end', function (output) {
-            fs.readdir('./temp/' + outputPath + "/", (err, files) => {
-                files.forEach(file => {
-                    try {
-                        fs.unlinkSync(`./temp/${outputPath}/${file}`)
-                    }catch{}
-                })
+    require('videoshow')(images, videoOptions)
+            .save(finalVideoPath)
+            .on('error', function (err, stdout, stderr) {
+                return Promise.reject(err)
             })
-            try {
-                fs.unlinkSync(`./temp/${outputPath}`)
-            }catch{}
-            otherEvents.onBoardVideoReady.forEach(event => {
-                event(outputPath);
-            });
-        })
+            .on('end', function (output) {
+                fs.readdir('./temp/' + outputPath + "/", (err, files) => {
+                    files.forEach(file => {
+                        try {
+                            fs.unlinkSync(`./temp/${outputPath}/${file}`)
+                        }catch{}
+                    })
+                })
+                try {
+                    fs.unlinkSync(`./temp/${outputPath}`)
+                }catch{}
+                otherEvents.onBoardVideoReady.forEach(event => {
+                    event(outputPath);
+                });
+            })
+    }catch{}*/
 }
 
 function formatTime(timeseconds) {

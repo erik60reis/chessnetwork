@@ -319,7 +319,7 @@ Rating: ${user.elo}
                     content: ''
                 });
             } catch{}
-        }, 1000);
+        }, 20000);
     });
 
 
