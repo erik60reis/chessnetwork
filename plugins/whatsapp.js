@@ -174,7 +174,7 @@ if (appconfig.whatsappbot.enabled) {
 
     function displayBoard(roomId) {
         if (rooms[roomId].white.whatsappChannelId) {
-            utils.BoardToPng(rooms[roomId].game, false, rooms[roomId].white, rooms[roomId].black, rooms[roomId].gametype)
+            utils.BoardToPng(rooms[roomId].game, false, rooms[roomId].white, rooms[roomId].black, rooms[roomId].gametype, rooms[roomId].variant)
             let media = MessageMedia.fromFilePath(
                 'board.png',
                 {unsafeMime: true}
@@ -185,7 +185,7 @@ if (appconfig.whatsappbot.enabled) {
 
         if (rooms[roomId].white.whatsappChannelId != rooms[roomId].black.whatsappChannelId) {
             if (rooms[roomId].black.whatsappChannelId) {
-                utils.BoardToPng(rooms[roomId].game, true, rooms[roomId].white, rooms[roomId].black, rooms[roomId].gametype)
+                utils.BoardToPng(rooms[roomId].game, true, rooms[roomId].white, rooms[roomId].black, rooms[roomId].gametype, rooms[roomId].variant)
                 let media = MessageMedia.fromFilePath(
                     'board.png',
                     {unsafeMime: true}

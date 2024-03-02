@@ -2,8 +2,6 @@ if (appconfig.discordbot.enabled) {
     const Dysnomia = require("@projectdysnomia/dysnomia");
     const fs = require('fs');
 
-    //(async () => { let pngdata = await utils.BoardToPng(new Chess(), false, {name: "Erik Reis", time: 1800}, {name: "Opponent", time: 1800}); fs.writeFileSync('board.png', pngdata)})();
-
 
     const bot = new Dysnomia.Client(appconfig.discordbot.token, {
         gateway: {
@@ -231,7 +229,7 @@ Rating: ${user.elo}
     function displayBoard(roomId) {
         if (rooms[roomId].white.discordChannelId) {
             bot.createMessage(rooms[roomId].white.discordChannelId, {attachments: [{
-                    file: utils.BoardToPng(rooms[roomId].game, false, rooms[roomId].white, rooms[roomId].black, rooms[roomId].gametype),
+                    file: utils.BoardToPng(rooms[roomId].game, false, rooms[roomId].white, rooms[roomId].black, rooms[roomId].gametype, rooms[roomId].variant),
                     filename: 'board.png'
                 }],
                 content: ''
@@ -242,7 +240,7 @@ Rating: ${user.elo}
         if (rooms[roomId].white.discordChannelId != rooms[roomId].black.discordChannelId) {
             if (rooms[roomId].black.discordChannelId) {
                 bot.createMessage(rooms[roomId].black.discordChannelId, {attachments: [{
-                        file: utils.BoardToPng(rooms[roomId].game, true, rooms[roomId].white, rooms[roomId].black, rooms[roomId].gametype),
+                        file: utils.BoardToPng(rooms[roomId].game, true, rooms[roomId].white, rooms[roomId].black, rooms[roomId].gametype, rooms[roomId].variant),
                         filename: 'board.png'
                     }],
                     content: ''

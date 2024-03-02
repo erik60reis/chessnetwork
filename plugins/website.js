@@ -66,8 +66,8 @@ if (appconfig.website.enabled) {
         if (avaliablegametypes.includes(variant)) {
             gametype = variant;
         }else{
-            if (!avaliablevariants.chess.includes(variant)) {
-                variant = 'chess';
+            if (!avaliablevariants[gametype].includes(variant)) {
+                variant = gametype;
             }
         }
         let roomId = roomFunctions.createRoom(gametype, variant);
@@ -201,11 +201,11 @@ if (appconfig.website.enabled) {
                             let gameInfo = utils.getGameInfo(roomId);
                             if (playercolor == 'black') {
                                 if (rooms[roomId].white.socketId) {
-                                    rooms[roomId].white.socket.emit('moveMade', imageDataURI.encode(utils.BoardToPng(rooms[roomId].game, false, rooms[roomId].white, rooms[roomId].black, rooms[roomId].gametype), 'png'), '', gameInfo, 'white');
+                                    rooms[roomId].white.socket.emit('moveMade', imageDataURI.encode(utils.BoardToPng(rooms[roomId].game, false, rooms[roomId].white, rooms[roomId].black, rooms[roomId].gametype, rooms[roomId].variant), 'png'), '', gameInfo, 'white');
                                 }
                                 rooms[roomId].start();
                             }
-                            socket.emit('moveMade', imageDataURI.encode(utils.BoardToPng(rooms[roomId].game, playercolor == 'black', rooms[roomId].white, rooms[roomId].black, rooms[roomId].gametype), 'png'), '', gameInfo, playercolor);
+                            socket.emit('moveMade', imageDataURI.encode(utils.BoardToPng(rooms[roomId].game, playercolor == 'black', rooms[roomId].white, rooms[roomId].black, rooms[roomId].gametype, rooms[roomId].variant), 'png'), '', gameInfo, playercolor);
                         }
                     }
                 }
@@ -216,10 +216,10 @@ if (appconfig.website.enabled) {
     function onMoveMade(roomId, move) {
         let gameInfo = utils.getGameInfo(roomId);
         if (rooms[roomId].white.socketId) {
-            rooms[roomId].white.socket.emit('moveMade', imageDataURI.encode(utils.BoardToPng(rooms[roomId].game, false, rooms[roomId].white, rooms[roomId].black, rooms[roomId].gametype), 'png'), (rooms[roomId].turn() ? "Your Turn" : "Black's Turn"), gameInfo, 'white');
+            rooms[roomId].white.socket.emit('moveMade', imageDataURI.encode(utils.BoardToPng(rooms[roomId].game, false, rooms[roomId].white, rooms[roomId].black, rooms[roomId].gametype, rooms[roomId].variant), 'png'), (rooms[roomId].turn() ? "Your Turn" : "Black's Turn"), gameInfo, 'white');
         }
         if (rooms[roomId].black.socketId) {
-            rooms[roomId].black.socket.emit('moveMade', imageDataURI.encode(utils.BoardToPng(rooms[roomId].game, true, rooms[roomId].white, rooms[roomId].black, rooms[roomId].gametype), 'png'), (rooms[roomId].turn() ? "White's Turn" : "Your Turn"), gameInfo, 'black');
+            rooms[roomId].black.socket.emit('moveMade', imageDataURI.encode(utils.BoardToPng(rooms[roomId].game, true, rooms[roomId].white, rooms[roomId].black, rooms[roomId].gametype, rooms[roomId].variant), 'png'), (rooms[roomId].turn() ? "White's Turn" : "Your Turn"), gameInfo, 'black');
         }
     }
 
@@ -231,10 +231,10 @@ if (appconfig.website.enabled) {
         let winnerColor = roomFunctions.colorLetterToColorName(rooms[roomId].winner);
         //let winner = isDraw ? "" : rooms[roomId][winnerColor];
         if (rooms[roomId].white.socketId) {
-            rooms[roomId].white.socket.emit('moveMade', imageDataURI.encode(utils.BoardToPng(rooms[roomId].game, false, rooms[roomId].white, rooms[roomId].black, rooms[roomId].gametype), 'png'), (isDraw ? "Game Ended in a draw" : "Game ended, " + winnerColor + " won the game" ), gameInfo, 'white');
+            rooms[roomId].white.socket.emit('moveMade', imageDataURI.encode(utils.BoardToPng(rooms[roomId].game, false, rooms[roomId].white, rooms[roomId].black, rooms[roomId].gametype, rooms[roomId].variant), 'png'), (isDraw ? "Game Ended in a draw" : "Game ended, " + winnerColor + " won the game" ), gameInfo, 'white');
         }
         if (rooms[roomId].black.socketId) {
-            rooms[roomId].black.socket.emit('moveMade', imageDataURI.encode(utils.BoardToPng(rooms[roomId].game, true, rooms[roomId].white, rooms[roomId].black, rooms[roomId].gametype), 'png'), (isDraw ? "Game Ended in a draw" : "Game ended, " + winnerColor + " won the game" ), gameInfo, 'black');
+            rooms[roomId].black.socket.emit('moveMade', imageDataURI.encode(utils.BoardToPng(rooms[roomId].game, true, rooms[roomId].white, rooms[roomId].black, rooms[roomId].gametype, rooms[roomId].variant), 'png'), (isDraw ? "Game Ended in a draw" : "Game ended, " + winnerColor + " won the game" ), gameInfo, 'black');
         }
     }
 

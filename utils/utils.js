@@ -251,7 +251,7 @@ function jsonToFen(jsonBoard, rankCount = 8, fileCount = 8) {
 utils.jsonToFen = jsonToFen;
 
 
-function checkersFenToJson(fen) {
+function checkersFenToJson(fen, rankCount = 8, fileCount = 8) {
     let jsonBoard = {};
     let fenparts = fen.split(':');
     let turn = fenparts[0].toLowerCase();
@@ -261,17 +261,17 @@ function checkersFenToJson(fen) {
 
     for (const whitePiece of whitePieces) {
         if (whitePiece.charAt(0) == 'K') {
-            jsonBoard[indexToCheckersBoard(parseInt(whitePiece.replace('K', '')) - 1, 8, 8)] = {color: 'w', type: 'k'};
+            jsonBoard[indexToCheckersBoard(parseInt(whitePiece.replace('K', '')) - 1, rankCount, fileCount)] = {color: 'w', type: 'k'};
         }else{
-            jsonBoard[indexToCheckersBoard(parseInt(whitePiece) - 1, 8, 8)] = {color: 'w', type: 'p'};
+            jsonBoard[indexToCheckersBoard(parseInt(whitePiece) - 1, rankCount, fileCount)] = {color: 'w', type: 'p'};
         }
     }
 
     for (const blackPiece of blackPieces) {
         if (blackPiece.charAt(0) == 'K') {
-            jsonBoard[indexToCheckersBoard(parseInt(blackPiece.replace('K', '')) - 1, 8, 8)] = {color: 'b', type: 'k'};
+            jsonBoard[indexToCheckersBoard(parseInt(blackPiece.replace('K', '')) - 1, rankCount, fileCount)] = {color: 'b', type: 'k'};
         }else{
-            jsonBoard[indexToCheckersBoard(parseInt(blackPiece) - 1, 8, 8)] = {color: 'b', type: 'p'};
+            jsonBoard[indexToCheckersBoard(parseInt(blackPiece) - 1, rankCount, fileCount)] = {color: 'b', type: 'p'};
         }
     }
 
@@ -280,14 +280,14 @@ function checkersFenToJson(fen) {
 
 utils.checkersFenToJson = checkersFenToJson;
 
-utils.checkersFenToChessFen = function(checkersfen) {
-    return jsonToFen(checkersFenToJson(checkersfen));
+utils.checkersFenToChessFen = function(checkersfen, rankCount = 8, fileCount = 8) {
+    return jsonToFen(checkersFenToJson(checkersfen, rankCount, fileCount), rankCount, fileCount);
 }
 
-utils.formatCheckersLegalMoves = function(checkersLegalMoves) {
+utils.formatCheckersLegalMoves = function(checkersLegalMoves, rankCount = 8, fileCount = 8) {
     let legalMoves = [];
     checkersLegalMoves.forEach((legalMove) => {
-        legalMoves.push(indexToCheckersBoard(legalMove.from - 1) + indexToCheckersBoard(legalMove.to - 1));
+        legalMoves.push(indexToCheckersBoard(legalMove.from - 1, rankCount, fileCount) + indexToCheckersBoard(legalMove.to - 1, rankCount, fileCount));
     });
     return legalMoves;
 }
@@ -313,9 +313,12 @@ utils.getGameInfo = (roomId) => {
         gameInfo.boardDimensions = utils.getBoardDimensions(rooms[roomId].game.fen());
         gameInfo.legalMoves = rooms[roomId].game.legalMoves().split(" ");
     } else if (gameInfo.gametype == 'checkers') {
-        gameInfo.fen = utils.checkersFenToChessFen(rooms[roomId].game.fen());
         gameInfo.boardDimensions = {width: 8, height: 8};
-        gameInfo.legalMoves = utils.formatCheckersLegalMoves(rooms[roomId].game.moves());
+        if (gameInfo.variant == 'draughts') {
+            gameInfo.boardDimensions = {width: 10, height: 10};
+        }
+        gameInfo.fen = utils.checkersFenToChessFen(rooms[roomId].game.fen(), gameInfo.boardDimensions.height, gameInfo.boardDimensions.width);
+        gameInfo.legalMoves = utils.formatCheckersLegalMoves(rooms[roomId].game.moves(), gameInfo.boardDimensions.height, gameInfo.boardDimensions.width);
     }
     return gameInfo;
 }
@@ -336,7 +339,7 @@ utils.getBoardDimensions = function(fen) {
     };
   }
 
-function BoardToPng(board, isflipped = false, white = {}, black = {}, gametype = 'chess') {
+function BoardToPng(board, isflipped = false, white = {}, black = {}, gametype = 'chess', variant = 'chess') {
     let canvas = createCanvas(400, 450);
 
     let boardfen = board.fen();
@@ -347,6 +350,10 @@ function BoardToPng(board, isflipped = false, white = {}, black = {}, gametype =
     if (gametype == 'checkers') {
         boardfiles = 8;
         boardranks = 8;
+        if (variant == 'draughts') {
+            boardfiles = 10;
+            boardranks = 10;
+        }
     } else {
         
     }
@@ -357,7 +364,7 @@ function BoardToPng(board, isflipped = false, white = {}, black = {}, gametype =
 
     let boardsquaresassetimage = fenToJson(boardfen, boardranks, boardfiles);
     if (gametype == 'checkers') {
-        boardsquaresassetimage = checkersFenToJson(boardfen);
+        boardsquaresassetimage = checkersFenToJson(boardfen, boardranks, boardfiles);
     } else {
         boardsquaresassetimage = fenToJson(boardfen, boardranks, boardfiles);
     }
@@ -385,7 +392,7 @@ function BoardToPng(board, isflipped = false, white = {}, black = {}, gametype =
         ctx.fillStyle = !isWhite ? '#f0d9b5' : '#b58863';
 
         if (!isWhite && gametype == 'checkers') {
-            ctx.fillText((isflipped ? 33 - squareindex : squareindex), j * squaresizeX, 50 + (i * squaresizeY));
+            ctx.fillText((isflipped ? (((boardfiles * boardranks) / 2) + 1) - squareindex : squareindex), j * squaresizeX, 50 + (i * squaresizeY));
             squareindex += 1;
         }
         if (gametype == 'chess') {

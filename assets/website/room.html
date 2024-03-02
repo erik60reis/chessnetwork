@@ -288,7 +288,7 @@
                 move: (orig, dest) => {
                     socket.emit('makeMove', orig + dest);
                     socket.emit('makeMove', orig + dest + 'q');
-                    socket.emit('makeMove', chessSquareToCheckersIndex(orig) + "-" + chessSquareToCheckersIndex(dest));
+                    socket.emit('makeMove', chessSquareToCheckersIndex(orig, oldGameInfo.boardDimensions.height, oldGameInfo.boardDimensions.width) + "-" + chessSquareToCheckersIndex(dest,  oldGameInfo.boardDimensions.height, oldGameInfo.boardDimensions.width));
                 },
                 dropNewPiece: (role, key) => {
                     // called when a new piece is dropped from pocket

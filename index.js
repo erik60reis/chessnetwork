@@ -1,7 +1,8 @@
 const fs = require('fs');
-const ffish = require('./ffish');
+const ffish = require('./games/ffish');
 const Checkers = {
-    checkers: require('./checkers.js'),
+    'checkers': require('./games/checkers.js'),
+    'draughts': require('./games/draughts.js'),
 }
 
 global.plugins = {};
@@ -94,8 +95,8 @@ roomFunctions.createRoom = function(gametype = 'chess', variant = 'chess') {
             roomEvents.onGameStart.forEach((event) => {
                 event(roomId);
             });
-            rooms[roomId].boardPngImages.push(utils.BoardToPng(rooms[roomId].game, false, rooms[roomId].white, rooms[roomId].black, rooms[roomId].gametype));
-            rooms[roomId].boardPngImagesFlipped.push(utils.BoardToPng(rooms[roomId].game, true, rooms[roomId].white, rooms[roomId].black, rooms[roomId].gametype));
+            rooms[roomId].boardPngImages.push(utils.BoardToPng(rooms[roomId].game, false, rooms[roomId].white, rooms[roomId].black, rooms[roomId].gametype, rooms[roomId].variant));
+            rooms[roomId].boardPngImagesFlipped.push(utils.BoardToPng(rooms[roomId].game, true, rooms[roomId].white, rooms[roomId].black, rooms[roomId].gametype, rooms[roomId].variant));
         },
         end: function() {
             utils.boardsToVideo(rooms[roomId].boardPngImages, 'replayvideo.mp4');
@@ -109,8 +110,8 @@ roomFunctions.createRoom = function(gametype = 'chess', variant = 'chess') {
             try {
                 if (rooms[roomId].gametype == 'checkers') {
                     if (rooms[roomId].game.move({from: move.split('-')[0], to: move.split('-')[1]})) {
-                        rooms[roomId].boardPngImages.push(utils.BoardToPng(rooms[roomId].game, false, rooms[roomId].white, rooms[roomId].black, rooms[roomId].gametype));
-                        rooms[roomId].boardPngImagesFlipped.push(utils.BoardToPng(rooms[roomId].game, true, rooms[roomId].white, rooms[roomId].black, rooms[roomId].gametype));
+                        rooms[roomId].boardPngImages.push(utils.BoardToPng(rooms[roomId].game, false, rooms[roomId].white, rooms[roomId].black, rooms[roomId].gametype, rooms[roomId].variant));
+                        rooms[roomId].boardPngImagesFlipped.push(utils.BoardToPng(rooms[roomId].game, true, rooms[roomId].white, rooms[roomId].black, rooms[roomId].gametype, rooms[roomId].variant));
                         roomEvents.onMoveMade.forEach((event) => {
                             event(roomId, move);
                         });
@@ -134,8 +135,8 @@ roomFunctions.createRoom = function(gametype = 'chess', variant = 'chess') {
                 } else {
                     if (rooms[roomId].game.legalMoves().split(' ').includes(move)) {
                         rooms[roomId].game.push(move);
-                        rooms[roomId].boardPngImages.push(utils.BoardToPng(rooms[roomId].game, false, rooms[roomId].white, rooms[roomId].black, rooms[roomId].gametype));
-                        rooms[roomId].boardPngImagesFlipped.push(utils.BoardToPng(rooms[roomId].game, true, rooms[roomId].white, rooms[roomId].black, rooms[roomId].gametype));
+                        rooms[roomId].boardPngImages.push(utils.BoardToPng(rooms[roomId].game, false, rooms[roomId].white, rooms[roomId].black, rooms[roomId].gametype, rooms[roomId].variant));
+                        rooms[roomId].boardPngImagesFlipped.push(utils.BoardToPng(rooms[roomId].game, true, rooms[roomId].white, rooms[roomId].black, rooms[roomId].gametype, rooms[roomId].variant));
                         roomEvents.onMoveMade.forEach((event) => {
                             event(roomId, move);
                         });
