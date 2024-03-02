@@ -25,6 +25,7 @@
     "sequelize": "^6.37.1",
     "socket.io": "^4.7.4",
     "sqlite3": "^5.1.7",
+    "videoshow": "^0.1.12",
     "whatsapp-web.js": "^1.23.0"
   }
 }

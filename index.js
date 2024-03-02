@@ -16,6 +16,10 @@ global.roomEvents = {
     onMoveMade: [],
 }
 
+global.otherEvents = {
+    onBoardVideoReady: [],
+}
+
 global.avaliablegametypes = ['chess', 'checkers'];
 
 global.avaliablevariants = {
@@ -62,6 +66,8 @@ roomFunctions.createRoom = function(gametype = 'chess', variant = 'chess') {
     rooms[roomId] = {
         gametype: gametype,
         game: generateGame(gametype, variant),
+        boardPngImages: [],
+        boardPngImagesFlipped: [],
         variant: variant,
         winner: '',
         isStarted: false,
@@ -88,8 +94,12 @@ roomFunctions.createRoom = function(gametype = 'chess', variant = 'chess') {
             roomEvents.onGameStart.forEach((event) => {
                 event(roomId);
             });
+            rooms[roomId].boardPngImages.push(utils.BoardToPng(rooms[roomId].game, false, rooms[roomId].white, rooms[roomId].black, rooms[roomId].gametype));
+            rooms[roomId].boardPngImagesFlipped.push(utils.BoardToPng(rooms[roomId].game, true, rooms[roomId].white, rooms[roomId].black, rooms[roomId].gametype));
         },
         end: function() {
+            utils.boardsToVideo(rooms[roomId].boardPngImages, 'replayvideo.mp4');
+            utils.boardsToVideo(rooms[roomId].boardPngImagesFlipped, 'replayvideoflipped.mp4');
             roomEvents.onGameEnd.forEach((event) => {
                 event(roomId);
             });
@@ -99,6 +109,8 @@ roomFunctions.createRoom = function(gametype = 'chess', variant = 'chess') {
             try {
                 if (rooms[roomId].gametype == 'checkers') {
                     if (rooms[roomId].game.move({from: move.split('-')[0], to: move.split('-')[1]})) {
+                        rooms[roomId].boardPngImages.push(utils.BoardToPng(rooms[roomId].game, false, rooms[roomId].white, rooms[roomId].black, rooms[roomId].gametype));
+                        rooms[roomId].boardPngImagesFlipped.push(utils.BoardToPng(rooms[roomId].game, true, rooms[roomId].white, rooms[roomId].black, rooms[roomId].gametype));
                         roomEvents.onMoveMade.forEach((event) => {
                             event(roomId, move);
                         });
@@ -122,6 +134,8 @@ roomFunctions.createRoom = function(gametype = 'chess', variant = 'chess') {
                 } else {
                     if (rooms[roomId].game.legalMoves().split(' ').includes(move)) {
                         rooms[roomId].game.push(move);
+                        rooms[roomId].boardPngImages.push(utils.BoardToPng(rooms[roomId].game, false, rooms[roomId].white, rooms[roomId].black, rooms[roomId].gametype));
+                        rooms[roomId].boardPngImagesFlipped.push(utils.BoardToPng(rooms[roomId].game, true, rooms[roomId].white, rooms[roomId].black, rooms[roomId].gametype));
                         roomEvents.onMoveMade.forEach((event) => {
                             event(roomId, move);
                         });

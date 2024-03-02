@@ -1,5 +1,6 @@
 if (appconfig.discordbot.enabled) {
     const Dysnomia = require("@projectdysnomia/dysnomia");
+    const fs = require('fs');
 
     //(async () => { let pngdata = await utils.BoardToPng(new Chess(), false, {name: "Erik Reis", time: 1800}, {name: "Opponent", time: 1800}); fs.writeFileSync('board.png', pngdata)})();
 
@@ -307,6 +308,19 @@ Rating: ${user.elo}
 
 
     roomEvents.onGameEnd.push(onGameEnd);
+
+    otherEvents.onBoardVideoReady.push((outputPath) => {
+        setTimeout(() => {            
+            try {
+                bot.createMessage(appconfig.discordbot.replays_channel, {attachments: [{
+                        file: fs.readFileSync(outputPath),
+                        filename: 'replay.mp4'
+                    }],
+                    content: ''
+                });
+            } catch{}
+        }, 1000);
+    });
 
 
     function onMoveMade(roomId, move) {

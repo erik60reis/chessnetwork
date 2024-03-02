@@ -3,7 +3,69 @@ const path = require('path');
 const fs = require('fs');
 const crypto = require('crypto');
 
+var videoshow = require('videoshow')
+
 global.utils = {};
+
+utils.boardsToVideo = async function(pngFrames, outputPath) {
+    // Write each PNG frame to a temporary file
+    
+    let secondsToShowEachImage = 1;
+
+    let images = [
+         
+    ]
+
+    try {
+        if (fs.mkdirSync(path.join(rootpath, 'temp')));
+    }catch{}
+
+    try{
+        if (fs.mkdirSync(path.join(rootpath, 'temp', outputPath)));
+    }catch{}
+
+    let framePaths = [];
+    for (let i = 0; i < pngFrames.length; i++) {
+      const framePath = path.join(rootpath, 'temp', outputPath, `frame-${i}.png`);
+      fs.writeFileSync(framePath, pngFrames[i]);
+      framePaths.push(framePath);
+
+      images.push({path: framePath, loop: secondsToShowEachImage});
+    }
+    let finalVideoPath = outputPath;
+    
+    // setup videoshow options
+    let videoOptions = {
+      fps: 24,
+      transition: false,
+      videoBitrate: 1024 ,
+      videoCodec: 'libx264', 
+      size: '400x450',
+      outputOptions: ['-pix_fmt yuv420p'],
+      format: 'mp4'
+    }
+
+    videoshow(images, videoOptions)
+        .save(finalVideoPath)
+        .on('error', function (err, stdout, stderr) {
+            return Promise.reject(new Error(err)) 
+        })
+        .on('end', function (output) {
+            fs.readdir('./temp/' + outputPath + "/", (err, files) => {
+                files.forEach(file => {
+                    try {
+                        fs.unlinkSync(`./temp/${outputPath}/${file}`)
+                    }catch{}
+                })
+            })
+            try {
+                fs.unlinkSync(`./temp/${outputPath}`)
+            }catch{}
+            otherEvents.onBoardVideoReady.forEach(event => {
+                event(outputPath);
+            });
+        })
+}
 
 function formatTime(timeseconds) {
     var timeWithoutDecimals = Math.ceil(timeseconds);

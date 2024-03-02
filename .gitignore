@@ -44,6 +44,16 @@ jspm_packages/
 
 config.json
 
+replayvideo.mp4
+
+replayvideoflipped.mp4
+
+ffmpeg.exe
+
+ffplay.exe
+
+ffprobe.exe
+
 database.sqlite
 
 board.png
