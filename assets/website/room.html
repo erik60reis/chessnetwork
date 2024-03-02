@@ -19,7 +19,7 @@
         }
 
         #gameimage {
-            width: 85%;
+            width: 100%;
             height: auto;
         }
 
@@ -305,8 +305,10 @@
                 gameBoard.style.height = ((gameBoard.clientWidth / oldDimensions.width) * oldDimensions.height) + "px";
             }
             let gameContainerMargin = ((document.body.clientWidth - gameBoard.clientWidth) / 2) + "px";
-            document.getElementById("gameContainer").style.marginLeft = gameContainerMargin;
-            document.getElementById("gameContainer").style.width = gameBoard.clientWidth + "px";
+            if (document.body.clientWidth >= 600) {
+                document.getElementById("gameContainer").style.marginLeft = gameContainerMargin;
+                document.getElementById("gameContainer").style.width = gameBoard.clientWidth + "px";
+            }
 
         }
 
