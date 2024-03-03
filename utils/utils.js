@@ -2,70 +2,77 @@ const { createCanvas, loadImage } = require('canvas');
 const path = require('path');
 const fs = require('fs');
 const crypto = require('crypto');
+const fluent_ffmpeg = require('fluent-ffmpeg');
 
 global.utils = {};
 
-utils.boardsToVideo = function(pngFrames, outputPath) {
-    /*try {
+function deleteFolderRecursive(folderPath) {
+    if (fs.existsSync(folderPath)) {
+        fs.readdirSync(folderPath).forEach((file, index) => {
+            const curPath = path.join(folderPath, file);
 
+            if (fs.lstatSync(curPath).isDirectory()) {
+                // Recursive call to delete sub-folders and their contents
+                deleteFolderRecursive(curPath);
+            } else {
+                // Delete file
+                fs.unlinkSync(curPath);
+            }
+        });
+
+        // Remove the main folder
+        fs.rmdirSync(folderPath);
+        console.log(`Folder deleted: ${folderPath}`);
+    }
+}
+
+utils.boardsToVideo = async function (pngFrames, outputPath) {
     // Write each PNG frame to a temporary file
-    
     let secondsToShowEachImage = 1;
-
-    let images = [
-         
-    ]
+    let images = [];
 
     try {
-        if (fs.mkdirSync(path.join(rootpath, 'temp')));
-    }catch{}
+        fs.mkdirSync(path.join(rootpath, 'temp'));
+    } catch {}
 
-    try{
-        if (fs.mkdirSync(path.join(rootpath, 'temp', outputPath)));
-    }catch{}
+    try {
+        fs.mkdirSync(path.join(rootpath, 'temp', outputPath));
+    } catch {}
 
     let framePaths = [];
+
     for (let i = 0; i < pngFrames.length; i++) {
-      const framePath = path.join(rootpath, 'temp', outputPath, `frame-${i}.png`);
-      fs.writeFileSync(framePath, pngFrames[i]);
-      framePaths.push(framePath);
+        const framePath = path.join(rootpath, 'temp', outputPath, `frame-${i}.png`);
+        fs.writeFileSync(framePath, pngFrames[i]);
+        framePaths.push(framePath);
 
-      images.push({path: framePath, loop: secondsToShowEachImage});
-    }
-    let finalVideoPath = outputPath;
-    
-    // setup videoshow options
-    let videoOptions = {
-      fps: 5,
-      transition: false,
-      videoBitrate: 256,
-      videoCodec: 'libx264',
-      size: '200x225',
-      outputOptions: ['-pix_fmt yuv420p'],
-      format: 'mp4'
+        images.push({ path: framePath, loop: secondsToShowEachImage });
     }
 
-    require('videoshow')(images, videoOptions)
-            .save(finalVideoPath)
-            .on('error', function (err, stdout, stderr) {
-                return Promise.reject(err)
-            })
-            .on('end', function (output) {
-                fs.readdir('./temp/' + outputPath + "/", (err, files) => {
-                    files.forEach(file => {
-                        try {
-                            fs.unlinkSync(`./temp/${outputPath}/${file}`)
-                        }catch{}
-                    })
-                })
-                try {
-                    fs.unlinkSync(`./temp/${outputPath}`)
-                }catch{}
-                otherEvents.onBoardVideoReady.forEach(event => {
-                    event(outputPath);
-                });
-            })
-    }catch{}*/
+    let finalVideoPath = path.join(rootpath, 'temp', `${outputPath}.mp4`);
+
+    // Create the video using fluent-ffmpeg
+    fluent_ffmpeg()
+        .input(path.join(rootpath, 'temp', outputPath, 'frame-%d.png'))
+        .inputOptions('-framerate 1')
+        .videoCodec('libx264')
+        .videoBitrate(256)
+        .outputOptions('-pix_fmt yuv420p')
+        .size('200x225')
+        .on('end', function () {
+            try {
+                deleteFolderRecursive(path.join(rootpath, 'temp', outputPath));
+            }catch{}
+            
+            // Trigger events for video ready
+            otherEvents.onBoardVideoReady.forEach(event => {
+                event(finalVideoPath);
+            });
+        })
+        .on('error', function (err) {
+            console.error('Error:', err);
+        })
+        .save(finalVideoPath);
 }
 
 function formatTime(timeseconds) {
