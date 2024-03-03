@@ -208,7 +208,7 @@
                     let legalMovesFormatted = [];
                     legalMoves.forEach(legalMove => {
                         if (legalMove.startsWith((letter + number))) {
-                            legalMovesFormatted.push(legalMove[2] + legalMove[3]);
+                            legalMovesFormatted.push(legalMove.replace((letter + number), ""));
                         }
                     });
                     moves.set((letter + number), legalMovesFormatted);
@@ -343,7 +343,7 @@
                         document.getElementById("piecesstyle").innerHTML = `<link rel="stylesheet" href="/assets/stylesheets/chessground.checkerspieces.css">`;
                     }
                 }
-                if ((gameInfo.gametype === "chess" && !["amazons"].includes(gameInfo.variant)) || gameInfo.gametype === "checkers") {
+                if ((gameInfo.gametype === "chess" && !["amazons"].includes(gameInfo.variant)) /*|| gameInfo.gametype === "checkers"*/) {
                     document.getElementById("moveinput").style.display = "none";
                     document.getElementById("movebutton").style.display = "none";
                     document.getElementById("gameimage").style.display = "none";
