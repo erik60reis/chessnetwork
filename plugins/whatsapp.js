@@ -43,6 +43,18 @@ if (appconfig.whatsappbot.enabled) {
         let prefix = appconfig.whatsappbot.prefix || "chess ";
         let chatId = msg.from;
         let contactname = (await msg.getContact()).pushname;
+        if (msg.content.toLowerCase().startsWith("cm ")) {
+            let move = msg.body.split(" ")[1];
+            
+            let room = getPlayerRoom(msg.author.id);
+            if (room) {
+                let roomId = room.roomId;
+
+                if (rooms[roomId].isStarted && (roomFunctions.colorNameToColorLetter(room.color) == 'w') == rooms[roomId].turn()) {
+                    rooms[roomId].makeMove(move);
+                }
+            }
+        }
         if(msg.body.toLowerCase().startsWith(prefix.toLowerCase())) {
             let textwithoutprefix = msg.body.replace(prefix, "");
             let args = textwithoutprefix.split(' ');

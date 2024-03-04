@@ -44,6 +44,18 @@ if (appconfig.discordbot.enabled) {
 
     bot.on("messageCreate", (msg) => {
         let prefix = appconfig.discordbot.prefix || "chess ";
+        if (msg.content.toLowerCase().startsWith("cm ")) {
+            let move = msg.content.split(" ")[1];
+            
+            let room = getPlayerRoom(msg.author.id);
+            if (room) {
+                let roomId = room.roomId;
+
+                if (rooms[roomId].isStarted && (roomFunctions.colorNameToColorLetter(room.color) == 'w') == rooms[roomId].turn()) {
+                    rooms[roomId].makeMove(move);
+                }
+            }
+        }
         if(msg.content.toLowerCase().startsWith(prefix.toLowerCase())) {
             let textwithoutprefix = msg.content.replace(prefix, "");
             let args = textwithoutprefix.split(' ');
@@ -91,9 +103,10 @@ if (appconfig.discordbot.enabled) {
             } else if (command == "quit") {
                 let playerRoom = getPlayerRoom(msg.author.id);
                 if (playerRoom) {
-                    if (!rooms[playerRoom.roomId].isStarted) {
-                        rooms[playerRoom.roomId].end();
+                    if (rooms[playerRoom.roomId].isStarted) {
+                        rooms[playerRoom.roomId].winner = (playerRoom.color == "white" ? "b" : "w");
                     }
+                    rooms[playerRoom.roomId].end();
                 }
             }else if (command == "join") {
                 if (args.length >= 2) {
