@@ -330,7 +330,7 @@ Rating: ${user.elo}
                     content: ''
                 });
             } catch{}
-        }, 20000);
+        }, 5000);
     });
 
 

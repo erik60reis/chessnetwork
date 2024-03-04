@@ -58,7 +58,7 @@ utils.boardsToVideo = async function (pngFrames, outputPath) {
         .videoCodec('libx264')
         .videoBitrate(256)
         .outputOptions('-pix_fmt yuv420p')
-        .size('200x225')
+        .size('800x900')
         .on('end', function () {
             try {
                 deleteFolderRecursive(path.join(rootpath, 'temp', outputPath));
@@ -347,7 +347,7 @@ utils.getBoardDimensions = function(fen) {
   }
 
 function BoardToPng(board, isflipped = false, white = {}, black = {}, gametype = 'chess', variant = 'chess') {
-    let canvas = createCanvas(400, 450);
+    let canvas = createCanvas(800, 900);
 
     let boardfen = board.fen();
 
@@ -365,8 +365,8 @@ function BoardToPng(board, isflipped = false, white = {}, black = {}, gametype =
         
     }
 
-    let squaresizeX = 400 / boardfiles;
-    let squaresizeY = 400 / boardranks;
+    let squaresizeX = 800 / boardfiles;
+    let squaresizeY = 800 / boardranks;
 
 
     let boardsquaresassetimage = fenToJson(boardfen, boardranks, boardfiles);
@@ -389,26 +389,26 @@ function BoardToPng(board, isflipped = false, white = {}, black = {}, gametype =
       for (let j = 0; j < boardfiles; j++) {
         const isWhite = (i + j) % 2 === 0;
         ctx.fillStyle = isWhite ? '#f0d9b5' : '#b58863';
-        ctx.fillRect(j * squaresizeX, 25 + (i * squaresizeY), squaresizeX, squaresizeY);
+        ctx.fillRect(j * squaresizeX, 50 + (i * squaresizeY), squaresizeX, squaresizeY);
 
 
-        ctx.font = '15px Arial';
+        ctx.font = '30px Arial';
     
         ctx.textAlign = 'left';
     
         ctx.fillStyle = !isWhite ? '#f0d9b5' : '#b58863';
 
         if (!isWhite && gametype == 'checkers') {
-            ctx.fillText((isflipped ? (((boardfiles * boardranks) / 2) + 1) - squareindex : squareindex), j * squaresizeX, 50 + (i * squaresizeY));
+            ctx.fillText((isflipped ? (((boardfiles * boardranks) / 2) + 1) - squareindex : squareindex), j * squaresizeX, 100 + (i * squaresizeY));
             squareindex += 1;
         }
         if (gametype == 'chess') {
             if (i == boardranks - 1 && j == 0) {
-                ctx.fillText(indexToBoard(isflipped ? (boardranks * boardfiles) - squareindex : squareindex - 1, boardranks, boardfiles), j * squaresizeX, 50 + (i * squaresizeY));
+                ctx.fillText(indexToBoard(isflipped ? (boardranks * boardfiles) - squareindex : squareindex - 1, boardranks, boardfiles), j * squaresizeX, 100 + (i * squaresizeY));
             }else if (i == boardranks - 1) {
-                ctx.fillText(indexToBoard(isflipped ? (boardranks * boardfiles) - squareindex : squareindex - 1, boardranks, boardfiles, true).col, j * squaresizeX, 50 + (i * squaresizeY));
+                ctx.fillText(indexToBoard(isflipped ? (boardranks * boardfiles) - squareindex : squareindex - 1, boardranks, boardfiles, true).col, j * squaresizeX, 100 + (i * squaresizeY));
             }else if (j == 0) {
-                ctx.fillText(indexToBoard(isflipped ? (boardranks * boardfiles) - squareindex : squareindex - 1, boardranks, boardfiles, true).row, j * squaresizeX, 50 + (i * squaresizeY));
+                ctx.fillText(indexToBoard(isflipped ? (boardranks * boardfiles) - squareindex : squareindex - 1, boardranks, boardfiles, true).row, j * squaresizeX, 100 + (i * squaresizeY));
             }
             squareindex += 1;
         }
@@ -423,24 +423,24 @@ function BoardToPng(board, isflipped = false, white = {}, black = {}, gametype =
         const piece = isflipped ? boardsquaresassetimage[letters[boardfiles - 1 - j] + (boardranks + 1 - i)] : boardsquaresassetimage[letters[j] + i];
         if (piece) {
           const img = images[gametype][piece.color + piece.type];
-          ctx.drawImage(img, (j * squaresizeX), 25 + (boardranks - 1 - (i - 1)) * squaresizeY, squaresizeX, squaresizeY);
+          ctx.drawImage(img, (j * squaresizeX), 50 + (boardranks - 1 - (i - 1)) * squaresizeY, squaresizeX, squaresizeY);
         }
       }
     }
 
-    ctx.font = '25px Arial';
+    ctx.font = '30px Arial';
 
     
     ctx.textAlign = 'right';
 
     ctx.fillStyle = '#f0d9b5';
     if (white.time) {
-        ctx.fillText(formatTime(white.time), 400, (isflipped ? 20 : 450));
+        ctx.fillText(formatTime(white.time), 800, (isflipped ? 40 : 880));
     }
 
     ctx.fillStyle = '#b58863';
     if (black.time) {
-        ctx.fillText(formatTime(black.time), 400, (isflipped ? 450 : 20));
+        ctx.fillText(formatTime(black.time), 800, (isflipped ? 880 : 40));
     }
 
 
@@ -448,12 +448,12 @@ function BoardToPng(board, isflipped = false, white = {}, black = {}, gametype =
 
     ctx.fillStyle = '#f0d9b5';
     if (white.name) {
-        ctx.fillText(white.name.substring(0, 18) + (white.elo && gametype == 'chess' ? ` (${white.elo})` : ""), 0, (isflipped ? 20 : 450));
+        ctx.fillText(white.name.substring(0, 18) + (white.elo && gametype == 'chess' ? ` (${white.elo})` : ""), 0, (isflipped ? 40 : 880));
     }
 
     ctx.fillStyle = '#b58863';
     if (black.name) {
-        ctx.fillText(black.name.substring(0, 18) + (black.elo && gametype == 'chess' ? ` (${black.elo})` : ""), 0, (isflipped ? 450 : 20));
+        ctx.fillText(black.name.substring(0, 18) + (black.elo && gametype == 'chess' ? ` (${black.elo})` : ""), 0, (isflipped ? 880 : 40));
     }
     
     let buffer = canvas.toBuffer('image/png');
