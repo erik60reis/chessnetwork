@@ -366,7 +366,7 @@
                         document.getElementById("piecesstyle").innerHTML = `<link rel="stylesheet" href="/assets/stylesheets/chessground.checkerspieces.css">`;
                     }
                 }
-                if ((gameInfo.gametype === "chess" && !["amazons"].includes(gameInfo.variant)) || (gameInfo.gametype === "checkers" && gameInfo.variant !== "draughts")) {
+                if ((gameInfo.gametype === "chess" && !["amazons", "crazyhouse"].includes(gameInfo.variant)) || (gameInfo.gametype === "checkers" && gameInfo.variant !== "draughts")) {
                     document.getElementById("moveinput").style.display = "none";
                     document.getElementById("movebutton").style.display = "none";
                     document.getElementById("gameimage").style.display = "none";
