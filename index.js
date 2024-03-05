@@ -19,6 +19,7 @@ global.roomEvents = {
 
 global.otherEvents = {
     onBoardVideoReady: [],
+    onBoardBestVideoReady: [],
 }
 
 global.avaliablegametypes = ['chess', 'checkers'];
@@ -101,6 +102,10 @@ roomFunctions.createRoom = function(gametype = 'chess', variant = 'chess') {
         end: function() {
             utils.boardsToVideo(rooms[roomId].boardPngImages, 'replayvideo.mp4');
             utils.boardsToVideo(rooms[roomId].boardPngImagesFlipped, 'replayvideoflipped.mp4');
+            if (rooms[roomId].boardPngImages.length >= 15 && rooms[roomId].boardPngImages.length <= 36) {
+                utils.boardsToVideo(rooms[roomId].boardPngImages, 'bestreplayvideo.mp4', true);
+                utils.boardsToVideo(rooms[roomId].boardPngImagesFlipped, 'bestreplayvideoflipped.mp4', true);
+            }
             roomEvents.onGameEnd.forEach((event) => {
                 event(roomId);
             });

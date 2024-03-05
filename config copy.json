@@ -8,7 +8,8 @@
         "token": "",
         "support_link": "https://discord.gg/bafBEF6r4R",
         "bot_addition_link": "https://discord.com/oauth2/authorize?client_id=1152654574054805505&permissions=8&scope=bot",
-        "replays_channel": ""
+        "replays_channel": "",
+        "best_replays_channel": ""
     },
     "auth": {
         "discord": {

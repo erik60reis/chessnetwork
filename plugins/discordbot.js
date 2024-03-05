@@ -333,6 +333,19 @@ Rating: ${user.elo}
         }, 5000);
     });
 
+    otherEvents.onBoardBestVideoReady.push((outputPath) => {
+        setTimeout(() => {            
+            try {
+                bot.createMessage(appconfig.discordbot.best_replays_channel, {attachments: [{
+                        file: fs.readFileSync(outputPath),
+                        filename: 'replay.mp4'
+                    }],
+                    content: ''
+                });
+            } catch{}
+        }, 5000);
+    });
+
 
     function onMoveMade(roomId, move) {
         displayBoard(roomId);

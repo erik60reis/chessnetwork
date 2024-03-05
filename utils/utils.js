@@ -26,7 +26,27 @@ function deleteFolderRecursive(folderPath) {
     }
 }
 
-utils.boardsToVideo = async function (pngFrames, outputPath) {
+function onBoardsVideoCreated(pngFrames, outputPath, bestvideo = false, finalVideoPath) {
+    
+    // Trigger events for video ready
+    
+    if (bestvideo) {
+        otherEvents.onBoardBestVideoReady.forEach(event => {
+            event(finalVideoPath);
+        });
+    }else{
+        otherEvents.onBoardVideoReady.forEach(event => {
+            event(finalVideoPath);
+        });
+    }
+    
+    try {
+        deleteFolderRecursive(path.join(rootpath, 'temp', outputPath));
+    }catch{}
+}
+
+
+utils.boardsToVideo = async function (pngFrames, outputPath, bestvideo = false) {
     // Write each PNG frame to a temporary file
     let secondsToShowEachImage = 1;
     let images = [];
@@ -51,28 +71,34 @@ utils.boardsToVideo = async function (pngFrames, outputPath) {
 
     let finalVideoPath = path.join(rootpath, 'temp', `${outputPath}.mp4`);
 
-    // Create the video using fluent-ffmpeg
-    fluent_ffmpeg()
-        .input(path.join(rootpath, 'temp', outputPath, 'frame-%d.png'))
-        .inputOptions('-framerate 1')
-        .videoCodec('libx264')
-        .videoBitrate(256)
-        .outputOptions('-pix_fmt yuv420p')
-        .size('800x900')
-        .on('end', function () {
-            try {
-                deleteFolderRecursive(path.join(rootpath, 'temp', outputPath));
-            }catch{}
-            
-            // Trigger events for video ready
-            otherEvents.onBoardVideoReady.forEach(event => {
-                event(finalVideoPath);
-            });
-        })
-        .on('error', function (err) {
-            console.error('Error:', err);
-        })
-        .save(finalVideoPath);
+    if (bestvideo) {
+        fluent_ffmpeg()
+            .input(path.join(rootpath, 'temp', outputPath, 'frame-%d.png'))
+            .inputOptions('-framerate 1')
+            .videoCodec('libx264')
+            .videoBitrate(256)
+            .outputOptions('-pix_fmt yuv420p')
+            .size('800x900')
+            .input(path.join(rootpath, 'assets', 'replayvideobackgroundmusic.mp3'))
+            .on('end', () => { onBoardsVideoCreated(pngFrames, outputPath, bestvideo, finalVideoPath); })
+            .on('error', function (err) {
+                console.error('Error:', err);
+            })
+            .save(finalVideoPath);
+    }else{
+        fluent_ffmpeg()
+            .input(path.join(rootpath, 'temp', outputPath, 'frame-%d.png'))
+            .inputOptions('-framerate 1')
+            .videoCodec('libx264')
+            .videoBitrate(256)
+            .outputOptions('-pix_fmt yuv420p')
+            .size('800x900')
+            .on('end', () => {onBoardsVideoCreated(pngFrames, outputPath, bestvideo, finalVideoPath); })
+            .on('error', function (err) {
+                console.error('Error:', err);
+            })
+            .save(finalVideoPath);
+    }
 }
 
 function formatTime(timeseconds) {
@@ -344,7 +370,7 @@ utils.getBoardDimensions = function(fen) {
       width: files,
       height: ranks,
     };
-  }
+}
 
 function BoardToPng(board, isflipped = false, white = {}, black = {}, gametype = 'chess', variant = 'chess') {
     let canvas = createCanvas(800, 900);
