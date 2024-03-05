@@ -10,12 +10,17 @@
             background-size: cover;
             background-color: rgb(30, 30, 30);
         }
+
         #gameContainer {
             width: 100%;
-            height: 100%;
+            height: 50vh;
             justify-content: center;
             align-items: center;
             text-align: center;
+            position: absolute;
+            top: 25%;
+            -ms-transform: translateY(-25%);
+            transform: translateY(-25%);
         }
 
         #gameimage {
@@ -76,9 +81,18 @@
                 height: 85vh;
                 width: auto;
             }
+
             #gameboard {
                 height: 80vh;
             }
+
+            #gameContainer {
+                position: relative;
+                top: 0%;
+                -ms-transform: translateY(-0%);
+                transform: translateY(-0%);
+            }
+
             input {
                 width: 500px;
             }
@@ -111,6 +125,7 @@
             <div class="username" id="otherUsername">User</div>
             <div class="playertimer" id="otherTime">30:00</div>
         </div>
+        <br/>
         <div id="gameboard"></div>
         <br/>
         <div class="playerInfo" id="yourData">
@@ -181,28 +196,29 @@
                 //document.getElementById("yourData").innerText = oldGameInfo[globalYourTeam + "Name"] + " " + formatTime(yourTime);
             }
         }, 200);
+    
+        var letters = 'abcdefghijklmnopqrstuvwxyz';
 
         function chessSquareToCheckersIndex(chessNotation, rankCount = 8, fileCount = 8) {
-            const col = chessNotation.charAt(0).toLowerCase();
-            const row = parseInt(chessNotation.charAt(1), 10);
+            let index = 1;
 
-            let index = (((rankCount - row) * fileCount));
+            for (let i = rankCount; i >= 1; i--) {
+                for (let j = ((i % 2) == 0 ? 1 : 0); j < fileCount; j += 2) {
+                    let letter = letters[j];
 
-            if ((rankCount - row) % 2 !== 0) {
-                index += col.charCodeAt(0) - 97 + 1;
-            } else {
-                index += col.charCodeAt(0) - 97;
+                    if (letter + i == chessNotation) {
+                        return ((index - 1) / 2) + 1;
+                    }
+
+                    index += 2;
+                }
             }
 
-            index /= 2;
-            index += 1;
-
-            return index;
+            return undefined;
         }
 
         function getDests(legalMoves, boardranks) {
             var moves = new Map();
-            var letters = 'abcdefghijklmnopqrstuvwxyz';
             letters.split("").forEach((letter) => {
                 for (let number = 1; number <= boardranks; number++) {
                     let legalMovesFormatted = [];
@@ -211,7 +227,9 @@
                             legalMovesFormatted.push(legalMove.replace((letter + number), ""));
                         }
                     });
-                    moves.set((letter + number), legalMovesFormatted);
+                    if (legalMovesFormatted.length > 0) {
+                        moves.set((letter + number), legalMovesFormatted);
+                    }
                 }
             });
             return moves;
@@ -241,6 +259,11 @@
 
             resizable: true, // allow resize
 
+            dimensions: {
+                width: 16,
+                height: 16,
+            },
+
             animation: {
                 enabled: true,
                 duration: 200
@@ -251,7 +274,7 @@
                 color: 'both', // allow both whites and blacks to move
                 showDests: true, // highlight destinations
                 dests: null,
-                rookCastle: true
+                rookCastle: false
             },
 
             drawable: {
@@ -343,7 +366,7 @@
                         document.getElementById("piecesstyle").innerHTML = `<link rel="stylesheet" href="/assets/stylesheets/chessground.checkerspieces.css">`;
                     }
                 }
-                if ((gameInfo.gametype === "chess" && !["amazons"].includes(gameInfo.variant)) /*|| gameInfo.gametype === "checkers"*/) {
+                if ((gameInfo.gametype === "chess" && !["amazons"].includes(gameInfo.variant)) || (gameInfo.gametype === "checkers" && gameInfo.variant !== "draughts")) {
                     document.getElementById("moveinput").style.display = "none";
                     document.getElementById("movebutton").style.display = "none";
                     document.getElementById("gameimage").style.display = "none";

@@ -4,7 +4,7 @@ if (appconfig.whatsappbot.enabled) {
     const imageDataURI = require('image-data-uri');
 
     const bot = new Client({
-        puppeteer: { 
+        puppeteer: {
             args: ['--no-sandbox'],
             headless: true
         }

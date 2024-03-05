@@ -162,6 +162,7 @@ function indexToCheckersBoard(index, rankCount = 8, fileCount = 8, returnjson = 
     for (let newindex = 0; newindex < oldindex; newindex++) {
         index += 2;
     }
+    
     let row = rankCount - Math.floor(index / fileCount);
     let col = String.fromCharCode(97 + (index % fileCount));
 
@@ -177,21 +178,21 @@ function indexToCheckersBoard(index, rankCount = 8, fileCount = 8, returnjson = 
 }
 
 function chessSquareToCheckersIndex(chessNotation, rankCount = 8, fileCount = 8) {
-    const col = chessNotation.charAt(0).toLowerCase();
-    const row = parseInt(chessNotation.charAt(1), 10);
+    let index = 1;
 
-    let index = (((rankCount - row) * fileCount));
+    for (let i = rankCount; i >= 1; i--) {
+        for (let j = ((i % 2) == 0 ? 1 : 0); j < fileCount; j += 2) {
+            let letter = letters[j];
 
-    if ((rankCount - row) % 2 !== 0) {
-        index += col.charCodeAt(0) - 97 + 1;
-    } else {
-        index += col.charCodeAt(0) - 97;
+            if (letter + i == chessNotation) {
+                return ((index - 1) / 2) + 1;
+            }
+
+            index += 2;
+        }
     }
 
-    index /= 2;
-    index += 1;
-
-    return index;
+    return undefined;
 }
 
 utils.chessSquareToCheckersIndex = chessSquareToCheckersIndex;
