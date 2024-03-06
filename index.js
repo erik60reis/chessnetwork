@@ -11,10 +11,18 @@ global.rootpath = __dirname;
 
 global.rooms = {};
 
+global.tournaments = {};
+
+
 global.roomEvents = {
     onGameStart: [],
     onGameEnd: [],
     onMoveMade: [],
+}
+
+global.tournamentEvents = {
+    onTournamentStart: [],
+    onTournamentEnd: [],
 }
 
 global.otherEvents = {
@@ -168,6 +176,57 @@ roomFunctions.createRoom = function(gametype = 'chess', variant = 'chess') {
     return roomId;
 }
 
+roomFunctions.createTournament = function(gametype = 'chess', variant = 'chess') {
+    let tournamentId = nextTournamentId();
+    tournaments[tournamentId] = {
+        gametype,
+        variant,
+        isStarted: true,
+        players: [],
+        currentStageIndex: 1,
+        level_1_room_1: null,
+        level_1_room_2: null,
+        level_1_room_3: null,
+        level_1_room_4: null,
+        level_2_room_1: null,
+        level_2_room_2: null,
+        level_3_room_1: null,
+        winner: null,
+        start: function () {
+            tournaments[tournamentId].isStarted = true;
+            tournamentEvents.onTournamentStart.forEach(event => {
+                event(tournamentId);
+            });
+        },
+        end: function () {
+            tournamentEvents.onTournamentEnd.forEach(event => {
+                event(tournamentId);
+            });
+            delete tournaments[tournamentId];
+        }
+    };
+    return tournamentId;
+}
+
+roomEvents.onGameEnd.push((roomId) => {
+    if (rooms[roomId].tournamentId != undefined) {
+        let tournamentId = rooms[roomId].tournamentId;
+        let tournamentLevel = rooms[roomId].tournamentLevel;
+        let tournamentRoom = rooms[roomId].tournamentRoom;
+        if (rooms[roomId].winner !== '') {
+            tournaments[tournamentId][`level_${tournamentLevel}_room_${tournamentRoom}`] = rooms[roomId][roomFunctions.colorLetterToColorName(rooms[roomId].winner)];
+        }else{
+            let newRoomId = roomFunctions.createRoom(tournaments[tournamentId].gametype, tournaments[tournamentId].variant);
+            rooms[newRoomId].white = rooms[roomId].white;
+            rooms[newRoomId].black = rooms[roomId].black;
+            rooms[newRoomId].tournamentId = rooms[roomId].tournamentId;
+            rooms[newRoomId].tournamentLevel = rooms[roomId].tournamentLevel;
+            rooms[newRoomId].tournamentRoom = rooms[roomId].tournamentRoom;
+            rooms[newRoomId].start();
+        }
+    }
+});
+
 roomFunctions.colorLetterToColorName = function(letter) {
     if (letter == 'w') {
         return 'white';
@@ -186,6 +245,83 @@ roomFunctions.colorNameToColorLetter = function(colorName) {
 
 
 setInterval(() => {
+    Object.keys(tournaments).forEach(function(tournamentId) {
+        if (tournaments[tournamentId].players.length >= 8 && !tournaments[tournamentId].isStarted) {
+            while (tournaments[tournamentId].players.length > 8) {
+                tournaments[tournamentId].players.pop();
+            }
+            tournaments[tournamentId].start();
+            let tournamentRoomIndex = 1;
+            for (let playerIndex = 0; playerIndex < tournaments[tournamentId].players.length; playerIndex += 2) {
+                const player = tournaments[tournamentId].players[playerIndex];
+                const player2 = tournaments[tournamentId].players[playerIndex + 1];
+                let newRoomId = roomFunctions.createRoom(tournaments[tournamentId].gametype, tournaments[tournamentId].variant);
+                rooms[newRoomId].white = player;
+                rooms[newRoomId].black = player2;
+                rooms[newRoomId].tournamentId = tournamentId;
+                rooms[newRoomId].tournamentLevel = 1;
+                rooms[newRoomId].tournamentRoom = tournamentRoomIndex;
+                rooms[newRoomId].start();
+                tournamentRoomIndex += 1;
+            }
+        }
+        if (tournaments[tournamentId].isStarted) {
+            let tournamentLevels = [[
+                "level_1_room_1",
+                "level_1_room_1",
+                "level_1_room_3",
+                "level_1_room_4",
+            ],[
+                "level_2_room_1",
+                "level_2_room_2",
+            ],[
+                "level_3_room_1",
+            ]];
+
+            let levelindex = 0;
+            for (let levelkeylist of tournamentLevels) {
+                let is_all_winners_set = true;
+                levelkeylist.forEach(tournamentroomkey => {
+                    if (tournaments[tournamentId][tournamentroomkey] === null) {
+                        is_all_winners_set = false;
+                    }
+                });
+
+                if (!is_all_winners_set && levelindex > currentStageIndex) {
+                    let winners = [];
+                    let previousLevelKeyList = tournamentLevels[levelindex - 1];
+                    for (let winnerIndex = 0; winnerIndex < previousLevelKeyList.length; winnerIndex++) {
+                        const winnerKey = previousLevelKeyList[winnerIndex];
+                        const winner = tournaments[tournamentId][winnerKey];
+                        winners.push(winner);
+                    }
+
+                    for (let i = 0; i < winners.length; i += 2) {
+                        const player = winners[i];
+                        const player2 = winners[i + 1];
+                        let newRoomId = roomFunctions.createRoom(tournaments[tournamentId].gametype, tournaments[tournamentId].variant);
+                        rooms[newRoomId].white = player;
+                        rooms[newRoomId].black = player2;
+                        rooms[newRoomId].tournamentId = tournamentId;
+                        rooms[newRoomId].tournamentLevel = levelindex + 1;
+                        rooms[newRoomId].tournamentRoom = tournamentRoomIndex;
+                        rooms[newRoomId].start();
+                    }
+                    currentStageIndex = levelindex;
+                }
+
+                if (is_all_winners_set == false) {
+                    break;
+                }
+            }
+
+            if (!tournaments[tournamentId][tournamentLevels[tournamentLevels.length - 1][0]] !== null) {
+                tournaments[tournamentId].winner = tournaments[tournamentId][tournamentLevels[tournamentLevels.length - 1][0]];
+                tournaments[tournamentId].end();
+            }
+        }
+
+    });
     Object.keys(rooms).forEach(function(roomId) {
         roomId = parseInt(roomId);
         if (rooms[roomId].isStarted) {
@@ -226,6 +362,14 @@ function nextRoomId() {
         roomId += 1;
     }
     return roomId;
+}
+
+function nextTournamentId() {
+    let tournamentId = 0;
+    while (tournaments[tournamentId]) {
+        tournamentId += 1;
+    }
+    return tournamentId;
 }
 
 
