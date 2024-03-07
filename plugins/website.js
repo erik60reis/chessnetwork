@@ -34,7 +34,7 @@ if (appconfig.website.enabled) {
 
     app.use('/assets/chesspieces', express.static(path.join(rootpath, 'assets', 'chesspieces')));
     app.use('/assets/chessgroundx', express.static(path.join(rootpath, 'assets', 'chessgroundx')));
-    app.use('/assets/stylesheets', express.static(path.join(rootpath, 'assets', 'stylesheets')));
+    app.use('/', express.static(path.join(rootpath, 'assets', 'public')));
     app.use('/assets/checkerspieces', express.static(path.join(rootpath, 'assets', 'checkerspieces')));
 
     const server = createServer(app);
@@ -200,10 +200,11 @@ if (appconfig.website.enabled) {
                             }
                             let gameInfo = utils.getGameInfo(roomId);
                             if (playercolor == 'black') {
+                                rooms[roomId].start();
+                                gameInfo.isStarted = true;
                                 if (rooms[roomId].white.socketId) {
                                     rooms[roomId].white.socket.emit('moveMade', imageDataURI.encode(utils.BoardToPng(rooms[roomId].game, false, rooms[roomId].white, rooms[roomId].black, rooms[roomId].gametype, rooms[roomId].variant), 'png'), '', gameInfo, 'white');
                                 }
-                                rooms[roomId].start();
                             }
                             socket.emit('moveMade', imageDataURI.encode(utils.BoardToPng(rooms[roomId].game, playercolor == 'black', rooms[roomId].white, rooms[roomId].black, rooms[roomId].gametype, rooms[roomId].variant), 'png'), '', gameInfo, playercolor);
                         }

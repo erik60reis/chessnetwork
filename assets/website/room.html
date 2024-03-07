@@ -58,6 +58,12 @@
 
         #gamestatus {
             color: white;
+            text-align: center;
+            justify-content: center;
+        }
+
+        a {
+            color: white;
         }
 
         .playertimer {
@@ -146,6 +152,7 @@
         ChessgroundJS = Chessground;
     </script>
     <script src="/socket.io/socket.io.js"></script>
+    <script src="/assets/scripts/qrcode.min.js"></script>
     <script>
         let yourTime = 1800;
         let otherTime = 1800;
@@ -349,7 +356,16 @@
                 socket.emit('joinRoom', roomId, window.localStorage.getItem('authid'), window.localStorage.getItem('authpassword'));
             });
 
-            document.getElementById('gamestatus').innerHTML = "Room {{RoomId}}";
+            document.getElementById("gamestatus").innerHTML = `<div>${window.location.href}</div><br/>&nbsp;<table id="joinqrcode" style="width: 150px; height: 150px; margin-left: auto; margin-right: auto;"</table>`;
+            var joinqrcode = new QRCode(document.getElementById("joinqrcode"), {
+                text: window.location.href,
+                width: 150,
+                height: 150,
+                colorDark : "#000000",
+                colorLight : "#ffffff",
+                correctLevel : QRCode.CorrectLevel.H
+            });
+        
 
 
             document.getElementById("movebutton").addEventListener('click', () => {
@@ -411,11 +427,17 @@
                 }
 
                 document.getElementById("gameimage").src = newimagedatauri;
-                document.getElementById('gamestatus').innerHTML = newGameStatusText;
+
+                if (gameInfo.isStarted) {
+                    document.getElementById('gamestatus').innerHTML = '';
+                }
+
+                if (newGameStatusText !== undefined && newGameStatusText !== '') {
+                    document.getElementById('gamestatus').innerHTML = newGameStatusText;
+                }
+
             });
         }
-
-
 
         let interval = setInterval(() => {
             if (ChessgroundJS != null) {
