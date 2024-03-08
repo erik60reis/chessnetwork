@@ -13,6 +13,7 @@ if (appconfig.website.enabled) {
 
     const app = express();
 
+    let sockets = [];
 
     var discordOauth2;
 
@@ -59,7 +60,26 @@ if (appconfig.website.enabled) {
         return undefined;
     }
 
-    function createRoomAndShowToClient(gametype, variant, res, time = 1800) {
+    function getPlayerRoomByDiscordId(playerDiscordId) {
+        for (let roomId of Object.keys(rooms)) {
+            roomId = parseInt(roomId);
+            if (rooms[roomId].white.socketDiscordId == playerDiscordId) {
+                return {
+                    color: 'white',
+                    roomId: parseInt(roomId)
+                };
+            }
+            if (rooms[roomId].black.socketDiscordId == playerDiscordId) {
+                return {
+                    color: 'black',
+                    roomId: parseInt(roomId)
+                };
+            }
+        }
+        return undefined;
+    }
+
+    function createRoomAndShowToClient(gametype, variant, res, time = 600, increment = 0) {
         if (!avaliablegametypes.includes(gametype)) {
             gametype = 'chess';
         }
@@ -74,6 +94,9 @@ if (appconfig.website.enabled) {
         try {
             rooms[roomId].white.time = parseInt(time);
             rooms[roomId].black.time = parseInt(time);
+
+            rooms[roomId].white.increment = parseInt(increment);
+            rooms[roomId].black.increment = parseInt(increment);
         }catch{}
         res.send(`<script>window.location.href = '/${roomId}'</script>`);
     }
@@ -163,7 +186,20 @@ if (appconfig.website.enabled) {
         }catch{}
     });
 
+    app.get('/new/:gametype/:variant/:time/:increment', (req, res) => {
+        try {
+            let gametype = req.params.gametype;
+            let variant = req.params.variant;
+            let time = req.params.time;
+            let increment = req.params.increment;
+
+            createRoomAndShowToClient(gametype, variant, res, time, increment);
+        }catch{}
+    });
+
+
     io.on('connection', (socket) => {
+        sockets.push(socket);
 
         socket.on('makeMove', (move) => {
             let playerRoom = getPlayerRoom(socket.id);
@@ -177,13 +213,31 @@ if (appconfig.website.enabled) {
             }
         });
 
+        socket.on('disconnect', () => {
+            sockets.splice(sockets.indexOf(socket), 1);
+        });
+
         socket.on('joinRoom', async (roomId, id, password) => {
             if (rooms[roomId]) {
                 let userdata = await databaseFunctions.getUser({id, password});
                 let isUserValid = userdata !== undefined;
 
                 let playerRoom = getPlayerRoom(socket.id);
+                let playerRoomByDiscordId = (isUserValid ? getPlayerRoomByDiscordId(userdata.discordId) : undefined);
+
+                if (!playerRoom && playerRoomByDiscordId) {
+                    if (playerRoomByDiscordId.roomId == roomId) {
+                        rooms[roomId][playerRoomByDiscordId.color].socketId = socket.id;
+                        rooms[roomId][playerRoomByDiscordId.color].socket = socket;
+                        let gameInfo = utils.getGameInfo(roomId);
+                        socket.emit('moveMade', imageDataURI.encode(utils.BoardToPng(rooms[roomId].game, playerRoomByDiscordId.color == 'black', rooms[roomId].white, rooms[roomId].black, rooms[roomId].gametype, rooms[roomId].variant), 'png'), '', gameInfo, playerRoomByDiscordId.color);
+                    }
+                }
+
                 if (!playerRoom) {
+                    if (playerRoomByDiscordId) {
+                        rooms[playerRoomByDiscordId.roomId][playerRoomByDiscordId.color].socketDiscordId = undefined;            
+                    }
                     if (!rooms[roomId].isStarted) {
                         let playercolor = 'white'; 
                         if (!rooms[roomId].white.isAvaliable) {
@@ -195,6 +249,9 @@ if (appconfig.website.enabled) {
                             rooms[roomId][playercolor].socketId = socket.id;
                             rooms[roomId][playercolor].socket = socket;
                             if (isUserValid) {
+                                if (userdata.discordId && userdata.discordId !== "") {
+                                    rooms[roomId][playercolor].socketDiscordId = userdata.discordId;
+                                }
                                 rooms[roomId][playercolor].name = userdata.username;
                                 rooms[roomId][playercolor].elo = userdata.elo;
                             }

@@ -86,11 +86,13 @@ roomFunctions.createRoom = function(gametype = 'chess', variant = 'chess') {
             isAvaliable: true,
             name: 'white',
             time: 1800,
+            increment: 0,
         },
         black: {
             isAvaliable: true,
             name: 'black',
             time: 1800,
+            increment: 0,
         },
         turn: function() {
             if (rooms[roomId].gametype == 'checkers') {
@@ -123,6 +125,7 @@ roomFunctions.createRoom = function(gametype = 'chess', variant = 'chess') {
             try {
                 if (rooms[roomId].gametype == 'checkers') {
                     if (rooms[roomId].game.move({from: move.split('-')[0], to: move.split('-')[1]})) {
+                        rooms[roomId][(rooms[roomId].game.turn() ? "black" : "white")].time += rooms[roomId][(rooms[roomId].game.turn() ? "black" : "white")].increment;
                         rooms[roomId].boardPngImages.push(utils.BoardToPng(rooms[roomId].game, false, rooms[roomId].white, rooms[roomId].black, rooms[roomId].gametype, rooms[roomId].variant));
                         rooms[roomId].boardPngImagesFlipped.push(utils.BoardToPng(rooms[roomId].game, true, rooms[roomId].white, rooms[roomId].black, rooms[roomId].gametype, rooms[roomId].variant));
                         roomEvents.onMoveMade.forEach((event) => {
@@ -147,6 +150,7 @@ roomFunctions.createRoom = function(gametype = 'chess', variant = 'chess') {
 
                 } else {
                     if (rooms[roomId].game.legalMoves().split(' ').includes(move)) {
+                        rooms[roomId][(rooms[roomId].game.turn() ? "white" : "black")].time += rooms[roomId][(rooms[roomId].game.turn() ? "white" : "black")].increment;
                         rooms[roomId].game.push(move);
                         rooms[roomId].boardPngImages.push(utils.BoardToPng(rooms[roomId].game, false, rooms[roomId].white, rooms[roomId].black, rooms[roomId].gametype, rooms[roomId].variant));
                         rooms[roomId].boardPngImagesFlipped.push(utils.BoardToPng(rooms[roomId].game, true, rooms[roomId].white, rooms[roomId].black, rooms[roomId].gametype, rooms[roomId].variant));
