@@ -58,6 +58,7 @@
             <option value="checkers/draughts">Draughts</option>
         </select> <br/>
         <select id="gametime" onchange="onGameInfoDropdownChanged();">
+            <option value="600/0">---SELECT TIME---</option>
             <option value="15/0">0:15</option>
             <option value="60/0">1:00</option>
             <option value="180/0">3:00</option>
@@ -84,6 +85,38 @@
             let gametimeropdownvalue = document.getElementById('gametime').options[document.getElementById('gametime').selectedIndex].value;
             document.getElementById('newroombutton').href = "/new/" + gametypedropdownvalue + "/" + gametimeropdownvalue;
         }
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            try {
+                if (window.localStorage.getItem('authid') && window.localStorage.getItem('authpassword') && window.localStorage.getItem('webPushVapidPublicKey')) {
+                    const registration = await navigator.serviceWorker.register('/service-worker.js');
+                        
+                    let subscription = await registration.pushManager.subscribe({
+                        userVisibleOnly: true,
+                        applicationServerKey: window.localStorage.getItem('webPushVapidPublicKey'),
+                    });
+
+                    let userdetails = {};
+
+                    userdetails.userId = parseInt(window.localStorage.getItem('authid'));
+                    
+                    userdetails.userPassword = window.localStorage.getItem('authpassword');
+
+                    // Send the subscription to the server
+                    await fetch('/notification/subscribe', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({subscription, userdetails}),
+                    });
+
+                    console.log('Subscription successful');
+                }
+            } catch (error) {
+                console.error('Error subscribing to push notifications:', error);
+            }
+        });
     </script>
 </body>
 </html>

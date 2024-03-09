@@ -8,14 +8,53 @@ if (appconfig.website.enabled) {
     const imageDataURI = require('image-data-uri');
     const DiscordOAuth2Constructor = require('discord-oauth2');
     const session = require('express-session');
+    const bodyParser = require('body-parser');
+    const webpush = require('web-push');
 
     const expressHandlebars = require('express-handlebars');
 
     const app = express();
 
+    let vapidKeys;
+    if (fs.existsSync(path.join(rootpath, 'webpushvapidkeys.json'))) {
+        vapidKeys = JSON.parse(fs.readFileSync(path.join(rootpath, 'webpushvapidkeys.json')));
+    }else{
+        vapidKeys = webpush.generateVAPIDKeys();
+        fs.writeFileSync(path.join(rootpath, 'webpushvapidkeys.json'), JSON.stringify(vapidKeys));
+    }
+
+    webpush.setVapidDetails(
+        'mailto:example@yourdomain.org',
+        vapidKeys.publicKey,
+        vapidKeys.privateKey
+    );
+
+    app.use(bodyParser.json());
+
+
     let sockets = [];
 
     var discordOauth2;
+
+
+    app.post('/notification/subscribe', async (req, res) => {
+        try {
+            let subscription = req.body.subscription;
+            let userdetails = req.body.userdetails;
+            
+            let user = await databaseFunctions.getUser({id: userdetails.userId, password: userdetails.userPassword});
+            if (user) {
+                user.webPushSubscription = JSON.stringify(subscription);
+                await user.save();
+            }
+            
+            res.status(201).json({ message: 'Subscription successful' });
+
+            //webpush.sendNotification(subscription, "Hi").catch(err => console.error(err));
+        }catch(err){
+            console.log('error: ' + err)
+        }
+    });
 
     if (appconfig.auth.discord.enabled && appconfig.database.enabled) {
         discordOauth2 = new DiscordOAuth2Constructor({
@@ -79,7 +118,7 @@ if (appconfig.website.enabled) {
         return undefined;
     }
 
-    function createRoomAndShowToClient(gametype, variant, res, time = 600, increment = 0) {
+    function createRoomAndShowToClient(gametype, variant, res, time = 600, increment = 0, invitedUserDiscordId) {
         if (!avaliablegametypes.includes(gametype)) {
             gametype = 'chess';
         }
@@ -98,11 +137,16 @@ if (appconfig.website.enabled) {
             rooms[roomId].white.increment = parseInt(increment);
             rooms[roomId].black.increment = parseInt(increment);
         }catch{}
-        res.send(`<script>window.location.href = '/${roomId}'</script>`);
+
+        if (invitedUserDiscordId) {
+            res.send(`<script>window.location.href = '/${roomId}?invitedUserDiscordId=${invitedUserDiscordId}'</script>`);
+        }else{
+            res.send(`<script>window.location.href = '/${roomId}'</script>`);
+        }
     }
 
     app.get('/:roomId', (req, res) => {
-        res.render(join(rootpath, 'assets', 'website', 'room.html'), {roomId: parseInt(req.params.roomId)});
+        res.render(join(rootpath, 'assets', 'website', 'room.html'), {roomId: parseInt(req.params.roomId), invitedUserDiscordId: req.query.invitedUserDiscordId});
     });
 
     app.get('/', (req, res) => {
@@ -146,6 +190,8 @@ if (appconfig.website.enabled) {
                         res.send(`<script>
                             window.localStorage.setItem('authid', ${user.id});
                             window.localStorage.setItem('authpassword', '${password}');
+                            window.localStorage.setItem('webPushVapidPublicKey', '${vapidKeys.publicKey}');
+                            
                             window.location.href = '/';
                         </script>`);
                     }
@@ -197,6 +243,17 @@ if (appconfig.website.enabled) {
         }catch{}
     });
 
+    app.get('/new/:gametype/:variant/:time/:increment/:invitedUserDiscordId', (req, res) => {
+        try {
+            let gametype = req.params.gametype;
+            let variant = req.params.variant;
+            let time = req.params.time;
+            let increment = req.params.increment;
+            let invitedUserDiscordId = req.params.invitedUserDiscordId;
+
+            createRoomAndShowToClient(gametype, variant, res, time, increment, invitedUserDiscordId);
+        }catch{}
+    });
 
     io.on('connection', (socket) => {
         sockets.push(socket);
@@ -217,7 +274,7 @@ if (appconfig.website.enabled) {
             sockets.splice(sockets.indexOf(socket), 1);
         });
 
-        socket.on('joinRoom', async (roomId, id, password) => {
+        socket.on('joinRoom', async (roomId, id, password, gameURL, invitedUserDiscordId) => {
             if (rooms[roomId]) {
                 let userdata = await databaseFunctions.getUser({id, password});
                 let isUserValid = userdata !== undefined;
@@ -231,6 +288,15 @@ if (appconfig.website.enabled) {
                         rooms[roomId][playerRoomByDiscordId.color].socket = socket;
                         let gameInfo = utils.getGameInfo(roomId);
                         socket.emit('moveMade', imageDataURI.encode(utils.BoardToPng(rooms[roomId].game, playerRoomByDiscordId.color == 'black', rooms[roomId].white, rooms[roomId].black, rooms[roomId].gametype, rooms[roomId].variant), 'png'), '', gameInfo, playerRoomByDiscordId.color);
+                    }
+                }
+
+                if (isUserValid) {
+                    let invitedUser = await databaseFunctions.getUser({discordId: invitedUserDiscordId});
+                    if (invitedUser) {
+                        console.log(typeof(invitedUser.webPushSubscription));
+                        console.log(invitedUser.webPushSubscription);
+                        webpush.sendNotification(JSON.parse(invitedUser.webPushSubscription), `${userdata.username} is inviting you for a game, ${gameURL.split("?")[0]}`);
                     }
                 }
 

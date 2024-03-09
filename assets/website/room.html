@@ -353,12 +353,12 @@
             socket = io();
 
             socket.once('connect', () => {
-                socket.emit('joinRoom', roomId, window.localStorage.getItem('authid'), window.localStorage.getItem('authpassword'));
+                socket.emit('joinRoom', roomId, window.localStorage.getItem('authid'), window.localStorage.getItem('authpassword'), window.location.href, '{{invitedUserDiscordId}}');
             });
 
-            document.getElementById("gamestatus").innerHTML = `<div>${window.location.href}</div><br/>&nbsp;<table id="joinqrcode" style="width: 150px; height: 150px; margin-left: auto; margin-right: auto;"</table>`;
+            document.getElementById("gamestatus").innerHTML = `<div>${window.location.href.split("?")[0]}</div><br/>&nbsp;<table id="joinqrcode" style="width: 150px; height: 150px; margin-left: auto; margin-right: auto;"</table>`;
             var joinqrcode = new QRCode(document.getElementById("joinqrcode"), {
-                text: window.location.href,
+                text: window.location.href.split("?")[0],
                 width: 150,
                 height: 150,
                 colorDark : "#000000",

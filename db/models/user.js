@@ -14,8 +14,8 @@ const User = sequelize.define('User', {
     type: DataTypes.STRING,
     unique: true,
   },
-  elo: {
-    type: DataTypes.INTEGER,
+  webPushSubscription: {
+    type: DataTypes.STRING,
   },
 });
 

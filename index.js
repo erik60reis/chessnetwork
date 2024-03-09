@@ -5,6 +5,16 @@ const Checkers = {
     'draughts': require('./games/draughts.js'),
 }
 
+setTimeout(() => {
+    //console.log(ffish);
+    ffish.run('position fen rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1');
+    ffish.go().then(bestMove => {
+        console.log(`Best move: ${bestMove}`);
+      }).catch(error => {
+        console.error(error);
+      });
+}, 2000);
+
 global.plugins = {};
 
 global.rootpath = __dirname;

@@ -83,7 +83,7 @@ if (appconfig.database.enabled) {
         
       }
     } catch (error) {
-      console.error('Error while trying to get user elo:', error);
+      console.error('Error while trying to get user: ', error);
     }
 };
 
