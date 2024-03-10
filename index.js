@@ -34,7 +34,7 @@ global.otherEvents = {
 global.avaliablegametypes = ['chess', 'checkers'];
 
 global.avaliablevariants = {
-    chess: ['chess', 'racingkings', '3check', 'horde', 'amazon', 'gothic', 'amazons', 'courier', 'crazyhouse'],
+    chess: ['chess', 'racingkings', '3check', 'horde', 'amazon', 'gothic', 'amazons', 'courier', 'crazyhouse', 'antichess'],
     checkers: Object.keys(Checkers)
 };
 
