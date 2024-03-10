@@ -146,11 +146,17 @@ if (appconfig.website.enabled) {
     }
 
     app.get('/:roomId', (req, res) => {
-        res.render(join(rootpath, 'assets', 'website', 'room.html'), {roomId: parseInt(req.params.roomId), invitedUserDiscordId: req.query.invitedUserDiscordId});
+        try {
+            let roomId = parseInt(req.params.roomId);
+            let isViewOnlyMode = (!rooms[roomId].white.isAvaliable && !rooms[roomId].black.isAvaliable);
+            res.render(join(rootpath, 'assets', 'website', 'room.html'), {roomId, isViewOnlyMode, invitedUserDiscordId: req.query.invitedUserDiscordId});
+        }catch(error) {
+            console.log(error);
+        }
     });
 
     app.get('/', (req, res) => {
-        res.render(join(rootpath, 'assets', 'website', 'index.html'), {roomId: parseInt(req.params.roomId), discord_bot_addition_link: appconfig.discordbot.bot_addition_link});
+        res.render(join(rootpath, 'assets', 'website', 'index.html'), {discord_bot_addition_link: appconfig.discordbot.bot_addition_link});
     });
 
     if (discordOauth2) {
@@ -257,6 +263,24 @@ if (appconfig.website.enabled) {
 
     io.on('connection', (socket) => {
         sockets.push(socket);
+
+        socket.on('spectateRoom', async (roomId, id, password) => {
+            let gameInfo = utils.getGameInfo(roomId);
+            
+            try {
+                let userdata = await databaseFunctions.getUser({id, password});
+                let isUserValid = userdata !== undefined;
+                let playerRoomByDiscordId = (isUserValid ? getPlayerRoomByDiscordId(userdata.discordId) : undefined);
+                
+                if (playerRoomByDiscordId) {
+                    if (playerRoomByDiscordId.roomId == roomId) {
+                        socket.emit('DisableViewOnlyMode');
+                    }
+                }
+            }catch{}
+                
+            socket.emit('moveMade', imageDataURI.encode(utils.BoardToPng(rooms[roomId].game, false, rooms[roomId].white, rooms[roomId].black, rooms[roomId].gametype, rooms[roomId].variant), 'png'), '', gameInfo, 'white');
+        });
 
         socket.on('makeMove', (move) => {
             let playerRoom = getPlayerRoom(socket.id);

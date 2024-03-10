@@ -244,6 +244,8 @@
 
         let roomId = {{roomId}};
 
+        let isViewOnlyMode = {{isViewOnlyMode}};
+
         let board = null;
         
         let socket;
@@ -348,12 +350,20 @@
 
         setGameBoardSize();
 
+        function joinRoom() {
+            socket.emit('joinRoom', roomId, window.localStorage.getItem('authid'), window.localStorage.getItem('authpassword'), window.location.href, '{{invitedUserDiscordId}}');
+        }
+
 
         function loadMainScript() {
             socket = io();
 
             socket.once('connect', () => {
-                socket.emit('joinRoom', roomId, window.localStorage.getItem('authid'), window.localStorage.getItem('authpassword'), window.location.href, '{{invitedUserDiscordId}}');
+                if (isViewOnlyMode) {
+                    socket.emit('spectateRoom', roomId, window.localStorage.getItem('authid'), window.localStorage.getItem('authpassword'));
+                }else{
+                    joinRoom();
+                }
             });
 
             document.getElementById("gamestatus").innerHTML = `<div>${window.location.href.split("?")[0]}</div><br/>&nbsp;<table id="joinqrcode" style="width: 150px; height: 150px; margin-left: auto; margin-right: auto;"</table>`;
@@ -395,6 +405,9 @@
                     chessgroundconfig.movable.dests = getDests(gameInfo.legalMoves, gameInfo.boardDimensions.height);
                     chessgroundconfig.turnColor = (gameInfo.turn ? "white" : "black");
                     chessgroundconfig.dimensions = gameInfo.boardDimensions;
+
+                    chessgroundconfig.viewOnly = isViewOnlyMode;
+
                     board = new ChessgroundJS(gameBoard, chessgroundconfig);
                     globalOtherTeam = (yourTeam == "white" ? "black" : "white");
                     if (gameInfo.boardDimensions != oldDimensions) {
@@ -436,9 +449,18 @@
                     document.getElementById('gamestatus').innerHTML = newGameStatusText;
                 }
 
-            });
-        }
+                if (isViewOnlyMode) {
+                    socket.emit('spectateRoom', roomId);
+                }
 
+            });
+
+            socket.on('DisableViewOnlyMode', () => {
+                isViewOnlyMode = false;
+                joinRoom();
+            })
+        }
+        
         let interval = setInterval(() => {
             if (ChessgroundJS != null) {
                 loadMainScript();
