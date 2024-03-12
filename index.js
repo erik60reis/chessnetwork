@@ -42,18 +42,7 @@ global.avaliablevariants = {
 global.roomFunctions = {};
 
 global.appconfig = require('./config.json');
-/*
-|| Internal numbering       External Numbering
-|| --------------------     --------------------
-||     01  02  03  04           01  02  03  04
-||   05  06  07  08           05  06  07  08
-||     10  11  12  13           09  10  11  12
-||   14  15  16  17           13  14  15  16
-||     19  20  21  22           17  18  19  20
-||   23  24  25  26           21  22  23  24
-||     28  29  30  31           25  26  27  28
-||   32  33  34  35           29  30  31  32
-|| --------------------     --------------------*/
+
 global.coordToExternalNumbering = {
     
 };
@@ -170,6 +159,14 @@ roomFunctions.createRoom = function(gametype = 'chess', variant = 'chess') {
                                 rooms[roomId].winner = '';
                                 rooms[roomId].end();
                             }
+                        }
+
+                        let botConfiguration = rooms[roomId][(rooms[roomId].game.turn() ? "white" : "black")].botConfiguration;
+
+                        if (botConfiguration) {
+                            utils.GetChessBestMove(rooms[roomId].variant, rooms[roomId].game.fen(), botConfiguration.skillLevel, (bestmove) => {
+                                rooms[roomId].makeMove(bestmove);
+                            });
                         }
                     }
                 }
@@ -380,10 +377,12 @@ function nextTournamentId() {
 
 require('./utils/utils.js');
 require('./utils/database.js');
+require('./utils/gameanalysis.js');
+
 
 fs.readdir('./plugins/', (err, files) => {
     files.forEach(file => {
         let plugin = require(`./plugins/${file}`);
         plugins[file] = plugin;
     })
-})
+});

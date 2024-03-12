@@ -219,6 +219,37 @@ if (appconfig.website.enabled) {
         }catch{}
     });
 
+    app.get('/playbot/:variant', (req, res) => {
+        try {
+            let variant = req.params.variant;
+
+            if (!avaliablevariants.chess.includes(variant)) {
+                variant = 'chess';
+            }
+
+            let roomId = roomFunctions.createRoom('chess', variant);
+            try {
+                rooms[roomId].white.time = 1800;
+                rooms[roomId].black.time = 1800;
+
+                rooms[roomId].white.increment = 0;
+                rooms[roomId].black.increment = 0;
+                
+                rooms[roomId].black.isAvaliable = false;
+                rooms[roomId].black.botConfiguration = {
+                    skillLevel: 5,
+                }
+                rooms[roomId].black.name = "Bot";
+           }catch{}
+
+            res.send(`<script>window.location.href = '/${roomId}'</script>`);
+
+            setTimeout(() => {
+                rooms[roomId].start();
+            }, 4000);
+        }catch{}
+    });
+
     app.get('/new/:gametype/', (req, res) => {
         try {
             let gametype = req.params.gametype;
@@ -266,7 +297,7 @@ if (appconfig.website.enabled) {
 
         socket.on('spectateRoom', async (roomId, id, password) => {
             let gameInfo = utils.getGameInfo(roomId);
-            
+
             try {
                 let userdata = await databaseFunctions.getUser({id, password});
                 let isUserValid = userdata !== undefined;

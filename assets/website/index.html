@@ -38,10 +38,6 @@
             text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1);
         }
 
-        .color-lightgray {
-            background-color: rgb(225, 225, 225);
-        }
-
         .game-options {
             display: flex;
             flex-wrap: wrap;
@@ -122,42 +118,42 @@
         <div class="header">
             <h1 class="title">Perfect Chess</h1>
         </div>
-        <div class="color-lightgray">
+        <div style="background-color: rgb(225, 225, 225); border-radius: 5px;">
             <div class="header">
                 <h2 class="subtitle">New Game</h2>
             </div>
             <div class="game-options">
-            <select id="gametype" onchange="onGameInfoDropdownChanged();">
-                <option value="chess/chess">Chess</option>
-                <option value="chess/courier">Courier Chess</option>
-                <option value="chess/gothic">Gothic Chess</option>
-                <option value="chess/racingkings">Racing Kings</option>
-                <option value="chess/antichess">Antichess</option>
-                <option value="chess/3check">3check Chess</option>
-                <option value="chess/horde">Horde Chess</option>
-                <option value="chess/amazon">Amazon Chess</option>
-                <option value="chess/amazons">Amazons Chess</option>
-                <option value="chess/crazyhouse">Crazyhouse Chess</option>
-                <option value="checkers/checkers">Checkers</option>
-                <option value="checkers/draughts">Draughts</option>
-            </select>
-            <select id="gametime" onchange="onGameInfoDropdownChanged();">
-                <option value="600/0">---SELECT TIME---</option>
-                <option value="15/0">0:15</option>
-                <option value="60/0">1:00</option>
-                <option value="180/0">3:00</option>
-                <option value="300/0">5:00</option>
-                <option value="300/3">5+3</option>
-                <option value="600/0">10:00</option>
-                <option value="600/5">10+5</option>
-                <option value="900/0">15:00</option>
-                <option value="1800/0">30:00</option>
-                <option value="3600/0">1:00:00</option>
-                <option value="7200/0">2:00:00</option>
-            </select>
-            <button id="newroombutton">New Room</button>
+                <select id="gametype" onchange="onGameInfoDropdownChanged();">
+                    <option value="chess/chess">Chess</option>
+                    <option value="chess/courier">Courier Chess</option>
+                    <option value="chess/gothic">Gothic Chess</option>
+                    <option value="chess/racingkings">Racing Kings</option>
+                    <option value="chess/antichess">Antichess</option>
+                    <option value="chess/3check">3check Chess</option>
+                    <option value="chess/horde">Horde Chess</option>
+                    <option value="chess/amazon">Amazon Chess</option>
+                    <option value="chess/amazons">Amazons Chess</option>
+                    <option value="chess/crazyhouse">Crazyhouse Chess</option>
+                    <option value="checkers/checkers">Checkers</option>
+                    <option value="checkers/draughts">Draughts</option>
+                </select>
+                <select id="gametime" onchange="onGameInfoDropdownChanged();">
+                    <option value="600/0">---SELECT TIME---</option>
+                    <option value="15/0">0:15</option>
+                    <option value="60/0">1:00</option>
+                    <option value="180/0">3:00</option>
+                    <option value="300/0">5:00</option>
+                    <option value="300/3">5+3</option>
+                    <option value="600/0">10:00</option>
+                    <option value="600/5">10+5</option>
+                    <option value="900/0">15:00</option>
+                    <option value="1800/0">30:00</option>
+                    <option value="3600/0">1:00:00</option>
+                    <option value="7200/0">2:00:00</option>
+                </select>
+                <button id="newroombutton">New Room</button>
+            </div>
         </div>
-    </div>
         <div class="login-links">
             <a href="{{discord_bot_addition_link}}">Add Discord Bot</a>
             <a href="/login/discord/">Login</a>

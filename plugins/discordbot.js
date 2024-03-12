@@ -63,6 +63,45 @@ if (appconfig.discordbot.enabled) {
 
             //bot.createMessage(msg.channel.id, "Pong!");
             let roomId;
+            let skillLevel = 3;
+            if (command == "playbot") {
+                let variant = 'chess';
+                if (args.length >= 2) {
+                    if (avaliablevariants.chess.includes(args[1])) {
+                        variant = args[1];
+                    }
+                    if (args.length >= 3) {
+                        try {
+                            skillLevel = parseInt(args[2]);
+                            if (skillLevel > 20) {
+                                skillLevel = 20;
+                            }
+                            if (skillLevel < 0) {
+                                skillLevel = 0;
+                            }
+                        }catch{}
+                    }
+                }
+                
+                if (!getPlayerRoom(msg.author.id)) {
+                    roomId = roomFunctions.createRoom('chess', variant);
+                    rooms[roomId].white.isAvaliable = false;
+                    rooms[roomId].white.discordChannelId = msg.channel.id;
+                    rooms[roomId].white.name = msg.author.globalName;
+                    rooms[roomId].white.discordId = msg.author.id;
+
+                    rooms[roomId].black.isAvaliable = false;
+                    rooms[roomId].black.botConfiguration = {
+                        skillLevel,
+                    }
+                    rooms[roomId].black.discordChannelId = msg.channel.id;
+                    rooms[roomId].black.name = "Bot";
+
+                    rooms[roomId].start();
+                }else{
+                    bot.createMessage(msg.channel.id, "you are already in another room");
+                }
+            }
             if (command == "create") {
                 let variant = 'chess';
                 let gametype = 'chess';
@@ -80,7 +119,7 @@ if (appconfig.discordbot.enabled) {
                         }
                     }
                 }
-                if (!getPlayerRoom(msg.author.id)) {                            
+                if (!getPlayerRoom(msg.author.id)) {
                     roomId = roomFunctions.createRoom(gametype, variant);
                     rooms[roomId].white.isAvaliable = false;
                     rooms[roomId].white.discordChannelId = msg.channel.id;
@@ -226,6 +265,7 @@ Rating: ${user.elo}
     **${botprefix}autojoin** ===== tries to join a random room, if not posssible, creates a new room
     **${botprefix}quit** ===== quits the current room
     **${botprefix}stats** ===== gets player stats on the database
+    **${botprefix}playbot <variant> <skill level (0 - 20)>** ===== plays a game with the bot
     **${botprefix}move <movement>** ===== plays a move (eg. ${botprefix}move e2e4   or   ${botprefix}move 21-17 )
 
     support: ${appconfig.discordbot.support_link}
