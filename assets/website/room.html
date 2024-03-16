@@ -6,21 +6,17 @@
     <title>Chess</title>
     <style>
         body {
-            background-repeat: no-repeat;
-            background-size: cover;
-            background-color: rgb(30, 30, 30);
+            background-color: #302e2b;
+            color: white;
         }
 
         #gameContainer {
             width: 100%;
-            height: 50vh;
+            height: 97%;
+            display: block;
             justify-content: center;
             align-items: center;
             text-align: center;
-            position: absolute;
-            top: 25%;
-            -ms-transform: translateY(-25%);
-            transform: translateY(-25%);
         }
 
         #gameimage {
@@ -60,6 +56,7 @@
             color: white;
             text-align: center;
             justify-content: center;
+            border-radius: 5px;
         }
 
         a {
@@ -80,6 +77,19 @@
             justify-content: center;
             align-items: center;
             text-align: center;
+            border-radius: 5px;
+        }
+
+        .sidebar {
+            display: block;
+            width: 100%;
+            margin-left: 20px;
+            background-color: #262522;
+            border-radius: 5px;
+        }
+
+        #menu {
+            width: 15%;
         }
 
         @media (min-width: 600px) {
@@ -94,16 +104,22 @@
 
             #gameContainer {
                 position: relative;
-                top: 0%;
-                -ms-transform: translateY(-0%);
-                transform: translateY(-0%);
+                display: flex;
+                flex-direction: row;
+                flex-grow: 1;
+                margin-left: 0px;
+                margin-right: 0px;
+                margin-top: 0px;
+                margin-bottom: 0px;
+                width: 80%;
             }
 
             input {
                 width: 500px;
             }
+
             .playerInfo {
-                font-size: 15px;
+                font-size: 25px;
             }
 
             .username {
@@ -117,6 +133,18 @@
             .playertimer {
                 font-size: 30px;
             }
+
+            .sidebar {
+                height: 80vh;
+            }
+
+            #menu {
+                width: 10%;               
+                margin-top: 0;
+                margin-bottom: 0;
+                height: 96vh;
+                background-color: #262522;
+            }
         }
     </style>
     <link rel="stylesheet" href="/assets/stylesheets/chessground.base.css">
@@ -125,23 +153,30 @@
 </head>
 <body>
     <div id="gameContainer">
-        <div id="gamestatus"> ---- </div>
-        <img id="gameimage">
-        <div class="playerInfo" id="otherData">
-            <div class="username" id="otherUsername">User</div>
-            <div class="playertimer" id="otherTime">30:00</div>
+        <div id="menu"><img src="/assets/logobanner.png" width="120" height="60"></div>
+        <div id="gameMainContainer">
+            <img id="gameimage">
+            <div class="playerInfo" id="otherData">
+                <img src="/assets/iconwhite.png" width="35" height="35">&nbsp;
+                <div class="username" id="otherUsername">User</div>
+                <div class="playertimer" id="otherTime">30:00</div>
+            </div>
+            <br/>
+            <div id="gameboard"></div>
+            <br/>
+            <div class="playerInfo" id="yourData">
+                <img src="/assets/iconwhite.png" width="40" height="40">&nbsp;
+                <div class="username" id="yourUsername">User</div>
+                <div class="playertimer" id="yourTime">30:00</div>
+            </div>
+            <br/>
+            <br/>
+            <input id="moveinput" type="text" placeholder="Enter move... (eg. e2e4 or 21-17)"/> <button id="movebutton">MOVE</button>
+            <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
         </div>
-        <br/>
-        <div id="gameboard"></div>
-        <br/>
-        <div class="playerInfo" id="yourData">
-            <div class="username" id="yourUsername">User</div>
-            <div class="playertimer" id="yourTime">30:00</div>
+        <div class="sidebar">
+            <div id="gamestatus"> ---- </div>
         </div>
-        <br/>
-        <br/>
-        <input id="moveinput" type="text" placeholder="Enter move... (eg. e2e4 or 21-17)"/> <button id="movebutton">MOVE</button>
-        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
     </div>
 
     <script>
@@ -340,10 +375,10 @@
             }else{
                 gameBoard.style.height = ((gameBoard.clientWidth / oldDimensions.width) * oldDimensions.height) + "px";
             }
-            let gameContainerMargin = ((document.body.clientWidth - gameBoard.clientWidth) / 2) + "px";
             if (document.body.clientWidth >= 600) {
-                document.getElementById("gameContainer").style.marginLeft = gameContainerMargin;
-                document.getElementById("gameContainer").style.width = gameBoard.clientWidth + "px";
+                let gameMainContainerMargin = (((document.body.clientWidth - gameBoard.clientWidth) / 2.5) - document.getElementById("menu").clientWidth) + "px";
+                document.getElementById("gameMainContainer").style.marginLeft = gameMainContainerMargin;
+                document.getElementById("gameMainContainer").style.width = gameBoard.clientWidth + "px";
             }
 
         }

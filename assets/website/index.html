@@ -6,48 +6,121 @@
     <title>Chess</title>
     <style>
         body {
-            font-family: 'Roboto', sans-serif;
-            margin: 0;
-            padding: 0;
-            background-color: #333;
+            background-color: #302e2b;
+            color: white
         }
 
-        .container {
-            max-width: 800px;
-            margin: 0 auto;
-            padding: 20px;
-            background-color: #eee;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-            border-radius: 4px;
-        }
-
-        .header {
+        #gameContainer {
+            width: 100%;
+            height: 97%;
+            display: block;
+            justify-content: center;
+            align-items: center;
             text-align: center;
-            margin-bottom: 20px;
         }
 
-        .title {
-            font-size: 36px;
-            color: #333;
-            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1);
+        #gameimage {
+            width: 100%;
+            height: auto;
         }
 
-        .subtitle {
-            font-size: 20px;
-            color: #333;
-            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1);
+        #gameboard {
+            width: 95%;
+        }
+
+        input {
+            border-radius: 5px;
+            width: 200px;
+        }
+
+        .playerInfo {
+            font-size: 25px;
+            display: flex;
+            flex-grow: 1;
+        }
+
+        .username {
+            color: white;
+            text-align: left;
+            font-size: 25px;
+            width: 75%;
+        }
+
+        .elo {
+            text-align: left;
+            font-size: 18px;
+            color: lightgray;
+        }
+
+        #gamestatus {
+            color: white;
+            text-align: center;
+            justify-content: center;
+            border-radius: 5px;
+        }
+
+        a {
+            color: white;
         }
 
         .game-options {
-            display: flex;
-            flex-wrap: wrap;
+            text-align: left;
+            justify-content: left;
+        }
+
+        .playertimer {
+            font-size: 15px;
+            border: 3px solid burlywood;
+            border-radius: 2px;
+            background-color: burlywood;
+            color: white;
+            text-align: right;
+            width: 15%;
+        }
+
+        cg-container {
             justify-content: center;
             align-items: center;
-            margin-bottom: 20px;
+            text-align: center;
+            border-radius: 5px;
+        }
+
+        .sidebar {
+            display: block;
+            width: 100%;
+            margin-left: 20px;
+            background-color: #262522;
+            border-radius: 5px;
+        }
+
+        #menu {
+            width: 15%;
+        }
+
+        .grid-container {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            grid-template-rows: repeat(4, 1fr);
+            height: 53%;
+        }
+
+        button {
+            background-color: green;
+            border-radius: 5px;
+            padding: 5px;
+        }
+
+        .grid-item {
+            border: 3px solid #262522;
+            background-color: darkgray;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
         }
 
         select {
-            padding: 8px 12px;
+            padding: 4px 6px;
             border: 1px solid #ccc;
             border-radius: 4px;
             font-size: 16px;
@@ -55,75 +128,107 @@
             background-color: #f9f9f9;
         }
 
-        button {
-            padding: 8px 16px;
-            background-color: #4caf50;
-            color: #fff;
-            border: none;
-            border-radius: 4px;
-            font-size: 16px;
-            cursor: pointer;
-            transition: background-color 0.3s ease;
-            margin: 5px;
-        }
-
-        button:hover {
-            background-color: #45a049;
-        }
-
-        .login-links {
-            text-align: center;
-            margin-top: 20px;
-        }
-
-        .login-links a {
-            color: #333;
-            text-decoration: none;
-            margin-right: 20px;
-        }
-
-        .login-links a:hover {
-            text-decoration: underline;
-        }
-
-        @media (max-width: 480px) {
-            .container {
-                padding: 10px;
+        @media (min-width: 600px) {
+            #gameimage {
+                height: 85vh;
+                width: auto;
             }
 
-            .title {
-                font-size: 28px;
+            #gameboard {
+                height: 80vh;
             }
 
-            .game-options {
-                flex-direction: column;
-                align-items: stretch;
+            #gameContainer {
+                position: relative;
+                display: flex;
+                flex-direction: row;
+                flex-grow: 1;
+                margin-left: 0px;
+                margin-right: 0px;
+                width: 80%;
             }
 
-            select,
-            button {
-                width: 100%;
-                margin: 5px 0;
+            input {
+                width: 500px;
             }
 
-            .login-links a {
-                display: block;
-                margin: 10px 0;
+            .playerInfo {
+                font-size: 25px;
+            }
+
+            .username {
+                font-size: 15px;
+            }
+
+            .elo {
+                font-size: 10px;
+            }
+
+            .playertimer {
+                font-size: 30px;
+            }
+
+            .sidebar {
+                height: 80vh;
+            }
+
+            #menu {
+                width: 10%;               
+                margin-top: 0;
+                margin-bottom: 0;
+                height: 96vh;
+                background-color: #262522;
+            }
+
+            #gameMainContainer {
+                max-height: 98vh;
             }
         }
     </style>
+    <link rel="stylesheet" href="/assets/stylesheets/chessground.base.css">
+    <link rel="stylesheet" href="/assets/stylesheets/chessground.board.css">
+    <link rel="stylesheet" href="/assets/stylesheets/chessground.pieces.css">
+    <span id="piecesstyle"></span>
 </head>
 <body>
-    <div class="container">
-        <div class="header">
-            <h1 class="title">Perfect Chess</h1>
-        </div>
-        <div style="background-color: rgb(225, 225, 225); border-radius: 5px;">
-            <div class="header">
-                <h2 class="subtitle">New Game</h2>
+    <div id="gameContainer">
+        <div id="menu"><img src="/assets/logobanner.png" width="120" height="60"></div>
+        <div id="gameMainContainer">
+            <div class="playerInfo" id="otherData">
+                <img src="/assets/iconwhite.png" width="35" height="35">&nbsp;
+                <div class="username" id="otherUsername">User</div>
+                <div class="playertimer" id="otherTime">30:00</div>
             </div>
+            <br/>
+            <div id="gameboard"></div>
+            <br/>
+            <div class="playerInfo" id="yourData">
+                <img src="/assets/iconwhite.png" width="40" height="40">&nbsp;
+                <div class="username" id="yourUsername">User</div>
+                <div class="playertimer" id="yourTime">30:00</div>
+            </div>
+            <br/>
+            <br/>
+        </div>
+        <div class="sidebar">
+            <h1>Create Room</h1>
+            <div class="grid-container">
+                <button class="grid-item">1+0</button>
+                <button class="grid-item">2+1</button>
+                <button class="grid-item">3+0</button>
+                <button class="grid-item">3+2</button>
+                <button class="grid-item">5+0</button>
+                <button class="grid-item">5+3</button>
+                <button class="grid-item">10+0</button>
+                <button class="grid-item">10+5.</button>
+                <button class="grid-item">15+10</button>
+                <button class="grid-item">30+0</button>
+                <button class="grid-item">30+20</button>
+            </div>
+            <br/>
+            <h1>Custom Options</h1>
             <div class="game-options">
-                <select id="gametype" onchange="onGameInfoDropdownChanged();">
+                Game: <select id="gametype" onchange="onGameInfoDropdownChanged();">
                     <option value="chess/chess">Chess</option>
                     <option value="chess/courier">Courier Chess</option>
                     <option value="chess/gothic">Gothic Chess</option>
@@ -137,6 +242,8 @@
                     <option value="checkers/checkers">Checkers</option>
                     <option value="checkers/draughts">Draughts</option>
                 </select>
+                <br/>
+                Time: 
                 <select id="gametime" onchange="onGameInfoDropdownChanged();">
                     <option value="600/0">---SELECT TIME---</option>
                     <option value="15/0">0:15</option>
@@ -151,16 +258,143 @@
                     <option value="3600/0">1:00:00</option>
                     <option value="7200/0">2:00:00</option>
                 </select>
+                <br/>
                 <button id="newroombutton">New Room</button>
             </div>
         </div>
-        <div class="login-links">
-            <a href="{{discord_bot_addition_link}}">Add Discord Bot</a>
-            <a href="/login/discord/">Login</a>
-        </div>
     </div>
-    
-   <script>
+
+    <script>
+        var ChessgroundJS = null;
+    </script>
+    <script type="module">
+        import { Chessground } from "/assets/chessgroundx/chessground.js"
+        ChessgroundJS = Chessground;
+    </script>
+    <script>
+        let gameBoard = document.getElementById("gameboard");
+
+        var chessgroundconfig = {
+
+            fen: 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1', // starting FEN
+
+            orientation: 'white', // board orientation
+
+            turnColor: 'white', // board orientation
+
+            coordinates: true, // show ranks and files
+
+            autoCastle: true, // automatically castle when king/rook move
+
+            viewOnly: false, // restrict premoves, clicks, drag pieces
+
+            disableContextMenu: false, // disable right click
+
+            resizable: true, // allow resize
+
+            dimensions: {
+                width: 8,
+                height: 8,
+            },
+
+            animation: {
+                enabled: true,
+                duration: 200
+            }, 
+
+            movable: {
+                free: false, // all moves are valid - no validation
+                color: 'both', // allow both whites and blacks to move
+                showDests: true, // highlight destinations
+                dests: null,
+                rookCastle: false
+            },
+
+            drawable: {
+                enabled: true,
+                visible: true,
+            },
+
+            premovable: {
+                enabled: false, // false for now
+                events: {
+                    set: function(orig, dest) {
+                        selectedpremove = {
+                            from: orig,
+                            to: dest,
+                            promotion: promotion
+                        };
+                    },
+                    unset: function() {
+                        selectedpremove = null;
+                    }
+                }
+            },
+
+            predroppable: {
+                enabled: false // disable predrops
+            },
+
+            highlight: {
+                lastMove: true, // highlight last move
+                check: true // highlight checks
+            },
+
+            events: {
+                move: (orig, dest) => {
+                    
+                },
+                dropNewPiece: (role, key) => {
+                    // called when a new piece is dropped from pocket
+                    // add to position
+                }
+            }
+
+        };
+
+        function setGameBoardSize() {
+            if (window.innerWidth >= 600) {
+                gameBoard.style.width = ((gameBoard.clientHeight / 8) * 8) + "px";
+            }else{
+                gameBoard.style.height = ((gameBoard.clientWidth / 8) * 8) + "px";
+            }
+            if (document.body.clientWidth >= 600) {
+                let gameMainContainerMargin = (((document.body.clientWidth - gameBoard.clientWidth) / 3.5) - document.getElementById("menu").clientWidth) + "px";
+                document.getElementById("gameMainContainer").style.marginLeft = gameMainContainerMargin;
+                document.getElementById("gameMainContainer").style.width = gameBoard.clientWidth + "px";
+            }
+
+        }
+
+        function loadMainScript() {
+            if (document.body.clientWidth >= 600) {
+
+                new ChessgroundJS(gameBoard, chessgroundconfig);
+
+                let gameBoardInside = document.getElementsByTagName("cg-board")[0];
+
+                gameBoard.classList.add("board8x8");
+
+                setGameBoardSize();
+            }
+        }
+
+
+        let interval = setInterval(() => {
+            if (ChessgroundJS != null) {
+                loadMainScript();
+                clearInterval(interval);
+            }
+        }, 500);
+
+        let array = document.getElementsByClassName("grid-item");
+        for (let index = 0; index < array.length; index++) {
+            const element = array[index];
+            element.addEventListener('click', () => {
+                window.location.href = "/new/chess/chess/" + element.innerHTML.split("+")[0] + "/" + element.innerHTML.split("+")[1];
+            })
+        }
+
         document.getElementById('newroombutton').onclick = () => {
                 window.location.href = "/new/" + "chess/chess" + "/" + "600/0";
         };
@@ -171,38 +405,6 @@
                     window.location.href = "/new/" + gametypedropdownvalue + "/" + gametimeropdownvalue;
             };
         }
-
-        document.addEventListener('DOMContentLoaded', async () => {
-            try {
-                if (window.localStorage.getItem('authid') && window.localStorage.getItem('authpassword') && window.localStorage.getItem('webPushVapidPublicKey')) {
-                    const registration = await navigator.serviceWorker.register('/service-worker.js');
-                        
-                    let subscription = await registration.pushManager.subscribe({
-                        userVisibleOnly: true,
-                        applicationServerKey: window.localStorage.getItem('webPushVapidPublicKey'),
-                    });
-
-                    let userdetails = {};
-
-                    userdetails.userId = parseInt(window.localStorage.getItem('authid'));
-                    
-                    userdetails.userPassword = window.localStorage.getItem('authpassword');
-
-                    // Send the subscription to the server
-                    await fetch('/notification/subscribe', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                        },
-                        body: JSON.stringify({subscription, userdetails}),
-                    });
-
-                    console.log('Subscription successful');
-                }
-            } catch (error) {
-                console.error('Error subscribing to push notifications:', error);
-            }
-        });
-   </script>
+    </script>
 </body>
 </html>

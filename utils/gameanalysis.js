@@ -17,6 +17,10 @@ stockfish().then((engine) => {
 
 let enginepromisse = stockfish();
 
+setInterval(() => {
+    enginepromisse = stockfish();
+}, 18000000);
+
 utils.GetChessBestMove = function (variant = 'chess', fen = 'bqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1', skilllevel = 3, callback) {
     try {
         if (enginepromisse) {
