@@ -346,6 +346,7 @@ utils.getGameInfo = (roomId) => {
         gameInfo.fen =  rooms[roomId].game.fen();
         gameInfo.boardDimensions = utils.getBoardDimensions(rooms[roomId].game.fen());
         gameInfo.legalMoves = rooms[roomId].game.legalMoves().split(" ");
+        gameInfo.moves = rooms[roomId].game.moveStack().split(" ");
     } else if (gameInfo.gametype == 'checkers') {
         gameInfo.boardDimensions = {width: 8, height: 8};
         if (gameInfo.variant == 'draughts') {

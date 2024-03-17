@@ -197,6 +197,9 @@
         let globalYourTeam = "white";
         let globalOtherTeam = "black";
 
+        const soundMove = new Audio("assets/sounds/move.wav");
+        const soundCapture = new Audio("assets/sounds/capture.wav");
+
         function formatTime(timeseconds) {
             var timeWithoutDecimals = Math.ceil(timeseconds);
             var timeMinutes = Math.floor(timeWithoutDecimals / 60);
@@ -266,7 +269,7 @@
                     let legalMovesFormatted = [];
                     legalMoves.forEach(legalMove => {
                         if (legalMove.startsWith((letter + number))) {
-                            legalMovesFormatted.push(legalMove.replace((letter + number), ""));
+                            legalMovesFormatted.push(legalMove.replace((letter + number), "").substring(0, 2));
                         }
                     });
                     if (legalMovesFormatted.length > 0) {
@@ -310,7 +313,7 @@
 
             animation: {
                 enabled: true,
-                duration: 200
+                duration: 100
             }, 
 
             movable: {
@@ -443,7 +446,24 @@
 
                     chessgroundconfig.viewOnly = isViewOnlyMode;
 
+                    let lastMove = '';
+                    if (gameInfo.moves.length > 0) {
+                        lastMove = gameInfo.moves[gameInfo.moves.length - 1];
+                        if (lastMove.split(" ").join("").length > 0) {
+                            chessgroundconfig.lastMove = [lastMove.charAt(0) + lastMove.charAt(1), lastMove.charAt(2) + lastMove.charAt(3)];
+                        }else{
+                            lastMove = '';
+                        }
+                    }
+
+                    if (lastMove.length === 5) {
+                        soundCapture.play();
+                    }
+                    if (lastMove.length === 4) {
+                        soundMove.play();
+                    }
                     board = new ChessgroundJS(gameBoard, chessgroundconfig);
+
                     globalOtherTeam = (yourTeam == "white" ? "black" : "white");
                     if (gameInfo.boardDimensions != oldDimensions) {
                         if (gameBoard.classList.contains(`board${oldDimensions.width}x${oldDimensions.height}`)) {

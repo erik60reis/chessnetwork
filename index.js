@@ -49,7 +49,7 @@ global.coordToExternalNumbering = {
 
 setTimeout(() => {
     ffish.loadVariantConfig(fs.readFileSync(rootpath + "/variants.ini"));
-}, 2000);
+}, 3000);
 
 function generateGame(gametype = 'chess', variant = 'chess') {
     switch (gametype) {
