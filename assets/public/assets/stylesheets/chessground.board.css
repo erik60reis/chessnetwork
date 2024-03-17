@@ -129,6 +129,10 @@
   background-image: url('/assets/chesspieces/board/brown12x10.svg');
 }
 
+.board5x5 cg-board {
+  background-image: url('/assets/chesspieces/board/brown5x5.svg');
+}
+
 cg-board square.move-dest {
   background: radial-gradient(rgba(20, 85, 30, 0.5) 22%, #208530 0, rgba(0, 0, 0, 0.3) 0, rgba(0, 0, 0, 0) 0);
 }

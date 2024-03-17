@@ -34,7 +34,7 @@ global.otherEvents = {
 global.avaliablegametypes = ['chess', 'checkers'];
 
 global.avaliablevariants = {
-    chess: ['chess', 'racingkings', '3check', 'horde', 'amazon', 'gothic', 'amazons', 'courier', 'crazyhouse', 'antichess'],
+    chess: ['chess', 'racingkings', '3check', 'horde', 'amazon', 'gothic', 'amazons', 'courier', 'crazyhouse', 'antichess', 'chess5x5'],
     checkers: Object.keys(Checkers)
 };
 
@@ -46,6 +46,10 @@ global.appconfig = require('./config.json');
 global.coordToExternalNumbering = {
     
 };
+
+setTimeout(() => {
+    ffish.loadVariantConfig(fs.readFileSync(rootpath + "/variants.ini"));
+}, 2000);
 
 function generateGame(gametype = 'chess', variant = 'chess') {
     switch (gametype) {
