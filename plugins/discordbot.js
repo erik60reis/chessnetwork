@@ -66,6 +66,7 @@ if (appconfig.discordbot.enabled) {
             let skillLevel = 3;
             if (command == "playbot") {
                 let variant = 'chess';
+                let fen = null;
                 if (args.length >= 2) {
                     if (avaliablevariants.chess.includes(args[1])) {
                         variant = args[1];
@@ -80,11 +81,21 @@ if (appconfig.discordbot.enabled) {
                                 skillLevel = 0;
                             }
                         }catch{}
+                        if (args.length >= 4) {
+                            fen = args[3];
+                            for (let index = 4; index < args.length; index++) {
+                                const element = args[index];
+                                fen += " " + element;
+                            }
+                        }
                     }
                 }
                 
                 if (!getPlayerRoom(msg.author.id)) {
                     roomId = roomFunctions.createRoom('chess', variant);
+                    if (fen) {
+                        rooms[roomId].game.setFen(fen);
+                    }
                     rooms[roomId].white.isAvaliable = false;
                     rooms[roomId].white.discordChannelId = msg.channel.id;
                     rooms[roomId].white.name = msg.author.globalName;
@@ -265,7 +276,7 @@ Rating: ${user.elo}
     **${botprefix}autojoin** ===== tries to join a random room, if not posssible, creates a new room
     **${botprefix}quit** ===== quits the current room
     **${botprefix}stats** ===== gets player stats on the database
-    **${botprefix}playbot <variant> <skill level (0 - 20)>** ===== plays a game with the bot
+    **${botprefix}playbot <variant> <skill level (0 - 20)> <fen>** ===== plays a game with the bot
     **${botprefix}move <movement>** ===== plays a move (eg. ${botprefix}move e2e4   or   ${botprefix}move 21-17 )
 
     support: ${appconfig.discordbot.support_link}
