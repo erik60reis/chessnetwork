@@ -64,7 +64,20 @@ if (appconfig.discordbot.enabled) {
             //bot.createMessage(msg.channel.id, "Pong!");
             let roomId;
             let skillLevel = 3;
-            if (command == "playbot") {
+            if (command == "jointournament") {
+                let tournamentIndex = 0;
+                if (args.length >= 2) {
+                    if (tournaments[tournamentIndex].players.length < 8) {
+                        try {
+                            tournamentIndex = parseInt(args[1]);
+                        }catch{}
+                        tournaments[tournamentIndex].players.push({
+                            name: msg.author.globalName,
+                            discordId: msg.author.id,
+                        });
+                    }
+                }
+            } else if (command == "playbot") {
                 let variant = 'chess';
                 let fen = null;
                 if (args.length >= 2) {

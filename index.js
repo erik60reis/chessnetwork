@@ -43,6 +43,7 @@ global.roomFunctions = {};
 
 global.appconfig = require('./config.json');
 
+
 global.coordToExternalNumbering = {
     
 };

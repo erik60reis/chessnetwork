@@ -19,6 +19,10 @@
             text-align: center;
         }
 
+        #gameMainContainer {
+            display: none;
+        }
+
         #gameimage {
             width: 100%;
             height: auto;
@@ -88,7 +92,7 @@
         .sidebar {
             display: block;
             width: 100%;
-            margin-left: 20px;
+            height: 80vh;
             background-color: #262522;
             border-radius: 5px;
         }
@@ -170,6 +174,7 @@
 
             .sidebar {
                 height: 80vh;
+                margin-left: 20px;
             }
 
             #menu {
@@ -182,6 +187,7 @@
 
             #gameMainContainer {
                 max-height: 98vh;
+                display: block;
             }
         }
     </style>
@@ -192,7 +198,7 @@
 </head>
 <body>
     <div id="gameContainer">
-        <div id="menu"><img src="/assets/logobanner.png" width="120" height="60"></div>
+        <div id="menu"><img src="/assets/logobanner.png" width="110" height="55"></div>
         <div id="gameMainContainer">
             <div class="playerInfo" id="otherData" style="display: none;">
                 <div class="username" id="otherUsername">User</div>
@@ -383,6 +389,8 @@
                 document.getElementById("yourData").style.display = "block";
 
                 setGameBoardSize();
+            }else{
+                
             }
         }
 
