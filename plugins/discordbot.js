@@ -67,7 +67,7 @@ if (appconfig.discordbot.enabled) {
             if (command == "jointournament") {
                 let tournamentIndex = 0;
                 if (args.length >= 2) {
-                    if (tournaments[tournamentIndex].players.length < 8) {
+                    if (tournaments[tournamentIndex] && tournaments[tournamentIndex].players.length < 8) {
                         try {
                             tournamentIndex = parseInt(args[1]);
                         }catch{}

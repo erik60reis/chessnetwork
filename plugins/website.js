@@ -61,7 +61,7 @@ if (appconfig.website.enabled) {
             clientId: appconfig.auth.discord.client_id,
             clientSecret: appconfig.auth.discord.client_secret,
             redirectUri: appconfig.auth.discord.redirect_uri,
-        });    
+        });
     }
 
     const handlebars = expressHandlebars.create({
