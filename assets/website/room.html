@@ -147,8 +147,6 @@
             }
         }
     </style>
-    <link rel="stylesheet" href="/assets/stylesheets/chessground.base.css">
-    <link rel="stylesheet" href="/assets/stylesheets/chessground.board.css">
     <span id="piecesstyle"></span>
 </head>
 <body>
@@ -179,13 +177,7 @@
         </div>
     </div>
 
-    <script>
-        var ChessgroundJS = null;
-    </script>
-    <script type="module">
-        import { Chessground } from "/assets/chessgroundx/chessground.js"
-        ChessgroundJS = Chessground;
-    </script>
+    <script src="/assets/gameboard.js"></script>
     <script src="/socket.io/socket.io.js"></script>
     <script src="/assets/scripts/qrcode.min.js"></script>
     <script>    
@@ -263,17 +255,17 @@
         }
 
         function getDests(legalMoves, boardranks) {
-            var moves = new Map();
+            var moves = {};
             letters.split("").forEach((letter) => {
                 for (let number = 1; number <= boardranks; number++) {
-                    let legalMovesFormatted = [];
+                    let legalMovesFormatted = {};
                     legalMoves.forEach(legalMove => {
                         if (legalMove.startsWith((letter + number))) {
-                            legalMovesFormatted.push(legalMove.replace((letter + number), "").substring(0, 2));
+                            legalMovesFormatted[legalMove.replace((letter + number), "").substring(0, legalMove.length - 1)] = true;
                         }
                     });
-                    if (legalMovesFormatted.length > 0) {
-                        moves.set((letter + number), legalMovesFormatted);
+                    if (Object.keys(legalMovesFormatted).length > 0) {
+                        moves[letter + number] = legalMovesFormatted;
                     }
                 }
             });
@@ -287,87 +279,6 @@
         let board = null;
         
         let socket;
-
-        var chessgroundconfig = {
-
-            fen: 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1', // starting FEN
-
-            orientation: 'white', // board orientation
-
-            turnColor: 'white', // board orientation
-
-            coordinates: true, // show ranks and files
-
-            autoCastle: true, // automatically castle when king/rook move
-
-            viewOnly: false, // restrict premoves, clicks, drag pieces
-
-            disableContextMenu: false, // disable right click
-
-            resizable: true, // allow resize
-
-            dimensions: {
-                width: 8,
-                height: 8,
-            },
-
-            animation: {
-                enabled: true,
-                duration: 100
-            }, 
-
-            movable: {
-                free: false, // all moves are valid - no validation
-                color: 'both', // allow both whites and blacks to move
-                showDests: true, // highlight destinations
-                dests: null,
-                rookCastle: false
-            },
-
-            drawable: {
-                enabled: true,
-                visible: true,
-            },
-
-            premovable: {
-                enabled: false, // false for now
-                events: {
-                    set: function(orig, dest) {
-                        selectedpremove = {
-                            from: orig,
-                            to: dest,
-                            promotion: promotion
-                        };
-                    },
-                    unset: function() {
-                        selectedpremove = null;
-                    }
-                }
-            },
-
-            predroppable: {
-                enabled: false // disable predrops
-            },
-
-            highlight: {
-                lastMove: true, // highlight last move
-                check: true // highlight checks
-            },
-
-            events: {
-                move: (orig, dest) => {
-                    socket.emit('makeMove', orig + dest);
-                    socket.emit('makeMove', orig + "-" + dest);
-                    socket.emit('makeMove', orig + dest + 'q');
-                    socket.emit('makeMove', chessSquareToCheckersIndex(orig, oldGameInfo.boardDimensions.height, oldGameInfo.boardDimensions.width) + "-" + chessSquareToCheckersIndex(dest,  oldGameInfo.boardDimensions.height, oldGameInfo.boardDimensions.width));
-                },
-                dropNewPiece: (role, key) => {
-                    // called when a new piece is dropped from pocket
-                    // add to position
-                }
-            }
-
-        };
 
         let gameBoard = document.getElementById("gameboard");
         let gameBoardInside = document.getElementsByTagName("cg-board")[0];
@@ -393,138 +304,139 @@
             socket.emit('joinRoom', roomId, window.localStorage.getItem('authid'), window.localStorage.getItem('authpassword'), window.location.href, '{{invitedUserDiscordId}}');
         }
 
-
-        function loadMainScript() {
-            socket = io();
-
-            socket.once('connect', () => {
-                if (isViewOnlyMode) {
-                    socket.emit('spectateRoom', roomId, window.localStorage.getItem('authid'), window.localStorage.getItem('authpassword'));
-                }else{
-                    joinRoom();
-                }
-            });
-
-            document.getElementById("gamestatus").innerHTML = `<div>${window.location.href.split("?")[0]}</div><br/>&nbsp;<table id="joinqrcode" style="width: 150px; height: 150px; margin-left: auto; margin-right: auto;"</table>`;
-            var joinqrcode = new QRCode(document.getElementById("joinqrcode"), {
-                text: window.location.href.split("?")[0],
-                width: 150,
-                height: 150,
-                colorDark : "#000000",
-                colorLight : "#ffffff",
-                correctLevel : QRCode.CorrectLevel.H
-            });
-        
-
-
-            document.getElementById("movebutton").addEventListener('click', () => {
-                socket.emit('makeMove', document.getElementById("moveinput").value);
-                document.getElementById("moveinput").value = "";
-            });
-
-
-            socket.on('moveMade', (newimagedatauri, newGameStatusText, gameInfo, yourTeam) => {
-                if (document.getElementById("piecesstyle").innerHTML === "") {
-                    if (gameInfo.gametype == "chess") {
-                        document.getElementById("piecesstyle").innerHTML = `<link rel="stylesheet" href="/assets/stylesheets/chessground.pieces.css">`;
-                    } else if (gameInfo.gametype == "checkers") {
-                        document.getElementById("piecesstyle").innerHTML = `<link rel="stylesheet" href="/assets/stylesheets/chessground.checkerspieces.css">`;
-                    } else if (gameInfo.gametype == "chess2.0") {
-                        document.getElementById("piecesstyle").innerHTML = `<link rel="stylesheet" href="/assets/stylesheets/chessground.2.0pieces.css">`;
-                    }
-                }
-                if ((gameInfo.gametype === "chess" && !["amazons", "crazyhouse"].includes(gameInfo.variant)) || (gameInfo.gametype === "checkers" && gameInfo.variant !== "draughts")) {
-                    document.getElementById("moveinput").style.display = "none";
-                    document.getElementById("movebutton").style.display = "none";
-                    document.getElementById("gameimage").style.display = "none";
-                    gameBoard.style.display = "block";
-                    document.getElementById("yourData").style.display = "flex";
-                    document.getElementById("otherData").style.display = "flex";
-                    chessgroundconfig.fen = gameInfo.fen;
-                    chessgroundconfig.orientation = yourTeam;
-                    chessgroundconfig.movable.color = yourTeam;
-                    chessgroundconfig.movable.dests = getDests(gameInfo.legalMoves, gameInfo.boardDimensions.height);
-                    chessgroundconfig.turnColor = (gameInfo.turn ? "white" : "black");
-                    chessgroundconfig.dimensions = gameInfo.boardDimensions;
-
-                    chessgroundconfig.viewOnly = isViewOnlyMode;
-
-                    let lastMove = '';
-                    if (gameInfo.moves.length > 0) {
-                        lastMove = gameInfo.moves[gameInfo.moves.length - 1];
-                        if (lastMove.split(" ").join("").length > 0) {
-                            chessgroundconfig.lastMove = [lastMove.charAt(0) + lastMove.charAt(1), lastMove.charAt(2) + lastMove.charAt(3)];
-                        }else{
-                            lastMove = '';
-                        }
-                    }
-
-                    if (lastMove.length === 5) {
-                        soundCapture.play();
-                    }
-                    if (lastMove.length === 4) {
-                        soundMove.play();
-                    }
-                    board = new ChessgroundJS(gameBoard, chessgroundconfig);
-
-                    globalOtherTeam = (yourTeam == "white" ? "black" : "white");
-                    if (gameInfo.boardDimensions != oldDimensions) {
-                        if (gameBoard.classList.contains(`board${oldDimensions.width}x${oldDimensions.height}`)) {
-                            gameBoard.classList.remove(`board${oldDimensions.width}x${oldDimensions.height}`);
-                        }
-                        gameBoard.classList.add(`board${gameInfo.boardDimensions.width}x${gameInfo.boardDimensions.height}`);
-                        oldDimensions = gameInfo.boardDimensions;
-                    }
-                    setGameBoardSize();
-                    yourTime = gameInfo[yourTeam + "Time"];
-                    otherTime = gameInfo[globalOtherTeam + "Time"];
-                    let pieces = document.getElementsByTagName("piece");
-                    for (let index = 0; index < pieces.length; index++) {
-                        const element = pieces[index];
-                        let piecesize = (gameBoard.clientWidth > gameBoard.clientHeight ?  (gameBoard.clientHeight / oldDimensions.height) + "px" : (gameBoard.clientWidth / oldDimensions.width) + "px");
-                        element.style.width = piecesize;
-                        element.style.height = piecesize;
-                    }
-                    oldGameInfo = gameInfo;
-                    isMyTurn = (yourTeam == 'white') == gameInfo.turn;
-                    globalYourTeam = yourTeam;
-                } else {
-                    document.getElementById("moveinput").style.display = "block";
-                    document.getElementById("movebutton").style.display = "block";
-                    document.getElementById("gameimage").style.display = "block";
-                    gameBoard.style.display = "none";
-                    document.getElementById("yourData").style.display = "none";
-                    document.getElementById("otherData").style.display = "none";
-                }
-
-                document.getElementById("gameimage").src = newimagedatauri;
-
-                if (gameInfo.isStarted) {
-                    document.getElementById('gamestatus').innerHTML = '';
-                }
-
-                if (newGameStatusText !== undefined && newGameStatusText !== '') {
-                    document.getElementById('gamestatus').innerHTML = newGameStatusText;
-                }
-
-                if (isViewOnlyMode) {
-                    socket.emit('spectateRoom', roomId);
-                }
-
-            });
-
-            socket.on('DisableViewOnlyMode', () => {
-                isViewOnlyMode = false;
-                joinRoom();
-            })
+        let gameboardconfig = {
+            fen: 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR',
+            width: 8,
+            height: 8,
+            pieceTheme: "/assets/chesspieces/%piece%.png",
+            isFlipped: false,
+            onMove: (orig, dest) => {
+                socket.emit('makeMove', orig + dest);
+                socket.emit('makeMove', orig + "-" + dest);
+                socket.emit('makeMove', orig + dest + 'q');
+                socket.emit('makeMove', chessSquareToCheckersIndex(orig, oldGameInfo.boardDimensions.height, oldGameInfo.boardDimensions.width) + "-" + chessSquareToCheckersIndex(dest,  oldGameInfo.boardDimensions.height, oldGameInfo.boardDimensions.width));
+            },
         }
-        
-        let interval = setInterval(() => {
-            if (ChessgroundJS != null) {
-                loadMainScript();
-                clearInterval(interval);
+
+        socket = io();
+
+        socket.once('connect', () => {
+            if (isViewOnlyMode) {
+                socket.emit('spectateRoom', roomId, window.localStorage.getItem('authid'), window.localStorage.getItem('authpassword'));
+            }else{
+                joinRoom();
             }
-        }, 500);
+        });
+
+        document.getElementById("gamestatus").innerHTML = `<div>${window.location.href.split("?")[0]}</div><br/>&nbsp;<table id="joinqrcode" style="width: 150px; height: 150px; margin-left: auto; margin-right: auto;"</table>`;
+        var joinqrcode = new QRCode(document.getElementById("joinqrcode"), {
+            text: window.location.href.split("?")[0],
+            width: 150,
+            height: 150,
+            colorDark : "#000000",
+            colorLight : "#ffffff",
+            correctLevel : QRCode.CorrectLevel.H
+        });
+    
+
+
+        document.getElementById("movebutton").addEventListener('click', () => {
+            socket.emit('makeMove', document.getElementById("moveinput").value);
+            document.getElementById("moveinput").value = "";
+        });
+
+
+        socket.on('moveMade', (newimagedatauri, newGameStatusText, gameInfo, yourTeam) => {
+            if (document.getElementById("piecesstyle").innerHTML === "") {
+                if (gameInfo.gametype == "chess") {
+                    gameboardconfig.pieceTheme = "/assets/chesspieces/%piece%.png";
+                } else if (gameInfo.gametype == "checkers") {
+                    gameboardconfig.pieceTheme = "/assets/checkerspieces/%piece%.png";
+                } else if (gameInfo.gametype == "chess2.0") {
+                    gameboardconfig.pieceTheme = "/assets/chess2.0pieces/%piece%.png";
+                }
+            }
+            if ((gameInfo.gametype === "chess" && !["amazons", "crazyhouse"].includes(gameInfo.variant)) || gameInfo.gametype === "checkers" || gameInfo.gametype === "chess2.0") {
+                document.getElementById("moveinput").style.display = "none";
+                document.getElementById("movebutton").style.display = "none";
+                document.getElementById("gameimage").style.display = "none";
+                gameBoard.style.display = "block";
+                document.getElementById("yourData").style.display = "flex";
+                document.getElementById("otherData").style.display = "flex";
+                gameboardconfig.fen = gameInfo.fen;
+                gameboardconfig.isFlipped = !(yourTeam === "white");
+                gameboardconfig.legalMoves = (!isViewOnlyMode && gameInfo.turn === (yourTeam === "white") ? getDests(gameInfo.legalMoves, gameInfo.boardDimensions.height) : {});
+                gameboardconfig.width = gameInfo.boardDimensions.width;
+                gameboardconfig.height = gameInfo.boardDimensions.height;
+
+                let lastMove = '';
+                /*if (gameInfo.moves.length > 0) {
+                    lastMove = gameInfo.moves[gameInfo.moves.length - 1];
+                    if (lastMove.split(" ").join("").length > 0) {
+                        //chessgroundconfig.lastMove = [lastMove.charAt(0) + lastMove.charAt(1), lastMove.charAt(2) + lastMove.charAt(3)];
+                    }else{
+                        lastMove = '';
+                    }
+                }*/
+
+                if (lastMove.length === 5) {
+                    soundCapture.play();
+                }
+                if (lastMove.length === 4) {
+                    soundMove.play();
+                }
+                board = createGameBoard(gameBoard, gameboardconfig);
+
+                globalOtherTeam = (yourTeam == "white" ? "black" : "white");
+                if (gameInfo.boardDimensions != oldDimensions) {
+                    if (gameBoard.classList.contains(`board${oldDimensions.width}x${oldDimensions.height}`)) {
+                        gameBoard.classList.remove(`board${oldDimensions.width}x${oldDimensions.height}`);
+                    }
+                    gameBoard.classList.add(`board${gameInfo.boardDimensions.width}x${gameInfo.boardDimensions.height}`);
+                    oldDimensions = gameInfo.boardDimensions;
+                }
+                setGameBoardSize();
+                yourTime = gameInfo[yourTeam + "Time"];
+                otherTime = gameInfo[globalOtherTeam + "Time"];
+                let pieces = document.getElementsByTagName("piece");
+                for (let index = 0; index < pieces.length; index++) {
+                    const element = pieces[index];
+                    let piecesize = (gameBoard.clientWidth > gameBoard.clientHeight ?  (gameBoard.clientHeight / oldDimensions.height) + "px" : (gameBoard.clientWidth / oldDimensions.width) + "px");
+                    element.style.width = piecesize;
+                    element.style.height = piecesize;
+                }
+                oldGameInfo = gameInfo;
+                isMyTurn = (yourTeam == 'white') == gameInfo.turn;
+                globalYourTeam = yourTeam;
+            } else {
+                document.getElementById("moveinput").style.display = "block";
+                document.getElementById("movebutton").style.display = "block";
+                document.getElementById("gameimage").style.display = "block";
+                gameBoard.style.display = "none";
+                document.getElementById("yourData").style.display = "none";
+                document.getElementById("otherData").style.display = "none";
+            }
+
+            document.getElementById("gameimage").src = newimagedatauri;
+
+            if (gameInfo.isStarted) {
+                document.getElementById('gamestatus').innerHTML = '';
+            }
+
+            if (newGameStatusText !== undefined && newGameStatusText !== '') {
+                document.getElementById('gamestatus').innerHTML = newGameStatusText;
+            }
+
+            if (isViewOnlyMode) {
+                socket.emit('spectateRoom', roomId);
+            }
+
+        });
+
+        socket.on('DisableViewOnlyMode', () => {
+            isViewOnlyMode = false;
+            joinRoom();
+        })
 
         setInterval(() => {
             let squares = document.getElementsByTagName("square");
