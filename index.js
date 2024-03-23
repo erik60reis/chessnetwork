@@ -4,6 +4,7 @@ const Checkers = {
     'checkers': require('./games/checkers.js'),
     'draughts': require('./games/draughts.js'),
 }
+const Chess2 = require('./games/chess2.0logic.js');
 
 
 global.plugins = {};
@@ -31,7 +32,7 @@ global.otherEvents = {
     onBoardBestVideoReady: [],
 }
 
-global.avaliablegametypes = ['chess', 'checkers'];
+global.avaliablegametypes = ['chess', 'checkers', 'chess2.0'];
 
 global.avaliablevariants = {
     chess: ['chess', 'racingkings', '3check', 'horde', 'amazon', 'gothic', 'amazons', 'courier', 'crazyhouse', 'antichess', 'chess5x5'],
@@ -50,10 +51,12 @@ global.coordToExternalNumbering = {
 
 setTimeout(() => {
     ffish.loadVariantConfig(fs.readFileSync(rootpath + "/variants.ini"));
-}, 3000);
+}, 4000);
 
 function generateGame(gametype = 'chess', variant = 'chess') {
     switch (gametype) {
+        case 'chess2.0':
+            return new Chess2();
         case 'chess':
             return new ffish.Board(variant);
         case 'checkers':
@@ -143,7 +146,7 @@ roomFunctions.createRoom = function(gametype = 'chess', variant = 'chess') {
                         }
                     }
 
-                } else {
+                  } else {
                     if (rooms[roomId].game.legalMoves().split(' ').includes(move)) {
                         rooms[roomId][(rooms[roomId].game.turn() ? "white" : "black")].time += rooms[roomId][(rooms[roomId].game.turn() ? "white" : "black")].increment;
                         rooms[roomId].game.push(move);

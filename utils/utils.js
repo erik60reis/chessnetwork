@@ -117,6 +117,7 @@ utils.formatTime = formatTime;
 
 global.images = {
     'chess': {},
+    'chess2.0': {},
     'checkers': {}
 };
 
@@ -133,6 +134,13 @@ async function loadImages() {
         }
     }
     
+    pieces = 'b k n p q r g'.split(' ');
+    for (let turn of turns) {
+        for (let piece of pieces) {
+            images['chess2.0'][turn + piece] = await loadImage(path.join(rootpath, `assets/chess2.0pieces/${turn}${piece.toUpperCase()}.png`).split('\\').join('/'));
+        }
+    }
+
     pieces = 'p k'.split(' ');
     for (let turn of turns) {
         for (let piece of pieces) {
@@ -342,7 +350,7 @@ utils.getGameInfo = (roomId) => {
         blackTime: rooms[roomId].black.time,
         blackTimeFormatted: utils.formatTime(rooms[roomId].black.time),
     };
-    if (gameInfo.gametype === 'chess') {
+    if (['chess', 'chess2.0'].includes(gameInfo.gametype)) {
         gameInfo.fen =  rooms[roomId].game.fen();
         gameInfo.boardDimensions = utils.getBoardDimensions(rooms[roomId].game.fen());
         gameInfo.legalMoves = rooms[roomId].game.legalMoves().split(" ");
@@ -389,8 +397,9 @@ function BoardToPng(board, isflipped = false, white = {}, black = {}, gametype =
             boardfiles = 10;
             boardranks = 10;
         }
-    } else {
-        
+    } else if (gametype == 'chess2.0') {
+        boardfiles = 10;
+        boardranks = 10;
     }
 
     let squaresizeX = 800 / boardfiles;

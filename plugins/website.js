@@ -52,7 +52,7 @@ if (appconfig.website.enabled) {
 
             //webpush.sendNotification(subscription, "Hi").catch(err => console.error(err));
         }catch(err){
-            console.log('error: ' + err)
+            console.log('error: ' + err);
         }
     });
 
@@ -73,6 +73,7 @@ if (appconfig.website.enabled) {
     app.set('view engine', '.html');
 
     app.use('/assets/chesspieces', express.static(path.join(rootpath, 'assets', 'chesspieces')));
+    app.use('/assets/chess2.0pieces', express.static(path.join(rootpath, 'assets', 'chess2.0pieces')));
     app.use('/assets/chessgroundx', express.static(path.join(rootpath, 'assets', 'chessgroundx')));
     app.use('/', express.static(path.join(rootpath, 'assets', 'public')));
     app.use('/assets/checkerspieces', express.static(path.join(rootpath, 'assets', 'checkerspieces')));

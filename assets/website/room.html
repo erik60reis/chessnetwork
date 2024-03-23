@@ -307,8 +307,8 @@
             resizable: true, // allow resize
 
             dimensions: {
-                width: 16,
-                height: 16,
+                width: 8,
+                height: 8,
             },
 
             animation: {
@@ -357,6 +357,7 @@
             events: {
                 move: (orig, dest) => {
                     socket.emit('makeMove', orig + dest);
+                    socket.emit('makeMove', orig + "-" + dest);
                     socket.emit('makeMove', orig + dest + 'q');
                     socket.emit('makeMove', chessSquareToCheckersIndex(orig, oldGameInfo.boardDimensions.height, oldGameInfo.boardDimensions.width) + "-" + chessSquareToCheckersIndex(dest,  oldGameInfo.boardDimensions.height, oldGameInfo.boardDimensions.width));
                 },
@@ -428,6 +429,8 @@
                         document.getElementById("piecesstyle").innerHTML = `<link rel="stylesheet" href="/assets/stylesheets/chessground.pieces.css">`;
                     } else if (gameInfo.gametype == "checkers") {
                         document.getElementById("piecesstyle").innerHTML = `<link rel="stylesheet" href="/assets/stylesheets/chessground.checkerspieces.css">`;
+                    } else if (gameInfo.gametype == "chess2.0") {
+                        document.getElementById("piecesstyle").innerHTML = `<link rel="stylesheet" href="/assets/stylesheets/chessground.2.0pieces.css">`;
                     }
                 }
                 if ((gameInfo.gametype === "chess" && !["amazons", "crazyhouse"].includes(gameInfo.variant)) || (gameInfo.gametype === "checkers" && gameInfo.variant !== "draughts")) {
