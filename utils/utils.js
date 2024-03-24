@@ -439,7 +439,7 @@ function BoardToPng(board, isflipped = false, white = {}, black = {}, gametype =
             ctx.fillText((isflipped ? (((boardfiles * boardranks) / 2) + 1) - squareindex : squareindex), j * squaresizeX, 100 + (i * squaresizeY));
             squareindex += 1;
         }
-        if (gametype == 'chess') {
+        if (['chess', 'chess2.0'].includes(gametype)) {
             if (i == boardranks - 1 && j == 0) {
                 ctx.fillText(indexToBoard(isflipped ? (boardranks * boardfiles) - squareindex : squareindex - 1, boardranks, boardfiles), j * squaresizeX, 100 + (i * squaresizeY));
             }else if (i == boardranks - 1) {

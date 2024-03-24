@@ -99,7 +99,7 @@ class Chess {
         return piece === '' || (isWhiteTurn && piece.toLowerCase() === piece) || (!isWhiteTurn && piece.toUpperCase() === piece);
     };
 
-    isKingInCheck = (color = this.color, tempBoard = this.board) => {
+    isKingInCheck = (color = this.turnColor, tempBoard = this.board) => {
         const kingXY = this.findKing(color);
         if (!kingXY) return false;
 
@@ -110,7 +110,7 @@ class Chess {
                     continue;
                 }
 
-                if (this.isMoveLegal(x, y, kingXY.x, kingXY.y)) {
+                if (this.isMoveLegal(x, y, kingXY.x, kingXY.y, true)) {
                     return true;
                 }
             }
@@ -119,7 +119,7 @@ class Chess {
         return false;
     };
 
-    isMoveLegal = (fromX, fromY, toX, toY) => {
+    isMoveLegal = (fromX, fromY, toX, toY, ignoreKingInCheck = false) => {
         if (fromX >= BOARD_SIZE_X || fromX < 0 || fromY >= BOARD_SIZE_Y || fromY < 0) {
             return false;
         }
@@ -130,9 +130,20 @@ class Chess {
 
         const piece = this.board[fromY][fromX];
     
+        const tempBoard2 = this.board.map(row => [...row]);
         const tempBoard = this.board.map(row => [...row]);
         const isWhiteTurn = this.turnColor === 'w';
         const direction = isWhiteTurn ? -1 : 1;
+
+
+        tempBoard2[toY][toX] = piece;
+        tempBoard2[fromY][fromX] = '';
+
+        if (!ignoreKingInCheck) {
+            if (this.isKingInCheck(this.turnColor, tempBoard2)) {
+                return false;
+            }
+        }
     
         switch (piece.toLowerCase()) {
             case 'p': // Peão
@@ -169,7 +180,11 @@ class Chess {
                         x += deltaX;
                         y += deltaY;
                         if (tempBoard[y][x] !== '') {
-                            return false;
+                            if (x === toX && y === toY && this.pieceTeam(tempBoard[toY][toX]) === (this.turnColor == "w" ? "b" : "w")) {
+                        
+                            }else{
+                                return false;
+                            }
                         }
                     }
                     return true;
@@ -184,7 +199,11 @@ class Chess {
                         while (y !== toY) {
                             y += deltaY;
                             if (tempBoard[y][fromX] !== '') {
-                                return false;
+                                if (y === toY && this.pieceTeam(tempBoard[toY][toX]) === (this.turnColor == "w" ? "b" : "w")) {
+                        
+                                }else{
+                                    return false;
+                                }
                             }
                         }
                     } else { // Movimento horizontal
@@ -193,7 +212,11 @@ class Chess {
                         while (x !== toX) {
                             x += deltaX;
                             if (tempBoard[fromY][x] !== '') {
-                                return false;
+                                if (x === toX && this.pieceTeam(tempBoard[toY][toX]) === (this.turnColor == "w" ? "b" : "w")) {
+                        
+                                }else{
+                                    return false;
+                                }
                             }
                         }
                     }
@@ -211,7 +234,11 @@ class Chess {
                         x += deltaX;
                         y += deltaY;
                         if (tempBoard[y][x] !== '') {
-                            return false;
+                            if (x === toX && y === toY && this.pieceTeam(tempBoard[toY][toX]) === (this.turnColor == "w" ? "b" : "w")) {
+                        
+                            }else{
+                                return false;
+                            }
                         }
                     }
                     return true;
@@ -224,7 +251,11 @@ class Chess {
                         while (y !== toY) {
                             y += deltaY;
                             if (tempBoard[y][fromX] !== '') {
-                                return false;
+                                if (y === toY && this.pieceTeam(tempBoard[toY][toX]) === (this.turnColor == "w" ? "b" : "w")) {
+                        
+                                }else{
+                                    return false;
+                                }
                             }
                         }
                     } else {
@@ -233,7 +264,11 @@ class Chess {
                         while (x !== toX) {
                             x += deltaX;
                             if (tempBoard[fromY][x] !== '') {
-                                return false;
+                                if (x === toX && this.pieceTeam(tempBoard[toY][toX]) === (this.turnColor == "w" ? "b" : "w")) {
+                        
+                                }else{
+                                    return false;
+                                }
                             }
                         }
                     }
