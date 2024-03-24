@@ -66,7 +66,7 @@ function createGameBoard(container, config) {
     let isFlipped = (config.isFlipped ? config.isFlipped : false);
     let pieceTheme = (config.pieceTheme ? config.pieceTheme : "assets/pieces/%piece%.png");
     let fen = (config.fen ? config.fen.split(" ")[0] : 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR');
-    let jsonBoard = fenToJson(fen, width, height);
+    let jsonBoard = fenToJson(fen, height, width);
 
     let selectedSquareCoords = null;
 
