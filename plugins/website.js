@@ -156,6 +156,16 @@ if (appconfig.website.enabled) {
         }
     });
 
+    app.get('/l/:roomId', (req, res) => {
+        res.send(`
+            <script>
+            const domainname = window.location.href.split("/")[2];
+            window.location.href = "${appconfig.website.custom_url_scheme}://" + domainname + "/${req.params.roomId}";
+            window.location.href = "http://" + domainname + "/${req.params.roomId}";
+            </script>
+        `);
+    });
+
     app.get('/', (req, res) => {
         res.render(join(rootpath, 'assets', 'website', 'index.html'), {discord_bot_addition_link: appconfig.discordbot.bot_addition_link});
     });

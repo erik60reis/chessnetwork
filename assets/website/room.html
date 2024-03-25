@@ -180,7 +180,7 @@
     <script src="/assets/gameboard.js"></script>
     <script src="/socket.io/socket.io.js"></script>
     <script src="/assets/scripts/qrcode.min.js"></script>
-    <script>    
+    <script>
         let yourTime = 1800;
         let otherTime = 1800;
         let oldGameInfo = {};
@@ -328,9 +328,9 @@
             }
         });
 
-        document.getElementById("gamestatus").innerHTML = `<div>${window.location.href.split("?")[0]}</div><br/>&nbsp;<table id="joinqrcode" style="width: 150px; height: 150px; margin-left: auto; margin-right: auto;"</table>`;
+        document.getElementById("gamestatus").innerHTML = `<div>http://${window.location.href.split("/")[2]}/l/${roomId}</div><br/>&nbsp;<table id="joinqrcode" style="width: 150px; height: 150px; margin-left: auto; margin-right: auto;"</table>`;
         var joinqrcode = new QRCode(document.getElementById("joinqrcode"), {
-            text: window.location.href.split("?")[0],
+            text: `http://${window.location.href.split("/")[2]}/l/${roomId}`,
             width: 150,
             height: 150,
             colorDark : "#000000",

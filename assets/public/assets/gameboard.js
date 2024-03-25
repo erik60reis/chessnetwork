@@ -87,7 +87,7 @@ function createGameBoard(container, config) {
             const squareCoords = `${String.fromCharCode(97 + j)}${fixedI + 1}`;
             const squareClass = `gameboardsquare-${squareCoords}`;
             if (jsonBoard[squareCoords]) {
-                cell.innerHTML = `<img style="width: 80%; height: 80%;" src="${pieceTheme.replace("%piece%", jsonBoard[squareCoords].color.toLowerCase() + jsonBoard[squareCoords].type.toUpperCase())}">`
+                cell.innerHTML = `<img style="width: 90%; height: 90%;" src="${pieceTheme.replace("%piece%", jsonBoard[squareCoords].color.toLowerCase() + jsonBoard[squareCoords].type.toUpperCase())}">`
             }
             cell.className = squareClass;
             cell.style.backgroundColor = "#f0d9b5";

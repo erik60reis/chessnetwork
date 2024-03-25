@@ -359,7 +359,7 @@ class Chess {
     }
 
     isCheckmate = function() {
-        return this.isKingInCheck() && this.legalMovesArray().length == 0;
+        return (this.isKingInCheck() && this.legalMovesArray().length == 0) || this.findKing(this.turnColor) === null;
     }
 
     isStalemate = function() {
