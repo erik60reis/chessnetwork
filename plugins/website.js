@@ -119,7 +119,7 @@ if (appconfig.website.enabled) {
         return undefined;
     }
 
-    function createRoomAndShowToClient(gametype, variant, res, time = 600, increment = 0, invitedUserDiscordId) {
+    function createRoomAndShowToClient(gametype, variant, res, time = 600, increment = 0, invitedUserDiscordId, isPublic = false) {
         if (!avaliablegametypes.includes(gametype)) {
             gametype = 'chess';
         }
@@ -137,6 +137,8 @@ if (appconfig.website.enabled) {
 
             rooms[roomId].white.increment = parseInt(increment);
             rooms[roomId].black.increment = parseInt(increment);
+
+            rooms[roomId].isPublic = isPublic;
         }catch{}
 
         if (invitedUserDiscordId) {
@@ -146,11 +148,40 @@ if (appconfig.website.enabled) {
         }
     }
 
+    app.get('/quickplay/:time/:increment', (req, res) => {
+        try {
+            let gametype = 'chess';
+            let variant = 'chess';
+
+            let time = parseInt(req.params.time);
+            let increment = parseInt(req.params.increment);
+
+            let createnewroom = true;
+
+            for (let roomId of Object.keys(rooms)) {
+                if (rooms[roomId].isPublic) {
+                    if (rooms[roomId].black.isAvaliable) {
+                        if (rooms[roomId].white.time == time) {
+                            if (rooms[roomId].white.increment == increment) {
+                                createnewroom = false;
+                                res.send(`<script>window.location.href = '/${roomId}'</script>`);
+                            }
+                        }
+                    }
+                }
+            }
+
+            if (createnewroom) {
+                createRoomAndShowToClient(gametype, variant, res, time, increment, undefined, true);
+            }
+        }catch{}
+    });
+
     app.get('/:roomId', (req, res) => {
         try {
             let roomId = parseInt(req.params.roomId);
-            let isViewOnlyMode = (!rooms[roomId].white.isAvaliable && !rooms[roomId].black.isAvaliable);
-            res.render(join(rootpath, 'assets', 'website', 'room.html'), {roomId, isViewOnlyMode, invitedUserDiscordId: req.query.invitedUserDiscordId});
+            let isViewOnlyMode = (rooms[roomId]) && !rooms[roomId].white.isAvaliable && !rooms[roomId].black.isAvaliable;
+            res.render(join(rootpath, 'assets', 'website', 'room.html'), {roomId, isViewOnlyMode, invitedUserDiscordId: req.query.invitedUserDiscordId, discord_client_id: appconfig.auth.discord.client_id});
         }catch(error) {
             console.log(error);
         }
@@ -167,7 +198,7 @@ if (appconfig.website.enabled) {
     });
 
     app.get('/', (req, res) => {
-        res.render(join(rootpath, 'assets', 'website', 'index.html'), {discord_bot_addition_link: appconfig.discordbot.bot_addition_link});
+        res.render(join(rootpath, 'assets', 'website', 'index.html'), {discord_bot_addition_link: appconfig.discordbot.bot_addition_link, discord_client_id: appconfig.auth.discord.client_id});
     });
 
     if (discordOauth2) {

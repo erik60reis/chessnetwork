@@ -223,7 +223,7 @@ if (appconfig.discordbot.enabled) {
             } else if (command == "autojoin") {
                 for (let roomId2 of Object.keys(rooms)) {
                     roomId = parseInt(roomId2);
-                    if (rooms[roomId].black.isAvaliable) {
+                    if (rooms[roomId].isPublic && rooms[roomId].black.isAvaliable) {
                         if (!getPlayerRoom(msg.author.id)) {                      
                             rooms[roomId].black.isAvaliable = false;
                             rooms[roomId].black.discordChannelId = msg.channel.id;

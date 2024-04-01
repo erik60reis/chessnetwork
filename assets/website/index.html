@@ -282,8 +282,31 @@
         import { Chessground } from "/assets/chessgroundx/chessground.js"
         ChessgroundJS = Chessground;
     </script>
+
+
+    <script>
+        var DiscordSDKPackage = null;
+        var discordSdk = null;
+        var discordClientId = "{{discord_client_id}}";
+    </script>
+    <script type="module">
+        import {DiscordSDK} from '/assets/discord-embedded-app-sdk/output/index.mjs';
+        DiscordSDKPackage = DiscordSDK;
+        discordSdk = new DiscordSDKPackage(discordClientId);
+    </script>
     <script>
         let gameBoard = document.getElementById("gameboard");
+        
+        setTimeout(() => {            
+            async function setupDiscordSdk() {
+                await discordSdk.ready();
+            }
+
+            setupDiscordSdk().then(() => {
+                console.log("Discord SDK is ready");
+            });
+        }, 2500);
+        
 
         var chessgroundconfig = {
 
@@ -407,7 +430,7 @@
         for (let index = 0; index < array.length; index++) {
             const element = array[index];
             element.addEventListener('click', () => {
-                window.location.href = "/new/chess/chess/" + (parseInt(element.innerHTML.split("+")[0]) * 60) + "/" + element.innerHTML.split("+")[1];
+                window.location.href = "/quickplay/" + (parseInt(element.innerHTML.split("+")[0]) * 60) + "/" + element.innerHTML.split("+")[1];
             })
         }
 

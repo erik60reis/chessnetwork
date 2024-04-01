@@ -176,7 +176,17 @@
             <div id="gamestatus"> ---- </div>
         </div>
     </div>
+    <script>
+        var DiscordSDKPackage = null;
+        var discordSdk = null;
+        var discordClientId = "{{discord_client_id}}";
 
+    </script>
+    <script type="module">
+        import {DiscordSDK} from '/assets/discord-embedded-app-sdk/output/index.mjs';
+        DiscordSDKPackage = DiscordSDK;
+        discordSdk = new DiscordSDKPackage(discordClientId);
+    </script>
     <script src="/assets/gameboard.js"></script>
     <script src="/socket.io/socket.io.js"></script>
     <script src="/assets/scripts/qrcode.min.js"></script>
@@ -191,6 +201,17 @@
 
         const soundMove = new Audio("assets/sounds/move.wav");
         const soundCapture = new Audio("assets/sounds/capture.wav");
+        
+        setTimeout(() => {            
+            async function setupDiscordSdk() {
+                await discordSdk.ready();
+            }
+
+            setupDiscordSdk().then(() => {
+                console.log("Discord SDK is ready");
+            });
+        }, 2500);
+
 
         function formatTime(timeseconds) {
             var timeWithoutDecimals = Math.ceil(timeseconds);

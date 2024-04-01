@@ -72,6 +72,7 @@ function generateGame(gametype = 'chess', variant = 'chess') {
 roomFunctions.createRoom = function(gametype = 'chess', variant = 'chess') {
     let roomId = nextRoomId();
     rooms[roomId] = {
+        isPublic: false,
         gametype: gametype,
         game: generateGame(gametype, variant),
         boardPngImages: [],
