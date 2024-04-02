@@ -61,7 +61,6 @@ function createGameBoard(container, config) {
     let removedSquares = (config.removedSquares ? config.removedSquares : []);
     let legalMoves = (config.legalMoves ? config.legalMoves : {});
     let onMoveCallback = (config.onMove ? config.onMove : function(orig, dest){});
-    let legalMoveSquareColor = (config.legalMoveSquareColor ? config.legalMoveSquareColor : "#00aa00");
     let selectPieceSquareColor = (config.selectPieceSquareColor ? config.selectPieceSquareColor : "#aaaa00");
     let isFlipped = (config.isFlipped ? config.isFlipped : false);
     let pieceTheme = (config.pieceTheme ? config.pieceTheme : "assets/pieces/%piece%.png");
@@ -73,6 +72,7 @@ function createGameBoard(container, config) {
     const table = document.createElement('table');
     table.style.width = "100%";
     table.style.height = "100%";
+    table.style.borderCollapse = "collapse";
   
     for (let i = height - 1; i >= 0; i--) {
         const row = document.createElement('tr');
@@ -97,10 +97,10 @@ function createGameBoard(container, config) {
             const sumOfIndexes = fixedI + fixedJ;
 
             if (sumOfIndexes % 2 === 0) {
-            const blackSquareClass = `gameboardblacksquare-${sumOfIndexes + 1}`;
-            cell.classList.add(blackSquareClass);
-            cell.classList.add("gameboardblacksquare");
-            cell.style.backgroundColor = "#b58863";
+                const blackSquareClass = `gameboardblacksquare-${sumOfIndexes + 1}`;
+                cell.classList.add(blackSquareClass);
+                cell.classList.add("gameboardblacksquare");
+                cell.style.backgroundColor = "#b58863";
             }
 
             if (removedSquares && removedSquares.includes(squareCoords)) {
@@ -122,20 +122,20 @@ function createGameBoard(container, config) {
 
                     for (let legalMoveSquare of document.querySelectorAll(`.legalMoveSquare`)) {
                         legalMoveSquare.classList.remove("legalMoveSquare");
-                        legalMoveSquare.style.backgroundColor = (legalMoveSquare.classList.contains("gameboardblacksquare") ? "#b58863" : "#f0d9b5")
+                        legalMoveSquare.style.backgroundImage = '';
                     }
-                    selectedSquare.style.backgroundColor = (selectedSquare.classList.contains("gameboardblacksquare") ? "#b58863" : "#f0d9b5")
                     selectedSquareCoords = null;
                 }
                 if (legalMoves[squareCoords] && Object.keys(legalMoves[squareCoords]).length > 0) {
                     for (let legalMoveSquareCoords of Object.keys(legalMoves[squareCoords])) {
                         let legalMoveSquare = document.querySelector(`.gameboardsquare-${legalMoveSquareCoords}`)
                         legalMoveSquare.classList.add("legalMoveSquare");
-                        legalMoveSquare.style.backgroundColor = legalMoveSquareColor;
+                        legalMoveSquare.style.backgroundImage = `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16pt' height='16.000099pt'%3E%3Cpath stroke='%23000' stroke-miterlimit='40' stroke-width='1.25' d='M15.625 10.000062c0 3.106602-2.518398 5.625-5.6249996 5.625-3.1066017 0-5.625-2.518398-5.625-5.625 0-3.1066013 2.5183983-5.6249996 5.625-5.6249996 3.1066016 0 5.6249996 2.5183983 5.6249996 5.6249996z'/%3E%3C/svg%3E")`;
+                        legalMoveSquare.style.backgroundSize = '50% 50%';
+                        legalMoveSquare.style.backgroundRepeat = 'no-repeat';
+                        legalMoveSquare.style.backgroundPosition = 'center';
                     }
                     selectedSquareCoords = squareCoords;
-                    let legalMoveSquare = document.querySelector(`.gameboardsquare-${selectedSquareCoords}`)
-                    legalMoveSquare.style.backgroundColor = selectPieceSquareColor;
                 }
             }
 
