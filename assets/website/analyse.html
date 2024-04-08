@@ -899,9 +899,8 @@
 
         function goToPreviousMove() {
             if (moveNumber - 1 >= 0) {
-                goToMove(moveNumber + 1);
+                goToMove(moveNumber - 1);
             }
-            goToMove(moveNumber - 1);
         }
 
         function goToMove(newMoveNumber) {
