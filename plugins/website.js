@@ -78,6 +78,10 @@ if (appconfig.website.enabled) {
     app.use('/', express.static(path.join(rootpath, 'assets', 'public')));
     app.use('/assets/checkerspieces', express.static(path.join(rootpath, 'assets', 'checkerspieces')));
 
+    app.get('/analyse', (req, res) => {
+        res.render(path.join(rootpath, 'assets', 'website', 'analyse.html'), {})
+    });
+
     const server = createServer(app);
     const io = new Server(server);
 
