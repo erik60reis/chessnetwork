@@ -291,10 +291,16 @@
             <button onclick="switchPgn(document.getElementById('pgn').value);">VIEW PGN</button>
             <br/>
             <br/>
-            <button style="width: 100%; font-size: 32px;" onclick="goToPreviousMove();">Previous</button>
+            <button style="width: 30%; font-size: 32px;" onclick="goToPreviousMove();"><</button>
+            <button style="width: 30%; font-size: 32px;" onclick="goToNextMove();">></button>
             <br/>
             <br/>
-            <button style="width: 100%; font-size: 32px;" onclick="goToNextMove();">Next</button>
+            <br/>
+            <br/>
+            <div id="movedetails"></div>
+            <div id="moves"></div>
+            <br/>
+            <br/>
 
             <div class="message">
                 <div>Performace: </div>
@@ -439,8 +445,6 @@
         </div>
     </div>
     <br/>
-    <div id="movedetails"></div>
-    <div id="moves"></div>
     <br/>
     <br/>
     <br/>
@@ -448,9 +452,6 @@
     <br/>
     <br/>
     <br/>
-    <script>
-        var moveindex = -1;
-    </script>
 
     <script src="/assets/gameboard.js"></script>
     <script>
@@ -520,8 +521,12 @@
         
         function showeval() {
             try {
-                document.getElementsByClassName('last-move')[0].innerHTML = `<img src="${evalImage[evals[moveindex][0]]}" width="25" height="25"></img>`
-                document.getElementById('movedetails').innerHTML = evals[moveindex][2];
+                //document.getElementsByClassName('last-move')[0].innerHTML = `<img src="${evalImage[evals[moveNumber][0]]}" width="25" height="25"></img>`
+                if (moveNumber - 1 >= 0) {
+                    document.getElementById('movedetails').innerHTML = evals[moveNumber - 1][2];
+                }else{
+                    document.getElementById('movedetails').innerHTML = '---';
+                }
             }catch{
                 try {
 
@@ -894,12 +899,14 @@
         function goToNextMove() {
             if (moveNumber + 1 < game.history().length) {
                 goToMove(moveNumber + 1);
+                showeval();
             }
         }
 
         function goToPreviousMove() {
             if (moveNumber - 1 >= 0) {
                 goToMove(moveNumber - 1);
+                showeval();
             }
         }
 
