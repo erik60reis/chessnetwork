@@ -191,14 +191,11 @@
             }
         }
     </style>
-    <link rel="stylesheet" href="/assets/stylesheets/chessground.base.css">
-    <link rel="stylesheet" href="/assets/stylesheets/chessground.board.css">
-    <link rel="stylesheet" href="/assets/stylesheets/chessground.pieces.css">
     <span id="piecesstyle"></span>
 </head>
 <body>
     <div id="gameContainer">
-        <div id="menu"><img src="/assets/logobanner.png" width="110" height="55"></div>
+        <div id="menu"><img src="/assets/logobanner.png" width="110" height="55" onclick="window.location.href = '/';"></div>
         <div id="gameMainContainer">
             <div class="playerInfo" id="otherData" style="display: none;">
                 <div class="username" id="otherUsername">User</div>
@@ -278,16 +275,7 @@
             </div>
         </div>
     </div>
-
-    <script>
-        var ChessgroundJS = null;
-    </script>
-    <script type="module">
-        import { Chessground } from "/assets/chessgroundx/chessground.js"
-        ChessgroundJS = Chessground;
-    </script>
-
-
+    <script src="/assets/scripts/gameboard.js"></script>
     <script>
         var DiscordSDKPackage = null;
         var discordSdk = null;
@@ -310,85 +298,6 @@
                 console.log("Discord SDK is ready");
             });
         }, 2500);
-        
-
-        var chessgroundconfig = {
-
-            fen: 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1', // starting FEN
-
-            orientation: 'white', // board orientation
-
-            turnColor: 'white', // board orientation
-
-            coordinates: true, // show ranks and files
-
-            autoCastle: true, // automatically castle when king/rook move
-
-            viewOnly: false, // restrict premoves, clicks, drag pieces
-
-            disableContextMenu: false, // disable right click
-
-            resizable: true, // allow resize
-
-            dimensions: {
-                width: 8,
-                height: 8,
-            },
-
-            animation: {
-                enabled: true,
-                duration: 200
-            }, 
-
-            movable: {
-                free: false, // all moves are valid - no validation
-                color: 'both', // allow both whites and blacks to move
-                showDests: true, // highlight destinations
-                dests: null,
-                rookCastle: false
-            },
-
-            drawable: {
-                enabled: true,
-                visible: true,
-            },
-
-            premovable: {
-                enabled: false, // false for now
-                events: {
-                    set: function(orig, dest) {
-                        selectedpremove = {
-                            from: orig,
-                            to: dest,
-                            promotion: promotion
-                        };
-                    },
-                    unset: function() {
-                        selectedpremove = null;
-                    }
-                }
-            },
-
-            predroppable: {
-                enabled: false // disable predrops
-            },
-
-            highlight: {
-                lastMove: true, // highlight last move
-                check: true // highlight checks
-            },
-
-            events: {
-                move: (orig, dest) => {
-                    
-                },
-                dropNewPiece: (role, key) => {
-                    // called when a new piece is dropped from pocket
-                    // add to position
-                }
-            }
-
-        };
 
         function setGameBoardSize() {
             if (window.innerWidth >= 600) {
@@ -401,34 +310,28 @@
                 document.getElementById("gameMainContainer").style.marginLeft = gameMainContainerMargin;
                 document.getElementById("gameMainContainer").style.width = gameBoard.clientWidth + "px";
             }
-
         }
 
-        function loadMainScript() {
-            if (document.body.clientWidth >= 600) {
-
-                new ChessgroundJS(gameBoard, chessgroundconfig);
-
-                let gameBoardInside = document.getElementsByTagName("cg-board")[0];
-
-                gameBoard.classList.add("board8x8");
-
-                document.getElementById("otherData").style.display = "block";
-                document.getElementById("yourData").style.display = "block";
-
-                setGameBoardSize();
-            }else{
-                
-            }
+        let gameboardconfig = {
+            fen: 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR',
+            pieceTheme: "/assets/chesspieces/%piece%.png",
         }
 
+        if (document.body.clientWidth >= 600) {
 
-        let interval = setInterval(() => {
-            if (ChessgroundJS != null) {
-                loadMainScript();
-                clearInterval(interval);
-            }
-        }, 500);
+            createGameBoard(gameBoard, gameboardconfig);
+
+            let gameBoardInside = document.getElementsByTagName("cg-board")[0];
+
+            gameBoard.classList.add("board8x8");
+
+            document.getElementById("otherData").style.display = "block";
+            document.getElementById("yourData").style.display = "block";
+
+            setGameBoardSize();
+        }else{
+            
+        }
 
         let array = document.getElementsByClassName("grid-item");
         for (let index = 0; index < array.length; index++) {

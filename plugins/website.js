@@ -74,7 +74,6 @@ if (appconfig.website.enabled) {
 
     app.use('/assets/chesspieces', express.static(path.join(rootpath, 'assets', 'chesspieces')));
     app.use('/assets/chess2.0pieces', express.static(path.join(rootpath, 'assets', 'chess2.0pieces')));
-    app.use('/assets/chessgroundx', express.static(path.join(rootpath, 'assets', 'chessgroundx')));
     app.use('/', express.static(path.join(rootpath, 'assets', 'public')));
     app.use('/assets/checkerspieces', express.static(path.join(rootpath, 'assets', 'checkerspieces')));
 

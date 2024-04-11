@@ -77,8 +77,8 @@
 
 
     </style>
-    <script src="/assets/chess.js"></script>
-    <script src="/assets/chart.umd.js"></script>
+    <script src="/assets/scripts/chess.js"></script>
+    <script src="/assets/scripts/chart.umd.js"></script>
     <style>
         body {
             background-color: #302e2b;
@@ -263,14 +263,11 @@
             }
         }
     </style>
-    <link rel="stylesheet" href="/assets/stylesheets/chessground.base.css">
-    <link rel="stylesheet" href="/assets/stylesheets/chessground.board.css">
-    <link rel="stylesheet" href="/assets/stylesheets/chessground.pieces.css">
     <span id="piecesstyle"></span>
 </head>
 <body>
     <div id="gameContainer">
-        <div id="menu"><img src="/assets/logobanner.png" width="110" height="55"></div>
+        <div id="menu"><img src="/assets/logobanner.png" width="110" height="55" onclick="window.location.href = '/';"></div>
         <div id="gameMainContainer">
             <div class="playerInfo" id="otherData" style="display: none;">
                 <div class="username" id="otherUsername">User</div>
@@ -453,7 +450,7 @@
     <br/>
     <br/>
 
-    <script src="/assets/gameboard.js"></script>
+    <script src="/assets/scripts/gameboard.js"></script>
     <script>
         var bookMoves = `e4 e5 - Abertura do Peão do Rei|e4 e5 Nf3 - Abertura Vienense|e4 e5 Nf3 Nc6 - Abertura de Cavalheiros|e4 e5 Nf3 Nc6 Bb5 - Abertura Ruy López|e4 e5 Nf3 Nc6 Bb5 a6 - Variante Morphy da Ruy López|e4 e5 Nf3 Nc6 Bb5 a6 Ba4 - Abertura Schliemann|e4 c5 - Abertura Siciliana|e4 c5 Nf3 - Abertura Siciliana Variante Fechada|e4 c5 Nf3 d6 - Abertura Siciliana Variante Najdorf|e4 c5 Nf3 e6 - Abertura Siciliana Variante Scheveningen|d4 Nf6 c4 - Defesa Índia do Rei|d4 Nf6 c4 g6 - Defesa Índia do Rei, Variante Benoni|d4 Nf6 c4 e6 - Defesa Índia do Rei, Variante Nimzo-Índia|d4 Nf6 c4 g6 Nf3 Bg7 - Defesa Índia do Rei, Variante Catalã|d4 d5 - Defesa Eslava|d4 d5 c4 - Gambito da Dama Aceito|d4 d5 c4 e6 - Defesa Semi-Eslava|d4 d5 c4 c6 - Defesa Eslava Variante Checa|d4 Nf6 c4 c5 - Defesa Siciliana Variante Alapin|d4 f5 - Defesa Holandesa|d4 f5 c4 - Gambito Staunton|e4 c6 - Defesa Caro-Kann|e4 c6 d4 d5 - Defesa Caro-Kann Variante Panov|e4 g6 - Defesa Moderna|d4 f6 - Defesa Alekhine|Nf3 d5 - Abertura Reti|c4 - Abertura Inglesa|c4 e5 - Abertura Inglesa, Variante Reversa|c4 e5 Nc3 - Abertura Inglesa, Variante Simetríca|c4 c5 Nf3 - Defesa Siciliana|c4 c5 g3 - Abertura Catalã|g3 d5 - Defesa Catalã|g3 g6 - Defesa Moderna Benoni|d3 d5 - Abertura Colle|Nf3 d5 - Defesa Escandinava|Nf3 f5 - Contra-Gambito Alekhine|b3 - Abertura Réti|b4 - Gambito da Dama|e3 - Abertura Larsen|f4 - Gambito do Rei|f4 d5 - Gambito do Rei Aceito|f4 e5 - Gambito do Rei, Variante Khan|f4 d6 - Defesa Philidor|f4 Nf6 - Contragambito Alekhine|f4 g6 - Defesa Moderna, Variante Pirc`.split("|")
         
@@ -476,7 +473,7 @@
 
         let pgnViewerBoard = createGameBoard(pgnViewer, gameboardconfig);
 
-        var stockfish = new Worker('/assets/stockfish.min.js');
+        var stockfish = new Worker('/assets/scripts/stockfish.min.js');
 
         function switchPgn(pgn) {
             matchpgn = pgn;
