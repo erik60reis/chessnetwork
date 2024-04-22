@@ -40,7 +40,7 @@ if (appconfig.discordbot.enabled) {
         sendDailyPuzzle();
         setInterval(() => {
             sendDailyPuzzle();
-        }, 86400);
+        }, 86400000);
     });
 
     function processNextPuzzle() {
