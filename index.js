@@ -6,6 +6,11 @@ const Checkers = {
 }
 const Chess2 = require('./games/chess2.0logic.js');
 
+global.gamelibraries = {
+    ffish,
+    Checkers,
+    Chess2
+}
 
 global.plugins = {};
 

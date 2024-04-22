@@ -382,6 +382,20 @@ utils.getBoardDimensions = function(fen) {
     };
 }
 
+function NextPuzzleBoardToPng(nextPuzzle) {
+    try {    
+        let game = new gamelibraries.ffish.Board('chess');
+        game.setFen(nextPuzzle.FEN);
+        let puzzlemoves = nextPuzzle.Moves.split(' ');
+        game.push(puzzlemoves.shift());
+        return BoardToPng(game, !game.turn(), {name: `${game.turn() ? "White" : "Black"} to Move`}, {}, 'chess', 'chess');
+    }catch(er){
+        return null;
+    }
+}
+
+utils.NextPuzzleBoardToPng = NextPuzzleBoardToPng;
+
 function BoardToPng(board, isflipped = false, white = {}, black = {}, gametype = 'chess', variant = 'chess') {
     let canvas = createCanvas(800, 900);
 

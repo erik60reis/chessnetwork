@@ -14,6 +14,7 @@
     "canvas": "^2.11.2",
     "chess.js": "^1.0.0-beta.7",
     "crypto": "^1.0.1",
+    "csv-parser": "^3.0.0",
     "discord-oauth2": "^2.12.1",
     "express": "^4.18.3",
     "express-handlebars": "^7.1.2",

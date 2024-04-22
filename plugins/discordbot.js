@@ -1,7 +1,8 @@
 if (appconfig.discordbot.enabled) {
     const Dysnomia = require("@projectdysnomia/dysnomia");
     const fs = require('fs');
-
+    const csv = require('csv-parser');
+    const path = require('path');
 
     const bot = new Dysnomia.Client(appconfig.discordbot.token, {
         gateway: {
@@ -36,10 +37,69 @@ if (appconfig.discordbot.enabled) {
     bot.on("ready", () => {
         console.log("discord bot ready!");
         console.log("guilds: " + bot.guilds.size);
+        sendDailyPuzzle();
+        setInterval(() => {
+            sendDailyPuzzle();
+        }, 86400);
     });
 
+    function processNextPuzzle() {
+        const csvFilePath = path.join(rootpath, "assets", "puzzles.csv");
+        return new Promise((resolve, reject) => {
+            const puzzles = [];
+            fs.createReadStream(csvFilePath)
+                .pipe(csv())
+                .on('data', (row) => {
+                    puzzles.push(row);
+                })
+                .on('end', () => {
+                    // Check if there are puzzles
+                    if (puzzles.length === 0) {
+                        reject("No puzzles found in the CSV file.");
+                        return;
+                    }
+
+                    // Get information about the first puzzle
+                    const firstPuzzle = puzzles[0];
+
+                    // Remove the first puzzle from the list
+                    puzzles.shift();
+
+                    // Write the remaining puzzles back to the CSV file
+                    const writer = fs.createWriteStream(csvFilePath);
+                    writer.write(Object.keys(firstPuzzle).join(',') + '\n'); // Write header
+                    puzzles.forEach(puzzle => {
+                        writer.write(Object.values(puzzle).join(',') + '\n');
+                    });
+                    writer.end();
+
+                    resolve(firstPuzzle);
+                })
+                .on('error', (error) => {
+                    reject(error);
+                });
+        });
+    }
+
+
+    function sendDailyPuzzle() {
+        processNextPuzzle()
+            .then((nextPuzzle) => {
+                //console.log("Information about the first puzzle:", nextPuzzle);
+                bot.createMessage(appconfig.discordbot.puzzles_channel, {attachments: [{
+                        file: utils.NextPuzzleBoardToPng(nextPuzzle),
+                        filename: 'board.png'
+                    }],
+                    content: `Daily Puzzle - ${(new Date()).toUTCString()}`
+                });
+            })
+            .catch((error) => {
+                console.error("Error:", error);
+            });
+    }
+
     bot.on("error", (err) => {
-    console.error(err);
+        console.error(err);
     });
 
     bot.on("messageCreate", (msg) => {
