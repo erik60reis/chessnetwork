@@ -10,7 +10,6 @@ if (appconfig.discordbot.enabled) {
                 'guilds',
                 'guildMessages',
                 'directMessages',
-                'messageContent'
             ]
         }
     });

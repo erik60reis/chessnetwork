@@ -4,7 +4,7 @@
     },
     "discordbot": {
         "enabled": false,
-        "prefix": "chess ",
+        "prefix": "<@1152654574054805505> ",
         "token": "",
         "support_link": "https://discord.gg/bafBEF6r4R",
         "bot_addition_link": "https://discord.com/oauth2/authorize?client_id=1152654574054805505&permissions=8&scope=bot",
