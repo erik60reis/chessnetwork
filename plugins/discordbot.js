@@ -9,7 +9,6 @@ if (appconfig.discordbot.enabled) {
             intents: [
                 'guilds',
                 'guildMessages',
-                'guildMembers',
                 'directMessages',
                 'messageContent'
             ]
