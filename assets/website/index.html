@@ -6,233 +6,214 @@
     <title>Chess</title>
     <style>
         body {
-            background-color: #302e2b;
-            color: white
+            background-color: #f7f7f7;
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            color: #333;
         }
 
         #gameContainer {
-            width: 100%;
-            height: 97%;
-            display: block;
-            justify-content: center;
-            align-items: center;
-            text-align: center;
-        }
-
-        #gameMainContainer {
-            display: none;
-        }
-
-        #gameimage {
-            width: 100%;
-            height: auto;
-        }
-
-        #gameboard {
-            width: 95%;
-        }
-
-        input {
-            border-radius: 5px;
-            width: 200px;
-        }
-
-        .playerInfo {
-            font-size: 25px;
+            width: 90%;
             display: flex;
-            flex-grow: 1;
-        }
-
-        .username {
-            color: white;
-            text-align: left;
-            font-size: 25px;
-            width: 75%;
-        }
-
-        .elo {
-            text-align: left;
-            font-size: 18px;
-            color: lightgray;
-        }
-
-        #gamestatus {
-            color: white;
-            text-align: center;
-            justify-content: center;
-            border-radius: 5px;
-        }
-
-        a {
-            color: white;
-        }
-
-        .game-options {
-            text-align: left;
-            justify-content: left;
-        }
-
-        .playertimer {
-            font-size: 15px;
-            border: 3px solid burlywood;
-            border-radius: 2px;
-            background-color: burlywood;
-            color: white;
-            text-align: right;
-            width: 15%;
-        }
-
-        cg-container {
-            justify-content: center;
-            align-items: center;
-            text-align: center;
-            border-radius: 5px;
-        }
-
-        .sidebar {
-            display: block;
-            width: 100%;
-            height: 80vh;
-            background-color: #262522;
-            border-radius: 5px;
+            justify-content: space-between;
+            align-items: flex-start;
+            flex-wrap: wrap; /* Permite que os elementos se ajustem em telas menores */
         }
 
         #menu {
-            width: 15%;
+            width: 100%;
+            background-color: #e0e0e0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+            color: white;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            height: auto; /* Ajusta a altura para conteúdo variável */
+        }
+
+        #menu img {
+            cursor: pointer;
+            margin-bottom: 20px;
+        }
+
+        #gameMainContainer {
+            width: 100%;
+            background-color: #f0f0f0;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            margin-bottom: 20px;
+        }
+
+        #boardWrapper {
+            width: 100%;
+            position: relative;
+        }
+
+        #gameboard {
+            width: 100%;
+            height: 100%;
+            position: absolute;
+            top: 0;
+            left: 0;
+        }
+
+        .sidebar {
+            width: 100%;
+            background-color: #f7f7f7;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+            height: auto; /* Ajusta a altura para conteúdo variável */
+            margin-bottom: 20px;
+        }
+
+        .sidebar h1 {
+            font-size: 24px;
+            margin-bottom: 20px;
         }
 
         .grid-container {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
-            grid-template-rows: repeat(4, 1fr);
-            height: 53%;
-        }
-
-        button {
-            background-color: green;
-            border-radius: 5px;
-            padding: 5px;
+            gap: 10px;
+            margin-bottom: 20px;
         }
 
         .grid-item {
-            border: 3px solid #262522;
-            background-color: darkgray;
+            background-color: #e0e0e0;
+            border-radius: 5px;
             display: flex;
-            align-items: center;
             justify-content: center;
-            font-size: 24px;
+            align-items: center;
+            font-size: 18px;
+            cursor: pointer;
+            padding: 10px 0;
         }
 
-        select {
-            padding: 4px 6px;
+        .grid-item:hover {
+            background-color: #d0d0d0;
+        }
+
+        .game-options {
+            margin-bottom: 20px;
+        }
+
+        .game-options select, .game-options button {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 10px;
             border: 1px solid #ccc;
-            border-radius: 4px;
+            border-radius: 5px;
             font-size: 16px;
-            margin: 5px;
-            background-color: #f9f9f9;
         }
 
-        @media (min-width: 600px) {
-            #gameimage {
-                height: 85vh;
-                width: auto;
-            }
+        .login-links a {
+            display: block;
+            color: #007bff;
+            text-decoration: none;
+            margin-bottom: 10px;
+        }
 
-            #gameboard {
-                height: 80vh;
-            }
+        .login-links a:hover {
+            text-decoration: underline;
+        }
 
-            #gameContainer {
-                position: relative;
-                display: flex;
-                flex-direction: row;
-                flex-grow: 1;
-                margin-left: 0px;
-                margin-right: 0px;
-                width: 80%;
-            }
+        #analyseLink:hover {
+            text-decoration: underline;
+        }
 
-            input {
-                width: 500px;
-            }
-
-            .playerInfo {
-                font-size: 25px;
-            }
-
-            .username {
-                font-size: 15px;
-            }
-
-            .elo {
-                font-size: 10px;
-            }
-
-            .playertimer {
-                font-size: 30px;
-            }
-
-            .sidebar {
-                height: 80vh;
-                margin-left: 20px;
-            }
-
+        /* Media Queries para Responsividade */
+        @media (min-width: 768px) {
             #menu {
-                width: 10%;               
-                margin-top: 0;
+                width: 15%;
+                margin-right: 20px;
+                height: 80vh;
                 margin-bottom: 0;
-                height: 96vh;
-                background-color: #262522;
             }
 
             #gameMainContainer {
-                max-height: 98vh;
-                display: block;
+                width: 45%;
+                height: 80vh;
+                margin-bottom: 0;
+            }
+
+            #boardWrapper {
+                height: 100%;
+            }
+
+            .sidebar {
+                width: 25%;
+                height: 80vh;
+                margin-bottom: 0;
+            }
+        }
+
+        @media (min-width: 1024px) {
+            #gameContainer {
+                width: 80%;
+            }
+        }
+
+        @media (max-width: 767px) {
+            #boardWrapper {
+                height: 60vw;
+            }
+            #gameMainContainer {
+                display: none;
+            }
+        }
+
+        @media (max-width: 480px) {
+            #boardWrapper {
+                height: 80vw;
             }
         }
     </style>
-    <span id="piecesstyle"></span>
 </head>
 <body>
     <div id="gameContainer">
-        <div id="menu"><img src="/assets/logobanner.png" width="110" height="55" onclick="window.location.href = '/';"></div>
+        <div id="menu">
+            <img src="/assets/logobanner.png" width="110" height="55" onclick="window.location.href = '/';" alt="Logo">
+            <div class="login-links">
+                <a id="analyseLink" href="/analyse">Analyse Your Game</a>
+                <a href="{{discord_bot_addition_link}}">Add Discord Bot</a>
+                <a href="/login/discord/">Login</a>
+            </div>
+        </div>
         <div id="gameMainContainer">
-            <div class="playerInfo" id="otherData" style="display: none;">
-                <div class="username" id="otherUsername">User</div>
-                <div class="playertimer" id="otherTime">30:00</div>
+            <div id="boardWrapper">
+                <div id="gameboard"></div>
             </div>
-            <br/>
-            <div id="gameboard"></div>
-            <br/>
-            <div class="playerInfo" id="yourData" style="display: none;">
-                <div class="username" id="yourUsername">User</div>
-                <div class="playertimer" id="yourTime">30:00</div>
-            </div>
-            <br/>
-            <br/>
         </div>
         <div class="sidebar">
             <h1>Create Room</h1>
             <div class="grid-container">
-                <button class="grid-item">1+0</button>
-                <button class="grid-item">2+1</button>
-                <button class="grid-item">3+0</button>
-                <button class="grid-item">3+2</button>
-                <button class="grid-item">5+0</button>
-                <button class="grid-item">5+3</button>
-                <button class="grid-item">10+0</button>
-                <button class="grid-item">10+5</button>
-                <button class="grid-item">15+10</button>
-                <button class="grid-item">30+0</button>
-                <button class="grid-item">30+20</button>
+                <div class="grid-item" onclick="createRoom('1+0')">1+0</div>
+                <div class="grid-item" onclick="createRoom('2+1')">2+1</div>
+                <div class="grid-item" onclick="createRoom('3+0')">3+0</div>
+                <div class="grid-item" onclick="createRoom('3+2')">3+2</div>
+                <div class="grid-item" onclick="createRoom('5+0')">5+0</div>
+                <div class="grid-item" onclick="createRoom('5+3')">5+3</div>
+                <div class="grid-item" onclick="createRoom('10+0')">10+0</div>
+                <div class="grid-item" onclick="createRoom('10+5')">10+5</div>
+                <div class="grid-item" onclick="createRoom('15+10')">15+10</div>
+                <div class="grid-item" onclick="createRoom('30+0')">30+0</div>
+                <div class="grid-item" onclick="createRoom('30+20')">30+20</div>
             </div>
-            <br/>
-            <a href="/analyse" style="font-size: 20px; color: #bb00dd;">Analyse Your Game</a>&nbsp;
-            <br/>
-            <br/>
             <h1>Custom Options</h1>
             <div class="game-options">
-                Game: <select id="gametype" onchange="onGameInfoDropdownChanged();">
+                <select id="gametype">
                     <option value="chess/chess">Chess</option>
                     <option value="chess/courier">Courier Chess</option>
                     <option value="chess/gothic">Gothic Chess</option>
@@ -247,9 +228,7 @@
                     <option value="checkers/checkers">Checkers</option>
                     <option value="checkers/draughts">Draughts</option>
                 </select>
-                <br/>
-                Time: 
-                <select id="gametime" onchange="onGameInfoDropdownChanged();">
+                <select id="gametime">
                     <option value="600/0">---SELECT TIME---</option>
                     <option value="15/0">0:15</option>
                     <option value="60/0">1:00</option>
@@ -263,94 +242,32 @@
                     <option value="3600/0">1:00:00</option>
                     <option value="7200/0">2:00:00</option>
                 </select>
-                <br/>
                 <button id="newroombutton">New Room</button>
-                <br/>
-
-                <div class="login-links">
-                    <a href="{{discord_bot_addition_link}}">Add Discord Bot</a>&nbsp;
-                    <a href="/login/discord/">Login</a>&nbsp;
-                </div>
-                <br/>
             </div>
         </div>
     </div>
     <script src="/assets/scripts/gameboard.js"></script>
     <script>
-        var DiscordSDKPackage = null;
-        var discordSdk = null;
-        var discordClientId = "{{discord_client_id}}";
-    </script>
-    <script type="module">
-        import {DiscordSDK} from '/assets/discord-embedded-app-sdk/output/index.mjs';
-        DiscordSDKPackage = DiscordSDK;
-        discordSdk = new DiscordSDKPackage(discordClientId);
-    </script>
-    <script>
-        let gameBoard = document.getElementById("gameboard");
-        
-        setTimeout(() => {            
-            async function setupDiscordSdk() {
-                await discordSdk.ready();
-            }
-
-            setupDiscordSdk().then(() => {
-                console.log("Discord SDK is ready");
-            });
-        }, 2500);
-
-        function setGameBoardSize() {
-            if (window.innerWidth >= 600) {
-                gameBoard.style.width = ((gameBoard.clientHeight / 8) * 8) + "px";
-            }else{
-                gameBoard.style.height = ((gameBoard.clientWidth / 8) * 8) + "px";
-            }
-            if (document.body.clientWidth >= 600) {
-                let gameMainContainerMargin = (((document.body.clientWidth - gameBoard.clientWidth) / 3.5) - document.getElementById("menu").clientWidth) + "px";
-                document.getElementById("gameMainContainer").style.marginLeft = gameMainContainerMargin;
-                document.getElementById("gameMainContainer").style.width = gameBoard.clientWidth + "px";
-            }
-        }
-
         let gameboardconfig = {
             fen: 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR',
             pieceTheme: "/assets/chesspieces/%piece%.png",
+            lightSquareColor: "f0f0f0",
+            darkSquareColor: "#d0d0d0"
         }
 
-        if (document.body.clientWidth >= 600) {
+        let gameBoard = document.getElementById("gameboard");
 
-            createGameBoard(gameBoard, gameboardconfig);
+        createGameBoard(gameBoard, gameboardconfig);
 
-            let gameBoardInside = document.getElementsByTagName("cg-board")[0];
-
-            gameBoard.classList.add("board8x8");
-
-            document.getElementById("otherData").style.display = "block";
-            document.getElementById("yourData").style.display = "block";
-
-            setGameBoardSize();
-        }else{
-            
+        function createRoom(time) {
+            window.location.href = `/quickplay/${time.replace('+', '/')}`;
         }
 
-        let array = document.getElementsByClassName("grid-item");
-        for (let index = 0; index < array.length; index++) {
-            const element = array[index];
-            element.addEventListener('click', () => {
-                window.location.href = "/quickplay/" + (parseInt(element.innerHTML.split("+")[0]) * 60) + "/" + element.innerHTML.split("+")[1];
-            })
-        }
-
-        document.getElementById('newroombutton').onclick = () => {
-                window.location.href = "/new/" + "chess/chess" + "/" + "600/0";
+        document.getElementById('newroombutton').onclick = function () {
+            let gametype = document.getElementById('gametype').value;
+            let gametime = document.getElementById('gametime').value;
+            window.location.href = `/new/${gametype}/${gametime}`;
         };
-        function onGameInfoDropdownChanged() {
-            let gametypedropdownvalue = document.getElementById('gametype').options[document.getElementById('gametype').selectedIndex].value;
-            let gametimeropdownvalue = document.getElementById('gametime').options[document.getElementById('gametime').selectedIndex].value;
-            document.getElementById('newroombutton').onclick = () => {
-                    window.location.href = "/new/" + gametypedropdownvalue + "/" + gametimeropdownvalue;
-            };
-        }
     </script>
 </body>
 </html>

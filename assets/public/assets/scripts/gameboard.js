@@ -62,6 +62,8 @@ function createGameBoard(container, config) {
     let legalMoves = (config.legalMoves ? config.legalMoves : {});
     let onMoveCallback = (config.onMove ? config.onMove : function(orig, dest){});
     let selectPieceSquareColor = (config.selectPieceSquareColor ? config.selectPieceSquareColor : "#aaaa00");
+    let lightSquareColor = (config.lightSquareColor ? config.lightSquareColor : "#f0d9b5");
+    let darkSquareColor = (config.darkSquareColor ? config.darkSquareColor : "#b58863");
     let isFlipped = (config.isFlipped ? config.isFlipped : false);
     let pieceTheme = (config.pieceTheme ? config.pieceTheme : "assets/pieces/%piece%.png");
     let fen = (config.fen ? config.fen.split(" ")[0] : 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR');
@@ -90,7 +92,7 @@ function createGameBoard(container, config) {
                 cell.innerHTML = `<img style="width: 90%; height: 90%;" src="${pieceTheme.replace("%piece%", jsonBoard[squareCoords].color.toLowerCase() + jsonBoard[squareCoords].type.toUpperCase())}">`
             }
             cell.className = squareClass;
-            cell.style.backgroundColor = "#f0d9b5";
+            cell.style.backgroundColor = lightSquareColor;
             cell.style.width = (100 / width) + "%";
             cell.style.height = (100 / height) + "%";
             
@@ -100,7 +102,7 @@ function createGameBoard(container, config) {
                 const blackSquareClass = `gameboardblacksquare-${sumOfIndexes + 1}`;
                 cell.classList.add(blackSquareClass);
                 cell.classList.add("gameboardblacksquare");
-                cell.style.backgroundColor = "#b58863";
+                cell.style.backgroundColor = darkSquareColor;
             }
 
             if (removedSquares && removedSquares.includes(squareCoords)) {
