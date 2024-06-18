@@ -340,6 +340,59 @@ if (appconfig.website.enabled) {
     io.on('connection', (socket) => {
         sockets.push(socket);
 
+        socket.on('quickMatch', (time, increment = 0, username = "Guest", elo = 500) => {
+            try {
+                let gametype = 'chess';
+                let variant = 'chess';
+    
+                let createnewroom = true;
+    
+                for (let roomId of Object.keys(rooms)) {
+                    if (rooms[roomId].isPublic && !rooms[roomId].isStarted) {
+                        if (rooms[roomId].black.isAvaliable) {
+                            if (rooms[roomId].white.time == time) {
+                                if (rooms[roomId].white.increment == increment) {
+                                    createnewroom = false;
+
+                                    rooms[roomId]["black"].isAvaliable = false;
+                                    rooms[roomId]["black"].name = username;
+                                    rooms[roomId]["black"].elo = elo;
+                                    rooms[roomId]["black"].socketId = socket.id;
+                                    rooms[roomId]["black"].socket = socket;
+                                    rooms[roomId].start();
+                                    let gameInfo = utils.getGameInfo(roomId);
+                                    gameInfo.isStarted = true;
+                                    if (rooms[roomId].white.socketId) {
+                                        rooms[roomId].white.socket.emit('moveMade', imageDataURI.encode(utils.BoardToPng(rooms[roomId].game, false, rooms[roomId].white, rooms[roomId].black, rooms[roomId].gametype, rooms[roomId].variant), 'png'), '', gameInfo, 'white');
+                                    }
+
+
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                }
+    
+                if (createnewroom) {
+                    let roomId = roomFunctions.createRoom(gametype, variant);
+                    rooms[roomId].white.time = time;
+                    rooms[roomId].black.time = time;
+
+                    rooms[roomId].white.increment = increment;
+                    rooms[roomId].black.increment = increment;
+
+                    rooms[roomId].isPublic = true;
+
+                    rooms[roomId]["white"].isAvaliable = false;
+                    rooms[roomId]["white"].name = username;
+                    rooms[roomId]["white"].elo = elo;
+                    rooms[roomId]["white"].socketId = socket.id;
+                    rooms[roomId]["white"].socket = socket;
+                }
+            }catch{}
+        });
+
         socket.on('spectateRoom', async (roomId, id, password) => {
             let gameInfo = utils.getGameInfo(roomId);
 
@@ -370,8 +423,19 @@ if (appconfig.website.enabled) {
             }
         });
 
-        socket.on('disconnect', () => {
+        socket.on('disconnect', async () => {
             sockets.splice(sockets.indexOf(socket), 1);
+            
+            let playerRoom = getPlayerRoom(socket.id);
+            
+            if (playerRoom) {
+                let roomId = playerRoom.roomId;
+                
+                if (rooms[roomId].isStarted && !rooms[roomId][playerRoom.color].discordId) {
+                    rooms[roomId].winner = (playerRoom.color == "white" ? "b" : "w");
+                    rooms[roomId].end();
+                }
+            }
         });
 
         socket.on('joinRoom', async (roomId, id, password, gameURL, invitedUserDiscordId) => {
@@ -456,14 +520,28 @@ if (appconfig.website.enabled) {
         //let winner = isDraw ? "" : rooms[roomId][winnerColor];
         if (rooms[roomId].white.socketId) {
             rooms[roomId].white.socket.emit('moveMade', imageDataURI.encode(utils.BoardToPng(rooms[roomId].game, false, rooms[roomId].white, rooms[roomId].black, rooms[roomId].gametype, rooms[roomId].variant), 'png'), (isDraw ? "Game Ended in a draw" : "Game ended, " + winnerColor + " won the game" ), gameInfo, 'white');
+            rooms[roomId].white.socket.emit('gameOver', roomFunctions.colorNameToColorLetter(winnerColor));
+            rooms[roomId].black.socket.emit('gameOver', roomFunctions.colorNameToColorLetter(winnerColor));
         }
         if (rooms[roomId].black.socketId) {
             rooms[roomId].black.socket.emit('moveMade', imageDataURI.encode(utils.BoardToPng(rooms[roomId].game, true, rooms[roomId].white, rooms[roomId].black, rooms[roomId].gametype, rooms[roomId].variant), 'png'), (isDraw ? "Game Ended in a draw" : "Game ended, " + winnerColor + " won the game" ), gameInfo, 'black');
+            rooms[roomId].white.socket.emit('gameOver', roomFunctions.colorNameToColorLetter(winnerColor));
+            rooms[roomId].black.socket.emit('gameOver', roomFunctions.colorNameToColorLetter(winnerColor));
         }
     }
 
 
     roomEvents.onGameEnd.push(onGameEnd);
+
+
+    roomEvents.onGameStart.push((roomId) => {
+        if (rooms[roomId].white.socketId) {
+            rooms[roomId].white.socket.emit('joinPermitted', roomId, 'white');
+        }
+        if (rooms[roomId].black.socketId) {
+            rooms[roomId].black.socket.emit('joinPermitted', roomId, 'black');
+        }
+    });
 
     server.listen(appconfig.website.port, () => {
         console.log('website running at http://localhost:' + appconfig.website.port);
