@@ -166,8 +166,10 @@ if (appconfig.website.enabled) {
                     if (rooms[roomId].black.isAvaliable) {
                         if (rooms[roomId].white.time == time) {
                             if (rooms[roomId].white.increment == increment) {
-                                createnewroom = false;
-                                res.send(`<script>window.location.href = '/${roomId}'</script>`);
+                                if (rooms[roomId].variant == variant) {
+                                    createnewroom = false;
+                                    res.send(`<script>window.location.href = '/${roomId}'</script>`);
+                                }
                             }
                         }
                     }
@@ -340,10 +342,9 @@ if (appconfig.website.enabled) {
     io.on('connection', (socket) => {
         sockets.push(socket);
 
-        socket.on('quickMatch', (time, increment = 0, username = "Guest", elo = 500) => {
+        socket.on('quickMatch', (time, increment = 0, username = "Guest", elo = 500, variant = "chess") => {
             try {
                 let gametype = 'chess';
-                let variant = 'chess';
     
                 let createnewroom = true;
     
@@ -352,22 +353,24 @@ if (appconfig.website.enabled) {
                         if (rooms[roomId].black.isAvaliable) {
                             if (rooms[roomId].white.time == time) {
                                 if (rooms[roomId].white.increment == increment) {
-                                    createnewroom = false;
+                                    if (rooms[roomId].variant == variant) {
+                                        createnewroom = false;
 
-                                    rooms[roomId]["black"].isAvaliable = false;
-                                    rooms[roomId]["black"].name = username;
-                                    rooms[roomId]["black"].elo = elo;
-                                    rooms[roomId]["black"].socketId = socket.id;
-                                    rooms[roomId]["black"].socket = socket;
-                                    rooms[roomId].start();
-                                    let gameInfo = utils.getGameInfo(roomId);
-                                    gameInfo.isStarted = true;
-                                    if (rooms[roomId].white.socketId) {
-                                        rooms[roomId].white.socket.emit('moveMade', imageDataURI.encode(utils.BoardToPng(rooms[roomId].game, false, rooms[roomId].white, rooms[roomId].black, rooms[roomId].gametype, rooms[roomId].variant), 'png'), '', gameInfo, 'white');
+                                        rooms[roomId]["black"].isAvaliable = false;
+                                        rooms[roomId]["black"].name = username;
+                                        rooms[roomId]["black"].elo = elo;
+                                        rooms[roomId]["black"].socketId = socket.id;
+                                        rooms[roomId]["black"].socket = socket;
+                                        rooms[roomId].start();
+                                        let gameInfo = utils.getGameInfo(roomId);
+                                        gameInfo.isStarted = true;
+                                        if (rooms[roomId].white.socketId) {
+                                            rooms[roomId].white.socket.emit('moveMade', imageDataURI.encode(utils.BoardToPng(rooms[roomId].game, false, rooms[roomId].white, rooms[roomId].black, rooms[roomId].gametype, rooms[roomId].variant), 'png'), '', gameInfo, 'white');
+                                        }
+
+
+                                        break;
                                     }
-
-
-                                    break;
                                 }
                             }
                         }
