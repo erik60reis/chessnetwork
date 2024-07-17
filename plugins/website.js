@@ -408,7 +408,7 @@ if (appconfig.website.enabled) {
                 rooms[roomId].white.increment = increment;
                 rooms[roomId].black.increment = increment;
 
-                rooms[roomId].isPublic = true;
+                rooms[roomId].isPublic = false;
 
                 rooms[roomId]["white"].isAvaliable = false;
                 rooms[roomId]["white"].name = username;
@@ -417,6 +417,29 @@ if (appconfig.website.enabled) {
                 rooms[roomId]["white"].socket = socket;
 
                 socket.emit("roomCreated", roomId);
+            }catch{}
+        });
+
+
+        socket.on('joinRoom', (roomId, username = "Guest", elo = 500) => {
+            try {
+                if (rooms[roomId].isPublic && !rooms[roomId].isStarted) {
+                    if (rooms[roomId].black.isAvaliable) {
+                        if (["chess", "racingkings"].includes(rooms[roomId].variant)) {
+                            rooms[roomId]["black"].isAvaliable = false;
+                            rooms[roomId]["black"].name = username;
+                            rooms[roomId]["black"].elo = elo;
+                            rooms[roomId]["black"].socketId = socket.id;
+                            rooms[roomId]["black"].socket = socket;
+                            rooms[roomId].start();
+                            let gameInfo = utils.getGameInfo(roomId);
+                            gameInfo.isStarted = true;
+                            if (rooms[roomId].white.socketId) {
+                                rooms[roomId].white.socket.emit('moveMade', imageDataURI.encode(utils.BoardToPng(rooms[roomId].game, false, rooms[roomId].white, rooms[roomId].black, rooms[roomId].gametype, rooms[roomId].variant), 'png'), '', gameInfo, 'white');
+                            }
+                        }
+                    }
+                }
             }catch{}
         });
 
