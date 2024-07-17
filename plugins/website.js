@@ -396,6 +396,30 @@ if (appconfig.website.enabled) {
             }catch{}
         });
 
+        socket.on('createRoom', (time, increment = 0, username = "Guest", elo = 500, variant = "chess") => {
+            try {
+                let gametype = 'chess';
+
+                let roomId = roomFunctions.createRoom(gametype, variant);
+
+                rooms[roomId].white.time = time;
+                rooms[roomId].black.time = time;
+
+                rooms[roomId].white.increment = increment;
+                rooms[roomId].black.increment = increment;
+
+                rooms[roomId].isPublic = true;
+
+                rooms[roomId]["white"].isAvaliable = false;
+                rooms[roomId]["white"].name = username;
+                rooms[roomId]["white"].elo = elo;
+                rooms[roomId]["white"].socketId = socket.id;
+                rooms[roomId]["white"].socket = socket;
+
+                socket.emit("roomCreated", roomId);
+            }catch{}
+        });
+
         socket.on('spectateRoom', async (roomId, id, password) => {
             let gameInfo = utils.getGameInfo(roomId);
 
