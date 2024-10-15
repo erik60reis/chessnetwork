@@ -176,16 +176,6 @@
             <div id="gamestatus"> ---- </div>
         </div>
     </div>
-    <script>
-        var DiscordSDKPackage = null;
-        var discordSdk = null;
-        var discordClientId = "{{discord_client_id}}";
-    </script>
-    <script type="module">
-        import {DiscordSDK} from '/assets/discord-embedded-app-sdk/output/index.mjs';
-        DiscordSDKPackage = DiscordSDK;
-        discordSdk = new DiscordSDKPackage(discordClientId);
-    </script>
     <script src="/assets/scripts/gameboard.js"></script>
     <script src="/socket.io/socket.io.js"></script>
     <script src="/assets/scripts/qrcode.min.js"></script>
@@ -200,17 +190,6 @@
 
         const soundMove = new Audio("assets/sounds/move.wav");
         const soundCapture = new Audio("assets/sounds/capture.wav");
-        
-        setTimeout(() => {            
-            async function setupDiscordSdk() {
-                await discordSdk.ready();
-            }
-
-            setupDiscordSdk().then(() => {
-                console.log("Discord SDK is ready");
-            });
-        }, 2500);
-
 
         function formatTime(timeseconds) {
             var timeWithoutDecimals = Math.ceil(timeseconds);
@@ -301,7 +280,6 @@
         let socket;
 
         let gameBoard = document.getElementById("gameboard");
-        let gameBoardInside = document.getElementsByTagName("cg-board")[0];
         let oldDimensions = {width: 8, height: 8};
 
         function setGameBoardSize() {
@@ -321,7 +299,7 @@
         setGameBoardSize();
 
         function joinRoom() {
-            socket.emit('joinRoom', roomId, window.localStorage.getItem('authid'), window.localStorage.getItem('authpassword'), window.location.href, '{{invitedUserDiscordId}}');
+            socket.emit('joinRoomWeb', roomId, window.localStorage.getItem('authid'), window.localStorage.getItem('authpassword'), window.location.href, '{{invitedUserDiscordId}}');
         }
 
         let gameboardconfig = {
@@ -432,7 +410,7 @@
                 document.getElementById("moveinput").style.display = "block";
                 document.getElementById("movebutton").style.display = "block";
                 document.getElementById("gameimage").style.display = "block";
-                gameBoard.style.display = "none";
+                ple .style.display = "none";
                 document.getElementById("yourData").style.display = "none";
                 document.getElementById("otherData").style.display = "none";
             }

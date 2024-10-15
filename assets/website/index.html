@@ -277,27 +277,7 @@
     </div>
     <script src="/assets/scripts/gameboard.js"></script>
     <script>
-        var DiscordSDKPackage = null;
-        var discordSdk = null;
-        var discordClientId = "{{discord_client_id}}";
-    </script>
-    <script type="module">
-        import {DiscordSDK} from '/assets/discord-embedded-app-sdk/output/index.mjs';
-        DiscordSDKPackage = DiscordSDK;
-        discordSdk = new DiscordSDKPackage(discordClientId);
-    </script>
-    <script>
         let gameBoard = document.getElementById("gameboard");
-        
-        setTimeout(() => {            
-            async function setupDiscordSdk() {
-                await discordSdk.ready();
-            }
-
-            setupDiscordSdk().then(() => {
-                console.log("Discord SDK is ready");
-            });
-        }, 2500);
 
         function setGameBoardSize() {
             if (window.innerWidth >= 600) {

@@ -127,7 +127,7 @@ if (appconfig.website.enabled) {
             gametype = 'chess';
         }
         if (avaliablegametypes.includes(variant)) {
-            gametype = variant;
+            variant = gametype;
         }else{
             if (!avaliablevariants[gametype].includes(variant)) {
                 variant = gametype;
@@ -420,7 +420,69 @@ if (appconfig.website.enabled) {
             }catch{}
         });
 
+        socket.on('joinRoomWeb', async (roomId, id, password, gameURL, invitedUserDiscordId) => {
+            try {
+                if (rooms[roomId]) {
+                    let userdata = await databaseFunctions.getUser({id, password});
+                    let isUserValid = userdata !== undefined;
 
+                    let playerRoom = getPlayerRoom(socket.id);
+                    let playerRoomByDiscordId = (isUserValid ? getPlayerRoomByDiscordId(userdata.discordId) : undefined);
+
+                    if (!playerRoom && playerRoomByDiscordId) {
+                        if (playerRoomByDiscordId.roomId == roomId) {
+                            rooms[roomId][playerRoomByDiscordId.color].socketId = socket.id;
+                            rooms[roomId][playerRoomByDiscordId.color].socket = socket;
+                            let gameInfo = utils.getGameInfo(roomId);
+                            socket.emit('moveMade', imageDataURI.encode(utils.BoardToPng(rooms[roomId].game, playerRoomByDiscordId.color == 'black', rooms[roomId].white, rooms[roomId].black, rooms[roomId].gametype, rooms[roomId].variant), 'png'), '', gameInfo, playerRoomByDiscordId.color);
+                        }
+                    }
+
+                    if (isUserValid) {
+                        let invitedUser = await databaseFunctions.getUser({discordId: invitedUserDiscordId});
+                        if (invitedUser) {
+                            console.log(typeof(invitedUser.webPushSubscription));
+                            console.log(invitedUser.webPushSubscription);
+                            webpush.sendNotification(JSON.parse(invitedUser.webPushSubscription), `${userdata.username} is inviting you for a game, ${gameURL.split("?")[0]}`);
+                        }
+                    }
+
+                    if (!playerRoom) {
+                        if (playerRoomByDiscordId) {
+                            rooms[playerRoomByDiscordId.roomId][playerRoomByDiscordId.color].socketDiscordId = undefined;            
+                        }
+                        if (!rooms[roomId].isStarted) {
+                            let playercolor = 'white'; 
+                            if (!rooms[roomId].white.isAvaliable) {
+                                playercolor = 'black';
+                            }
+                            if (rooms[roomId][playercolor].isAvaliable) {
+                                rooms[roomId][playercolor].isAvaliable = false;
+                                rooms[roomId][playercolor].name = "Guest";
+                                rooms[roomId][playercolor].socketId = socket.id;
+                                rooms[roomId][playercolor].socket = socket;
+                                if (isUserValid) {
+                                    if (userdata.discordId && userdata.discordId !== "") {
+                                        rooms[roomId][playercolor].socketDiscordId = userdata.discordId;
+                                    }
+                                    rooms[roomId][playercolor].name = userdata.username;
+                                    rooms[roomId][playercolor].elo = userdata.elo;
+                                }
+                                let gameInfo = utils.getGameInfo(roomId);
+                                if (playercolor == 'black') {
+                                    rooms[roomId].start();
+                                    gameInfo.isStarted = true;
+                                    if (rooms[roomId].white.socketId) {
+                                        rooms[roomId].white.socket.emit('moveMade', imageDataURI.encode(utils.BoardToPng(rooms[roomId].game, false, rooms[roomId].white, rooms[roomId].black, rooms[roomId].gametype, rooms[roomId].variant), 'png'), '', gameInfo, 'white');
+                                    }
+                                }
+                                socket.emit('moveMade', imageDataURI.encode(utils.BoardToPng(rooms[roomId].game, playercolor == 'black', rooms[roomId].white, rooms[roomId].black, rooms[roomId].gametype, rooms[roomId].variant), 'png'), '', gameInfo, playercolor);
+                            }
+                        }
+                    }
+                }
+            }catch{}
+        });
         socket.on('joinRoom', (roomId, username = "Guest", elo = 500) => {
             try {
                 if (rooms[roomId].isPublic && !rooms[roomId].isStarted) {
@@ -566,18 +628,20 @@ if (appconfig.website.enabled) {
     function onGameEnd(roomId) {
         let gameInfo = utils.getGameInfo(roomId);
         let isDraw = rooms[roomId].winner == '';
-        let winnerColor = roomFunctions.colorLetterToColorName(rooms[roomId].winner);
-        //let winner = isDraw ? "" : rooms[roomId][winnerColor];
-        if (rooms[roomId].white.socketId) {
-            rooms[roomId].white.socket.emit('moveMade', imageDataURI.encode(utils.BoardToPng(rooms[roomId].game, false, rooms[roomId].white, rooms[roomId].black, rooms[roomId].gametype, rooms[roomId].variant), 'png'), (isDraw ? "Game Ended in a draw" : "Game ended, " + winnerColor + " won the game" ), gameInfo, 'white');
-            rooms[roomId].white.socket.emit('gameOver', roomFunctions.colorNameToColorLetter(winnerColor));
-            rooms[roomId].black.socket.emit('gameOver', roomFunctions.colorNameToColorLetter(winnerColor));
-        }
-        if (rooms[roomId].black.socketId) {
-            rooms[roomId].black.socket.emit('moveMade', imageDataURI.encode(utils.BoardToPng(rooms[roomId].game, true, rooms[roomId].white, rooms[roomId].black, rooms[roomId].gametype, rooms[roomId].variant), 'png'), (isDraw ? "Game Ended in a draw" : "Game ended, " + winnerColor + " won the game" ), gameInfo, 'black');
-            rooms[roomId].white.socket.emit('gameOver', roomFunctions.colorNameToColorLetter(winnerColor));
-            rooms[roomId].black.socket.emit('gameOver', roomFunctions.colorNameToColorLetter(winnerColor));
-        }
+        try {
+            let winnerColor = roomFunctions.colorLetterToColorName(rooms[roomId].winner);
+            //let winner = isDraw ? "" : rooms[roomId][winnerColor];
+            if (rooms[roomId].white.socketId) {
+                rooms[roomId].white.socket.emit('moveMade', imageDataURI.encode(utils.BoardToPng(rooms[roomId].game, false, rooms[roomId].white, rooms[roomId].black, rooms[roomId].gametype, rooms[roomId].variant), 'png'), (isDraw ? "Game Ended in a draw" : "Game ended, " + winnerColor + " won the game" ), gameInfo, 'white');
+                rooms[roomId].white.socket.emit('gameOver', roomFunctions.colorNameToColorLetter(winnerColor));
+                rooms[roomId].black.socket.emit('gameOver', roomFunctions.colorNameToColorLetter(winnerColor));
+            }
+            if (rooms[roomId].black.socketId) {
+                rooms[roomId].black.socket.emit('moveMade', imageDataURI.encode(utils.BoardToPng(rooms[roomId].game, true, rooms[roomId].white, rooms[roomId].black, rooms[roomId].gametype, rooms[roomId].variant), 'png'), (isDraw ? "Game Ended in a draw" : "Game ended, " + winnerColor + " won the game" ), gameInfo, 'black');
+                rooms[roomId].white.socket.emit('gameOver', roomFunctions.colorNameToColorLetter(winnerColor));
+                rooms[roomId].black.socket.emit('gameOver', roomFunctions.colorNameToColorLetter(winnerColor));
+            }
+        }catch{}
     }
 
 

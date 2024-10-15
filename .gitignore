@@ -145,11 +145,9 @@ dist
 .yarn/build-state.yml
 .yarn/install-state.gz
 .pnp.*
-board.png
-board.png
 webpushvapidkeys.json
-board.png
-board.png
 board.png
 assets/public/.well-known/assetlinks.json
 assets/puzzles_backup.csv
+sftp_readme.txt
+auth
