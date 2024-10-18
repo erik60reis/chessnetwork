@@ -35,6 +35,7 @@ if (appconfig.website.enabled) {
     let sockets = [];
 
     var discordOauth2;
+    var discordOauth2mobile;
 
 
     app.post('/notification/subscribe', async (req, res) => {
@@ -61,6 +62,11 @@ if (appconfig.website.enabled) {
             clientId: appconfig.auth.discord.client_id,
             clientSecret: appconfig.auth.discord.client_secret,
             redirectUri: appconfig.auth.discord.redirect_uri,
+        });
+        discordOauth2mobile = new DiscordOAuth2Constructor({
+            clientId: appconfig.auth.discord.client_id,
+            clientSecret: appconfig.auth.discord.client_secret,
+            redirectUri: appconfig.auth.discord.redirect_uri + "?mobile=1",
         });
     }
 
@@ -181,7 +187,7 @@ if (appconfig.website.enabled) {
             }
         }catch{}
     });
-
+    
     app.get('/:roomId', (req, res) => {
         try {
             let roomId = parseInt(req.params.roomId);
@@ -208,16 +214,20 @@ if (appconfig.website.enabled) {
 
     if (discordOauth2) {
         app.get('/login/discord', (req, res) => {
-            const authorizeUrl = discordOauth2.generateAuthUrl({
+            const authorizeUrl = (req.query["mobile"] == 1 ? discordOauth2mobile : discordOauth2).generateAuthUrl({
                 scope: ['identify', 'email'],
             });
             res.redirect(authorizeUrl);
         });
         
         app.get('/login/discord/callback', async (req, res) => {
+            if (req.query["mobile"] == 1) {
+                res.send(`<script>window.location.href = window.location.href.replace('https://', '${appconfig.website.custom_url_scheme}://').replace('http://', '${appconfig.website.custom_url_scheme}://').replace('?mobile=1', '?mobile=2');</script>`);
+                return;
+            }
             const code = req.query.code;
             try {
-                const tokenData = await discordOauth2.tokenRequest({
+                const tokenData = await (req.query["mobile"] == 2 ? discordOauth2mobile : discordOauth2).tokenRequest({
                     clientId: appconfig.auth.discord.client_id,
                     clientSecret: appconfig.auth.discord.client_secret,
                     grantType: "authorization_code",

@@ -146,8 +146,9 @@ dist
 .yarn/install-state.gz
 .pnp.*
 webpushvapidkeys.json
-board.png
 assets/public/.well-known/assetlinks.json
 assets/puzzles_backup.csv
 sftp_readme.txt
 auth
+
+trainbot/
