@@ -515,10 +515,28 @@ if (appconfig.website.enabled) {
             }catch{}
         });
 
-        socket.on('spectateRoom', async (roomId, id, password) => {
-            let gameInfo = utils.getGameInfo(roomId);
-
+        socket.on('resign', () => {
             try {
+                let playerRoom = getPlayerRoom(socket.id);
+                let playerColor = playerRoom.color;
+
+                if (playerRoom) {
+                    let roomId = playerRoom.roomId;
+                    
+                    rooms[roomId].winner = (playerColor === 'white' ? 'b' : 'w');
+                    rooms[roomId].end();
+                    
+                    socket.emit('gameOver', { winner: rooms[roomId].winner });
+                    socket.broadcast.to(roomId).emit('gameOver', { winner: rooms[roomId].winner });
+                }
+            }catch{}
+        });
+
+
+        socket.on('spectateRoom', async (roomId, id, password) => {
+            try {
+                let gameInfo = utils.getGameInfo(roomId);
+
                 let userdata = await databaseFunctions.getUser({id, password});
                 let isUserValid = userdata !== undefined;
                 let playerRoomByDiscordId = (isUserValid ? getPlayerRoomByDiscordId(userdata.discordId) : undefined);
@@ -528,9 +546,9 @@ if (appconfig.website.enabled) {
                         socket.emit('DisableViewOnlyMode');
                     }
                 }
+                socket.emit('moveMade', imageDataURI.encode(utils.BoardToPng(rooms[roomId].game, false, rooms[roomId].white, rooms[roomId].black, rooms[roomId].gametype, rooms[roomId].variant), 'png'), '', gameInfo, 'white');
             }catch{}
                 
-            socket.emit('moveMade', imageDataURI.encode(utils.BoardToPng(rooms[roomId].game, false, rooms[roomId].white, rooms[roomId].black, rooms[roomId].gametype, rooms[roomId].variant), 'png'), '', gameInfo, 'white');
         });
 
         socket.on('makeMove', (move) => {

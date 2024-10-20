@@ -74,7 +74,11 @@ function createGameBoard(container, config) {
     const table = document.createElement('table');
     table.style.width = "100%";
     table.style.height = "100%";
-    table.style.borderCollapse = "collapse";
+    table.style.borderCollapse = "separate";
+    table.style.borderSpacing = "0";
+    table.style.borderRadius = "5px";
+    table.style.overflow = "hidden";
+    
   
     for (let i = height - 1; i >= 0; i--) {
         const row = document.createElement('tr');

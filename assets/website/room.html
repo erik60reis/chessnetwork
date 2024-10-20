@@ -25,7 +25,7 @@
         }
 
         #gameboard {
-            width: 95%;
+            width: 99%;
         }
 
         input {
@@ -42,8 +42,8 @@
         .username {
             color: white;
             text-align: left;
-            font-size: 25px;
-            width: 75%;
+            font-size: 18px;
+            width: 70%;
         }
 
         .elo {
@@ -64,13 +64,13 @@
         }
 
         .playertimer {
-            font-size: 15px;
-            border: 3px solid burlywood;
-            border-radius: 2px;
-            background-color: burlywood;
+            font-size: 25px;
+            font-weight: 500;
+            border-radius: 4px;
+            background-color: #57544a;
             color: white;
-            text-align: right;
-            width: 15%;
+            text-align: center;
+            width: 30%;
         }
 
         cg-container {
@@ -122,6 +122,7 @@
             }
 
             .username {
+                width: 85%;
                 font-size: 15px;
             }
 
@@ -130,7 +131,7 @@
             }
 
             .playertimer {
-                font-size: 30px;
+                width: 15%;
             }
 
             .sidebar {
@@ -174,6 +175,9 @@
         </div>
         <div class="sidebar">
             <div id="gamestatus"> ---- </div>
+            <br/>
+            <br/>
+            <button id="resign-button">Resign</button>
         </div>
     </div>
     <script src="/assets/scripts/gameboard.js"></script>
@@ -301,6 +305,11 @@
         function joinRoom() {
             socket.emit('joinRoomWeb', roomId, window.localStorage.getItem('authid'), window.localStorage.getItem('authpassword'), window.location.href, '{{invitedUserDiscordId}}');
         }
+
+
+        document.getElementById('resign-button').addEventListener('click', () => {
+            socket.emit('resign');
+        });
 
         let gameboardconfig = {
             fen: 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR',

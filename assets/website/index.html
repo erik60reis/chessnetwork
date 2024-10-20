@@ -91,14 +91,16 @@
 
         .sidebar {
             display: block;
-            width: 100%;
+            width: 97%;
+            padding: 5px;
             height: 80vh;
             background-color: #262522;
             border-radius: 5px;
         }
 
         #menu {
-            width: 15%;
+            width: 97%;
+            text-align: left;
         }
 
         .grid-container {
@@ -115,8 +117,7 @@
         }
 
         .grid-item {
-            border: 3px solid #262522;
-            background-color: darkgray;
+            background-color: #75716c;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -130,6 +131,11 @@
             font-size: 16px;
             margin: 5px;
             background-color: #f9f9f9;
+        }
+
+        #logo {
+            width: 80px;
+            height: 40px;
         }
 
         @media (min-width: 600px) {
@@ -178,6 +184,7 @@
             }
 
             #menu {
+                text-align: center;
                 width: 10%;               
                 margin-top: 0;
                 margin-bottom: 0;
@@ -189,13 +196,18 @@
                 max-height: 98vh;
                 display: block;
             }
+
+            #logo {
+                width: 110px;
+                height: 55px;
+            }
         }
     </style>
     <span id="piecesstyle"></span>
 </head>
 <body>
     <div id="gameContainer">
-        <div id="menu"><img src="/assets/logobanner.png" width="110" height="55" onclick="window.location.href = '/';"></div>
+        <div id="menu"><img id="logo" src="/assets/logobanner.png" width="110" height="55" onclick="window.location.href = '/';"></div>
         <div id="gameMainContainer">
             <div class="playerInfo" id="otherData" style="display: none;">
                 <div class="username" id="otherUsername">User</div>
@@ -212,7 +224,6 @@
             <br/>
         </div>
         <div class="sidebar">
-            <h1>Create Room</h1>
             <div class="grid-container">
                 <button class="grid-item">1+0</button>
                 <button class="grid-item">2+1</button>
@@ -227,7 +238,7 @@
                 <button class="grid-item">30+20</button>
             </div>
             <br/>
-            <a href="/analyse" style="font-size: 20px; color: #bb00dd;">Analyse Your Game</a>&nbsp;
+            <a href="/analyse" style="font-size: 20px; color: #70675e;">Analyse Your Game</a>&nbsp;
             <br/>
             <br/>
             <h1>Custom Options</h1>
