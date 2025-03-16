@@ -54,8 +54,11 @@ global.coordToExternalNumbering = {
     
 };
 
-setTimeout(() => {
-    ffish.loadVariantConfig(fs.readFileSync(rootpath + "/variants.ini"));
+let interval = setInterval(() => {
+    if (typeof ffish.loadVariantConfig == 'function') {
+        ffish.loadVariantConfig(fs.readFileSync(rootpath + "/variants.ini"));
+        clearInterval(interval);
+    }
 }, 4000);
 
 function generateGame(gametype = 'chess', variant = 'chess') {
