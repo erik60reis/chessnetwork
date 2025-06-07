@@ -1,4 +1,6 @@
-type "npm install" or "npm i"
+install node.js 18
+
+type "npm install" or "npm i" on this folder with powershell with admin rights
 
 rename "config copy.json" to "config.json"
 

@@ -5,15 +5,29 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Chess</title>
     <style>
+        :root {
+            --primary-color: #7fa650;
+            --dark-bg: #302e2b;
+            --darker-bg: #262522;
+            --light-text: #ffffff;
+            --gray-text: #9c9c9c;
+            --timer-bg: #57544a;
+            --hover-color: #8fb760;
+            --button-shadow: rgba(0, 0, 0, 0.2);
+        }
+
         body {
-            background-color: #302e2b;
-            color: white;
+            background-color: var(--dark-bg);
+            color: var(--light-text);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+            overflow: hidden; /*no scroolbar*/
         }
 
         #gameContainer {
             width: 100%;
-            height: 97%;
-            display: block;
+            height: 97vh;
             justify-content: center;
             align-items: center;
             text-align: center;
@@ -25,70 +39,187 @@
         }
 
         #gameboard {
-            width: 99%;
+            height: 99%;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        button {
+            background-color: var(--primary-color);
+            color: var(--light-text);
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            box-shadow: 0 2px 4px var(--button-shadow);
+        }
+
+        button:hover {
+            background-color: var(--hover-color);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px var(--button-shadow);
+        }
+
+        button:active {
+            transform: translateY(0);
+            box-shadow: 0 2px 4px var(--button-shadow);
+        }
+
+        #resign-button {
+            background-color: #c33;
+            margin-top: 10px;
+        }
+
+        #resign-button:hover {
+            background-color: #d44;
         }
 
         input {
-            border-radius: 5px;
+            border-radius: 6px;
             width: 200px;
+            padding: 8px 12px;
+            border: 2px solid var(--darker-bg);
+            background-color: var(--dark-bg);
+            color: var(--light-text);
+            font-size: 14px;
+            transition: all 0.2s ease;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 2px rgba(127, 166, 80, 0.2);
         }
 
         .playerInfo {
             font-size: 25px;
             display: flex;
-            flex-grow: 1;
+            align-items: center;
+            background-color: var(--darker-bg);
+            padding: 10px 15px;
+            border-radius: 8px;
+            margin: 10px 0;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+        }
+
+        .playerAvatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            margin-right: 12px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
         }
 
         .username {
-            color: white;
+            color: var(--light-text);
             text-align: left;
-            font-size: 18px;
-            width: 70%;
+            font-size: 16px;
+            font-weight: 500;
+            flex-grow: 1;
+            margin-right: 12px;
         }
 
         .elo {
             text-align: left;
-            font-size: 18px;
-            color: lightgray;
+            font-size: 14px;
+            color: var(--gray-text);
+            margin-left: 8px;
         }
 
         #gamestatus {
-            color: white;
+            color: var(--light-text);
             text-align: center;
             justify-content: center;
-            border-radius: 5px;
-        }
-
-        a {
-            color: white;
+            border-radius: 8px;
+            padding: 15px;
+            background-color: var(--darker-bg);
+            margin: 10px 0;
+            font-size: 14px;
         }
 
         .playertimer {
-            font-size: 25px;
-            font-weight: 500;
-            border-radius: 4px;
-            background-color: #57544a;
-            color: white;
+            font-size: 20px;
+            font-weight: 600;
+            font-family: 'Roboto Mono', monospace;
+            border-radius: 6px;
+            background-color: var(--timer-bg);
+            color: var(--light-text);
             text-align: center;
-            width: 30%;
-        }
-
-        cg-container {
-            justify-content: center;
-            align-items: center;
-            text-align: center;
-            border-radius: 5px;
+            padding: 8px 12px;
+            min-width: 80px;
         }
 
         .sidebar {
             display: block;
             width: 100%;
-            background-color: #262522;
-            border-radius: 5px;
+            background-color: var(--darker-bg);
+            border-radius: 8px;
+            padding: 15px;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
         }
 
         #menu {
             width: 15%;
+            padding: 10px;
+        }
+
+        #menu img {
+            border-radius: 4px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        /* Promotion popup styles */
+        #promotionPopup {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: var(--darker-bg);
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+            z-index: 1000;
+        }
+
+        #promotionOptions {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            padding: 10px;
+        }
+
+        .promotion-piece {
+            width: 60px;
+            height: 60px;
+            cursor: pointer;
+            border: 2px solid transparent;
+            border-radius: 8px;
+            padding: 8px;
+            transition: all 0.2s ease;
+            background-color: var(--dark-bg);
+        }
+
+        .promotion-piece:hover {
+            border-color: var(--primary-color);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        }
+
+        #promotionOverlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(2px);
+            z-index: 999;
         }
 
         @media (min-width: 600px) {
@@ -106,10 +237,7 @@
                 display: flex;
                 flex-direction: row;
                 flex-grow: 1;
-                margin-left: 0px;
-                margin-right: 0px;
-                margin-top: 0px;
-                margin-bottom: 0px;
+                margin: 20px;
                 width: 80%;
             }
 
@@ -123,15 +251,15 @@
 
             .username {
                 width: 85%;
-                font-size: 15px;
+                font-size: 16px;
             }
 
             .elo {
-                font-size: 10px;
+                font-size: 14px;
             }
 
             .playertimer {
-                width: 15%;
+                min-width: 100px;
             }
 
             .sidebar {
@@ -144,8 +272,14 @@
                 margin-top: 0;
                 margin-bottom: 0;
                 height: 96vh;
-                background-color: #262522;
+                background-color: var(--darker-bg);
+                border-radius: 0 8px 8px 0;
             }
+        }
+
+        /* Add smooth transitions */
+        * {
+            transition: background-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
         }
     </style>
     <span id="piecesstyle"></span>
@@ -153,32 +287,38 @@
      crossorigin="anonymous"></script>
 </head>
 <body>
+    <!-- Add promotion popup HTML -->
+    <div id="promotionOverlay"></div>
+    <div id="promotionPopup">
+        <div id="promotionOptions">
+            <img src="/assets/chesspieces/wQ.png" class="promotion-piece" data-piece="q" alt="Queen">
+            <img src="/assets/chesspieces/wR.png" class="promotion-piece" data-piece="r" alt="Rook">
+            <img src="/assets/chesspieces/wB.png" class="promotion-piece" data-piece="b" alt="Bishop">
+            <img src="/assets/chesspieces/wN.png" class="promotion-piece" data-piece="n" alt="Knight">
+        </div>
+    </div>
     <div id="gameContainer">
         <div id="menu"><img src="/assets/logobanner.png" width="110" height="55"></div>
         <div id="gameMainContainer">
             <img id="gameimage">
             <div class="playerInfo" id="otherData">
-                <img src="/assets/iconwhite.png" width="35" height="35">&nbsp;
+                <img src="/assets/iconwhite.png" class="playerAvatar" width="40" height="40">
                 <div class="username" id="otherUsername">User</div>
                 <div class="playertimer" id="otherTime">30:00</div>
             </div>
-            <br/>
             <div id="gameboard"></div>
-            <br/>
             <div class="playerInfo" id="yourData">
-                <img src="/assets/iconwhite.png" width="40" height="40">&nbsp;
+                <img src="/assets/iconwhite.png" class="playerAvatar" width="40" height="40">
                 <div class="username" id="yourUsername">User</div>
                 <div class="playertimer" id="yourTime">30:00</div>
             </div>
-            <br/>
-            <br/>
-            <input id="moveinput" type="text" placeholder="Enter move... (eg. e2e4 or 21-17)"/> <button id="movebutton">MOVE</button>
-            <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+            <div class="move-input">
+                <input id="moveinput" type="text" placeholder="Enter move... (eg. e2e4 or 21-17)"/>
+                <button id="movebutton">Move</button>
+            </div>
         </div>
         <div class="sidebar">
-            <div id="gamestatus"> ---- </div>
-            <br/>
-            <br/>
+            <div id="gamestatus">Waiting for opponent...</div>
             <button id="resign-button">Resign</button>
         </div>
     </div>
@@ -196,6 +336,9 @@
 
         const soundMove = new Audio("assets/sounds/move.wav");
         const soundCapture = new Audio("assets/sounds/capture.wav");
+
+        // Add promotion handling functions
+        let pendingMove = null;
 
         function formatTime(timeseconds) {
             var timeWithoutDecimals = Math.ceil(timeseconds);
@@ -266,7 +409,12 @@
                     let legalMovesFormatted = {};
                     legalMoves.forEach(legalMove => {
                         if (legalMove.startsWith((letter + number))) {
-                            legalMovesFormatted[legalMove.replace((letter + number), "").substring(0, legalMove.length - 1)] = true;
+                            const destSquare = legalMove.slice(2, 4);
+                            if (legalMove.length === 5) { // Promotion move
+                                legalMovesFormatted[destSquare] = true;
+                            } else {
+                                legalMovesFormatted[destSquare] = true;
+                            }
                         }
                     });
                     if (Object.keys(legalMovesFormatted).length > 0) {
@@ -277,22 +425,21 @@
             return moves;
         }
 
-        let roomId = {{roomId}};
-
-        let isViewOnlyMode = {{isViewOnlyMode}};
+        const roomId = {{roomId}};
+        const isViewOnlyMode = {{isViewOnlyMode}};
 
         let board = null;
-        
         let socket;
-
         let gameBoard = document.getElementById("gameboard");
         let oldDimensions = {width: 8, height: 8};
 
         function setGameBoardSize() {
             if (window.innerWidth >= 600) {
-                gameBoard.style.width = ((gameBoard.clientHeight / oldDimensions.height) * oldDimensions.width) + "px";
+                gameBoard.style.width = (((gameBoard.clientHeight / oldDimensions.height) * oldDimensions.width)) + "px";
+                gameBoard.style.height = gameBoard.clientWidth + "px";
             }else{
-                gameBoard.style.height = ((gameBoard.clientWidth / oldDimensions.width) * oldDimensions.height) + "px";
+                gameBoard.style.height = (((gameBoard.clientWidth / oldDimensions.width) * oldDimensions.height)) + "px";
+                gameBoard.style.width = gameBoard.clientHeight + "px";
             }
             if (document.body.clientWidth >= 600) {
                 let gameMainContainerMargin = (((document.body.clientWidth - gameBoard.clientWidth) / 2.5) - document.getElementById("menu").clientWidth) + "px";
@@ -320,12 +467,68 @@
             pieceTheme: "/assets/chesspieces/%piece%.png",
             isFlipped: false,
             onMove: (orig, dest) => {
-                socket.emit('makeMove', orig + dest);
-                socket.emit('makeMove', orig + "-" + dest);
-                socket.emit('makeMove', orig + dest + 'q');
-                socket.emit('makeMove', chessSquareToCheckersIndex(orig, oldGameInfo.boardDimensions.height, oldGameInfo.boardDimensions.width) + "-" + chessSquareToCheckersIndex(dest,  oldGameInfo.boardDimensions.height, oldGameInfo.boardDimensions.width));
+                if (oldGameInfo.gametype === "checkers") {
+                    socket.emit('makeMove', chessSquareToCheckersIndex(orig, oldGameInfo.boardDimensions.height, oldGameInfo.boardDimensions.width) + "-" + chessSquareToCheckersIndex(dest, oldGameInfo.boardDimensions.height, oldGameInfo.boardDimensions.width));
+                    return;
+                }
+
+                // Find all legal moves from the origin square
+                const originLegalMoves = oldGameInfo.legalMoves.filter(move => 
+                    move.startsWith(orig) && move.slice(2, 4) === dest
+                );
+
+                // If there are multiple legal moves to the same square, it's a promotion
+                if (originLegalMoves.length > 1) {
+                    showPromotionPopup(orig, dest);
+                } else if (originLegalMoves.length === 1) {
+                    // If there's exactly one move and it's a promotion move (length 5)
+                    if (originLegalMoves[0].length === 5) {
+                        showPromotionPopup(orig, dest);
+                    } else {
+                        socket.emit('makeMove', orig + dest);
+                    }
+                }
             },
         }
+
+        function showPromotionPopup(orig, dest) {
+            pendingMove = { orig, dest };
+            const popup = document.getElementById('promotionPopup');
+            const overlay = document.getElementById('promotionOverlay');
+            const options = document.getElementById('promotionOptions');
+            const isWhite = oldGameInfo.turn;
+            
+            // Update piece images to match the current player's color
+            options.querySelectorAll('.promotion-piece').forEach(piece => {
+                const pieceType = piece.dataset.piece;
+                piece.src = `/assets/chesspieces/${isWhite ? 'w' : 'b'}${pieceType.toUpperCase()}.png`;
+            });
+            
+            popup.style.display = 'block';
+            overlay.style.display = 'block';
+        }
+
+        function hidePromotionPopup() {
+            const popup = document.getElementById('promotionPopup');
+            const overlay = document.getElementById('promotionOverlay');
+            popup.style.display = 'none';
+            overlay.style.display = 'none';
+            pendingMove = null;
+        }
+
+        // Add click handlers for promotion pieces
+        document.querySelectorAll('.promotion-piece').forEach(piece => {
+            piece.addEventListener('click', () => {
+                if (pendingMove) {
+                    const promotionPiece = piece.dataset.piece;
+                    socket.emit('makeMove', pendingMove.orig + pendingMove.dest + promotionPiece);
+                    hidePromotionPopup();
+                }
+            });
+        });
+
+        // Close promotion popup when clicking overlay
+        document.getElementById('promotionOverlay').addEventListener('click', hidePromotionPopup);
 
         socket = io();
 

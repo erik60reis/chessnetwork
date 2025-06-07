@@ -126,11 +126,7 @@ function createGameBoard(container, config) {
                     let selectedSquare = document.querySelector(`.gameboardsquare-${selectedSquareCoords}`);
     
                     if (clickedSquare.classList.contains('legalMoveSquare')) {
-                        let isMoveValid = onMoveCallback(selectedSquareCoords, squareCoords);
-                        if (isMoveValid) {
-                            clickedSquare.innerHTML = selectedSquare.innerHTML;
-                            selectedSquare.innerHTML = "";
-                        }
+                        onMoveCallback(selectedSquareCoords, squareCoords);
                     }
     
                     document.querySelectorAll(`.legalMoveSquare`).forEach(legalCell => {
@@ -146,12 +142,16 @@ function createGameBoard(container, config) {
 
             function paintLegalMoves() {
                 for (let legalMoveSquareCoords of Object.keys(legalMoves[squareCoords])) {
-                    let legalMoveSquare = document.querySelector(`.gameboardsquare-${legalMoveSquareCoords}`);
-                    legalMoveSquare.classList.add("legalMoveSquare");
-                    legalMoveSquare.style.backgroundImage = `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16pt' height='16.000099pt'%3E%3Cpath stroke='%23000' stroke-miterlimit='40' stroke-width='1.25' d='M15.625 10.000062c0 3.106602-2.518398 5.625-5.6249996 5.625-3.1066017 0-5.625-2.518398-5.625-5.625 0-3.1066013 2.5183983-5.6249996 5.625-5.6249996 3.1066016 0 5.6249996 2.5183983 5.6249996 5.6249996z'/%3E%3C/svg%3E")`;
-                    legalMoveSquare.style.backgroundSize = '50% 50%';
-                    legalMoveSquare.style.backgroundRepeat = 'no-repeat';
-                    legalMoveSquare.style.backgroundPosition = 'center';
+                    // Extract just the square coordinates without the promotion piece
+                    const destSquare = legalMoveSquareCoords.slice(0, 2);
+                    let legalMoveSquare = document.querySelector(`.gameboardsquare-${destSquare}`);
+                    if (legalMoveSquare) {
+                        legalMoveSquare.classList.add("legalMoveSquare");
+                        legalMoveSquare.style.backgroundImage = `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16pt' height='16.000099pt'%3E%3Cpath stroke='%23000' stroke-miterlimit='40' stroke-width='1.25' d='M15.625 10.000062c0 3.106602-2.518398 5.625-5.6249996 5.625-3.1066017 0-5.625-2.518398-5.625-5.625 0-3.1066013 2.5183983-5.6249996 5.625-5.6249996 3.1066016 0 5.6249996 2.5183983 5.6249996 5.6249996z'/%3E%3C/svg%3E")`;
+                        legalMoveSquare.style.backgroundSize = '50% 50%';
+                        legalMoveSquare.style.backgroundRepeat = 'no-repeat';
+                        legalMoveSquare.style.backgroundPosition = 'center';
+                    }
                 }
                 selectedSquareCoords = squareCoords;
             }
@@ -167,11 +167,7 @@ function createGameBoard(container, config) {
                 event.preventDefault();
                 let selectedSquare = document.querySelector(`.gameboardsquare-${selectedSquareCoords}`);
                 if (cell.classList.contains('legalMoveSquare')) {
-                    let isMoveValid = onMoveCallback(selectedSquareCoords, squareCoords);
-                    if (isMoveValid) {
-                        cell.innerHTML = selectedSquare.innerHTML;
-                        selectedSquare.innerHTML = "";
-                    }
+                    onMoveCallback(selectedSquareCoords, squareCoords);
                 }
             };
 
