@@ -22,7 +22,6 @@
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             margin: 0;
             padding: 0;
-            overflow: hidden; /*no scroolbar*/
         }
 
         #gameContainer {
@@ -223,6 +222,10 @@
         }
 
         @media (min-width: 600px) {
+            body {
+                overflow: hidden; /*no scroolbar*/
+            }
+
             #gameimage {
                 height: 85vh;
                 width: auto;
