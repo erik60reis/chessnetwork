@@ -83,12 +83,17 @@ if (appconfig.website.enabled) {
     app.use('/', express.static(path.join(rootpath, 'assets', 'public')));
     app.use('/assets/checkerspieces', express.static(path.join(rootpath, 'assets', 'checkerspieces')));
 
-    app.get('/analyse', (req, res) => {
-        res.render(path.join(rootpath, 'assets', 'website', 'analyse.html'), {})
-    });
-
     const server = createServer(app);
-    const io = new Server(server);
+    const io = new Server(server, {
+        transports: ['websocket', 'polling'],
+        pingInterval: 25_000,
+        pingTimeout: 60_000,
+        cors: {
+            origin: ["http://localhost:5173", "https://oxadrez.com"],
+            methods: ["GET", "POST"],
+            credentials: true
+        }
+    });
 
     function getPlayerRoom(playerId) {
         for (let roomId of Object.keys(rooms)) {
@@ -198,6 +203,14 @@ if (appconfig.website.enabled) {
         }
     });
 
+    app.get('/', (req, res) => {
+        res.render(join(rootpath, 'assets', 'website', 'index.html'), {discord_client_id: appconfig.auth.discord.client_id});
+    });
+
+    app.get('/analyse', (req, res) => {
+        res.render(path.join(rootpath, 'assets', 'website', 'analyse.html'), {})
+    });
+
     app.get('/l/:roomId', (req, res) => {
         res.send(`
             <script>
@@ -206,10 +219,6 @@ if (appconfig.website.enabled) {
             window.location.href = "http://" + domainname + "/${req.params.roomId}";
             </script>
         `);
-    });
-
-    app.get('/', (req, res) => {
-        res.render(join(rootpath, 'assets', 'website', 'index.html'), {discord_bot_addition_link: appconfig.discordbot.bot_addition_link, discord_client_id: appconfig.auth.discord.client_id});
     });
 
     if (discordOauth2) {
@@ -352,7 +361,7 @@ if (appconfig.website.enabled) {
     io.on('connection', (socket) => {
         sockets.push(socket);
 
-        socket.on('quickMatch', (time, increment = 0, username = "Guest", elo = 500, variant = "chess") => {
+        socket.on('quickMatch', async (time, increment = 0, username = "Guest", elo = 500, variant = "chess") => {
             try {
                 let gametype = 'chess';
     
@@ -375,7 +384,8 @@ if (appconfig.website.enabled) {
                                         let gameInfo = utils.getGameInfo(roomId);
                                         gameInfo.isStarted = true;
                                         if (rooms[roomId].white.socketId) {
-                                            rooms[roomId].white.socket.emit('moveMade', imageDataURI.encode(utils.BoardToPng(rooms[roomId].game, false, rooms[roomId].white, rooms[roomId].black, rooms[roomId].gametype, rooms[roomId].variant), 'png'), '', gameInfo, 'white');
+                                            let pnginfo = await utils.BoardToPng(rooms[roomId].game, false, rooms[roomId].white, rooms[roomId].black, rooms[roomId].gametype, rooms[roomId].variant);
+                                            rooms[roomId].white.socket.emit('moveMade', imageDataURI.encode(pnginfo, 'png'), '', gameInfo, 'white');
                                         }
 
 
@@ -444,7 +454,8 @@ if (appconfig.website.enabled) {
                             rooms[roomId][playerRoomByDiscordId.color].socketId = socket.id;
                             rooms[roomId][playerRoomByDiscordId.color].socket = socket;
                             let gameInfo = utils.getGameInfo(roomId);
-                            socket.emit('moveMade', imageDataURI.encode(utils.BoardToPng(rooms[roomId].game, playerRoomByDiscordId.color == 'black', rooms[roomId].white, rooms[roomId].black, rooms[roomId].gametype, rooms[roomId].variant), 'png'), '', gameInfo, playerRoomByDiscordId.color);
+                            let pnginfo = utils.BoardToPng(rooms[roomId].game, playerRoomByDiscordId.color == 'black', rooms[roomId].white, rooms[roomId].black, rooms[roomId].gametype, rooms[roomId].variant);
+                            socket.emit('moveMade', imageDataURI.encode(pnginfo, 'png'), '', gameInfo, playerRoomByDiscordId.color);
                         }
                     }
 
@@ -483,17 +494,37 @@ if (appconfig.website.enabled) {
                                     rooms[roomId].start();
                                     gameInfo.isStarted = true;
                                     if (rooms[roomId].white.socketId) {
-                                        rooms[roomId].white.socket.emit('moveMade', imageDataURI.encode(utils.BoardToPng(rooms[roomId].game, false, rooms[roomId].white, rooms[roomId].black, rooms[roomId].gametype, rooms[roomId].variant), 'png'), '', gameInfo, 'white');
+                                        let pnginfo = await utils.BoardToPng(rooms[roomId].game, false, rooms[roomId].white, rooms[roomId].black, rooms[roomId].gametype, rooms[roomId].variant);
+                                        rooms[roomId].white.socket.emit('moveMade', imageDataURI.encode(pnginfo, 'png'), '', gameInfo, 'white');
                                     }
                                 }
-                                socket.emit('moveMade', imageDataURI.encode(utils.BoardToPng(rooms[roomId].game, playercolor == 'black', rooms[roomId].white, rooms[roomId].black, rooms[roomId].gametype, rooms[roomId].variant), 'png'), '', gameInfo, playercolor);
+
+                                let pnginfo = await utils.BoardToPng(rooms[roomId].game, playercolor == 'black', rooms[roomId].white, rooms[roomId].black, rooms[roomId].gametype, rooms[roomId].variant);
+                                socket.emit('moveMade', imageDataURI.encode(pnginfo, 'png'), '', gameInfo, playercolor);
+                            }
+                            else {
+                                try {
+                                    let gameInfo = utils.getGameInfo(roomId);
+
+                                    let userdata = await databaseFunctions.getUser({id, password});
+                                    let isUserValid = userdata !== undefined;
+                                    let playerRoomByDiscordId = (isUserValid ? getPlayerRoomByDiscordId(userdata.discordId) : undefined);
+                                    
+                                    if (playerRoomByDiscordId) {
+                                        if (playerRoomByDiscordId.roomId == roomId) {
+                                            socket.emit('DisableViewOnlyMode');
+                                        }
+                                    }
+                                    let pnginfo = await utils.BoardToPng(rooms[roomId].game, false, rooms[roomId].white, rooms[roomId].black, rooms[roomId].gametype, rooms[roomId].variant);
+                                    socket.emit('moveMade', imageDataURI.encode(pnginfo, 'png'), '', gameInfo, 'white');
+                                }catch{}
                             }
                         }
                     }
                 }
             }catch{}
         });
-        socket.on('joinRoom', (roomId, username = "Guest", elo = 500) => {
+        socket.on('joinRoom', async (roomId, username = "Guest", elo = 500) => {
             try {
                 if (rooms[roomId].isPublic && !rooms[roomId].isStarted) {
                     if (rooms[roomId].black.isAvaliable) {
@@ -507,7 +538,8 @@ if (appconfig.website.enabled) {
                             let gameInfo = utils.getGameInfo(roomId);
                             gameInfo.isStarted = true;
                             if (rooms[roomId].white.socketId) {
-                                rooms[roomId].white.socket.emit('moveMade', imageDataURI.encode(utils.BoardToPng(rooms[roomId].game, false, rooms[roomId].white, rooms[roomId].black, rooms[roomId].gametype, rooms[roomId].variant), 'png'), '', gameInfo, 'white');
+                                let pnginfo = await utils.BoardToPng(rooms[roomId].game, false, rooms[roomId].white, rooms[roomId].black, rooms[roomId].gametype, rooms[roomId].variant);
+                                rooms[roomId].white.socket.emit('moveMade', imageDataURI.encode(pnginfo, 'png'), '', gameInfo, 'white');
                             }
                         }
                     }
@@ -530,25 +562,6 @@ if (appconfig.website.enabled) {
                     socket.broadcast.to(roomId).emit('gameOver', { winner: rooms[roomId].winner });
                 }
             }catch{}
-        });
-
-
-        socket.on('spectateRoom', async (roomId, id, password) => {
-            try {
-                let gameInfo = utils.getGameInfo(roomId);
-
-                let userdata = await databaseFunctions.getUser({id, password});
-                let isUserValid = userdata !== undefined;
-                let playerRoomByDiscordId = (isUserValid ? getPlayerRoomByDiscordId(userdata.discordId) : undefined);
-                
-                if (playerRoomByDiscordId) {
-                    if (playerRoomByDiscordId.roomId == roomId) {
-                        socket.emit('DisableViewOnlyMode');
-                    }
-                }
-                socket.emit('moveMade', imageDataURI.encode(utils.BoardToPng(rooms[roomId].game, false, rooms[roomId].white, rooms[roomId].black, rooms[roomId].gametype, rooms[roomId].variant), 'png'), '', gameInfo, 'white');
-            }catch{}
-                
         });
 
         socket.on('makeMove', (move) => {
@@ -591,7 +604,8 @@ if (appconfig.website.enabled) {
                         rooms[roomId][playerRoomByDiscordId.color].socketId = socket.id;
                         rooms[roomId][playerRoomByDiscordId.color].socket = socket;
                         let gameInfo = utils.getGameInfo(roomId);
-                        socket.emit('moveMade', imageDataURI.encode(utils.BoardToPng(rooms[roomId].game, playerRoomByDiscordId.color == 'black', rooms[roomId].white, rooms[roomId].black, rooms[roomId].gametype, rooms[roomId].variant), 'png'), '', gameInfo, playerRoomByDiscordId.color);
+                        let pnginfo = await utils.BoardToPng(rooms[roomId].game, playerRoomByDiscordId.color == 'black', rooms[roomId].white, rooms[roomId].black, rooms[roomId].gametype, rooms[roomId].variant);
+                        socket.emit('moveMade', imageDataURI.encode(pnginfo, 'png'), '', gameInfo, playerRoomByDiscordId.color);
                     }
                 }
 
@@ -630,10 +644,12 @@ if (appconfig.website.enabled) {
                                 rooms[roomId].start();
                                 gameInfo.isStarted = true;
                                 if (rooms[roomId].white.socketId) {
-                                    rooms[roomId].white.socket.emit('moveMade', imageDataURI.encode(utils.BoardToPng(rooms[roomId].game, false, rooms[roomId].white, rooms[roomId].black, rooms[roomId].gametype, rooms[roomId].variant), 'png'), '', gameInfo, 'white');
+                                    let pnginfo = await utils.BoardToPng(rooms[roomId].game, false, rooms[roomId].white, rooms[roomId].black, rooms[roomId].gametype, rooms[roomId].variant);
+                                    rooms[roomId].white.socket.emit('moveMade', imageDataURI.encode(pnginfo, 'png'), '', gameInfo, 'white');
                                 }
                             }
-                            socket.emit('moveMade', imageDataURI.encode(utils.BoardToPng(rooms[roomId].game, playercolor == 'black', rooms[roomId].white, rooms[roomId].black, rooms[roomId].gametype, rooms[roomId].variant), 'png'), '', gameInfo, playercolor);
+                            let pnginfo = await utils.BoardToPng(rooms[roomId].game, playercolor == 'black', rooms[roomId].white, rooms[roomId].black, rooms[roomId].gametype, rooms[roomId].variant);
+                            socket.emit('moveMade', imageDataURI.encode(pnginfo, 'png'), '', gameInfo, playercolor);
                         }
                     }
                 }
@@ -641,31 +657,35 @@ if (appconfig.website.enabled) {
         });
     });
 
-    function onMoveMade(roomId, move) {
+    async function onMoveMade(roomId, move) {
         let gameInfo = utils.getGameInfo(roomId);
         if (rooms[roomId].white.socketId) {
-            rooms[roomId].white.socket.emit('moveMade', imageDataURI.encode(utils.BoardToPng(rooms[roomId].game, false, rooms[roomId].white, rooms[roomId].black, rooms[roomId].gametype, rooms[roomId].variant), 'png'), (rooms[roomId].turn() ? "Your Turn" : "Black's Turn"), gameInfo, 'white');
+            let pnginfo = await utils.BoardToPng(rooms[roomId].game, false, rooms[roomId].white, rooms[roomId].black, rooms[roomId].gametype, rooms[roomId].variant);
+            rooms[roomId].white.socket.emit('moveMade', imageDataURI.encode(pnginfo, 'png'), (rooms[roomId].turn() ? "Your Turn" : "Black's Turn"), gameInfo, 'white');
         }
         if (rooms[roomId].black.socketId) {
-            rooms[roomId].black.socket.emit('moveMade', imageDataURI.encode(utils.BoardToPng(rooms[roomId].game, true, rooms[roomId].white, rooms[roomId].black, rooms[roomId].gametype, rooms[roomId].variant), 'png'), (rooms[roomId].turn() ? "White's Turn" : "Your Turn"), gameInfo, 'black');
+            let pnginfo = await utils.BoardToPng(rooms[roomId].game, true, rooms[roomId].white, rooms[roomId].black, rooms[roomId].gametype, rooms[roomId].variant)
+            rooms[roomId].black.socket.emit('moveMade', imageDataURI.encode(pnginfo, 'png'), (rooms[roomId].turn() ? "White's Turn" : "Your Turn"), gameInfo, 'black');
         }
     }
 
     roomEvents.onMoveMade.push(onMoveMade);
 
-    function onGameEnd(roomId) {
+    async function onGameEnd(roomId) {
         let gameInfo = utils.getGameInfo(roomId);
         let isDraw = rooms[roomId].winner == '';
         try {
             let winnerColor = roomFunctions.colorLetterToColorName(rooms[roomId].winner);
             //let winner = isDraw ? "" : rooms[roomId][winnerColor];
             if (rooms[roomId].white.socketId) {
-                rooms[roomId].white.socket.emit('moveMade', imageDataURI.encode(utils.BoardToPng(rooms[roomId].game, false, rooms[roomId].white, rooms[roomId].black, rooms[roomId].gametype, rooms[roomId].variant), 'png'), (isDraw ? "Game Ended in a draw" : "Game ended, " + winnerColor + " won the game" ), gameInfo, 'white');
+                let pnginfo = await utils.BoardToPng(rooms[roomId].game, false, rooms[roomId].white, rooms[roomId].black, rooms[roomId].gametype, rooms[roomId].variant);
+                rooms[roomId].white.socket.emit('moveMade', imageDataURI.encode(pnginfo, 'png'), (isDraw ? "Game Ended in a draw" : "Game ended, " + winnerColor + " won the game" ), gameInfo, 'white');
                 rooms[roomId].white.socket.emit('gameOver', roomFunctions.colorNameToColorLetter(winnerColor));
                 rooms[roomId].black.socket.emit('gameOver', roomFunctions.colorNameToColorLetter(winnerColor));
             }
             if (rooms[roomId].black.socketId) {
-                rooms[roomId].black.socket.emit('moveMade', imageDataURI.encode(utils.BoardToPng(rooms[roomId].game, true, rooms[roomId].white, rooms[roomId].black, rooms[roomId].gametype, rooms[roomId].variant), 'png'), (isDraw ? "Game Ended in a draw" : "Game ended, " + winnerColor + " won the game" ), gameInfo, 'black');
+                let pnginfo = await utils.BoardToPng(rooms[roomId].game, true, rooms[roomId].white, rooms[roomId].black, rooms[roomId].gametype, rooms[roomId].variant);
+                rooms[roomId].black.socket.emit('moveMade', imageDataURI.encode(pnginfo, 'png'), (isDraw ? "Game Ended in a draw" : "Game ended, " + winnerColor + " won the game" ), gameInfo, 'black');
                 rooms[roomId].white.socket.emit('gameOver', roomFunctions.colorNameToColorLetter(winnerColor));
                 rooms[roomId].black.socket.emit('gameOver', roomFunctions.colorNameToColorLetter(winnerColor));
             }

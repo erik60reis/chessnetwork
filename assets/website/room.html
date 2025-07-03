@@ -533,7 +533,10 @@
         // Close promotion popup when clicking overlay
         document.getElementById('promotionOverlay').addEventListener('click', hidePromotionPopup);
 
-        socket = io();
+        socket = io({
+            transports: ['websocket'],
+            reconnection: true,
+        });
 
         socket.once('connect', () => {
             if (isViewOnlyMode) {

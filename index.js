@@ -108,13 +108,15 @@ roomFunctions.createRoom = function(gametype = 'chess', variant = 'chess') {
                 return rooms[roomId].game.turn();
             }
         },
-        start: function() {
+        start: async function() {
             rooms[roomId].isStarted = true;
             roomEvents.onGameStart.forEach((event) => {
                 event(roomId);
             });
-            rooms[roomId].boardPngImages.push(utils.BoardToPng(rooms[roomId].game, false, rooms[roomId].white, rooms[roomId].black, rooms[roomId].gametype, rooms[roomId].variant));
-            rooms[roomId].boardPngImagesFlipped.push(utils.BoardToPng(rooms[roomId].game, true, rooms[roomId].white, rooms[roomId].black, rooms[roomId].gametype, rooms[roomId].variant));
+            let boardpnginfo = await utils.BoardToPng(rooms[roomId].game, false, rooms[roomId].white, rooms[roomId].black, rooms[roomId].gametype, rooms[roomId].variant);
+            let flippedboardpnginfo = await utils.BoardToPng(rooms[roomId].game, true, rooms[roomId].white, rooms[roomId].black, rooms[roomId].gametype, rooms[roomId].variant);
+            rooms[roomId].boardPngImages.push(boardpnginfo);
+            rooms[roomId].boardPngImagesFlipped.push(flippedboardpnginfo);
         },
         end: function() {
             utils.boardsToVideo(rooms[roomId].boardPngImages, 'replayvideo.mp4');

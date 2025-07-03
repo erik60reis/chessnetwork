@@ -1,4 +1,4 @@
-install node.js 18
+install node.js 20
 
 type "npm install" or "npm i" on this folder with powershell with admin rights
 
