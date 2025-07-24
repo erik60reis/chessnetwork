@@ -152,8 +152,9 @@ sftp_readme.txt
 auth
 
 trainbot/
-/frontend
 sqlite3.def
 sqlite3.dll
 board.png
 board.png
+/temp
+/frontend/.vscode

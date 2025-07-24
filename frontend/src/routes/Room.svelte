@@ -1,0 +1,681 @@
+<script>
+    export let roomId;
+
+     fetch(`/api/roomexists/${roomId}`).then(response => response.json()).then(data => {
+        if (!data.exists) {
+            window.location.href = "/";
+        }
+    });
+</script>
+<style>
+        :root {
+            --primary-color: #7fa650;
+            --dark-bg: #302e2b;
+            --darker-bg: #262522;
+            --light-text: #ffffff;
+            --gray-text: #9c9c9c;
+            --timer-bg: #57544a;
+            --hover-color: #8fb760;
+            --button-shadow: rgba(0, 0, 0, 0.2);
+        }
+
+        body {
+            background-color: var(--dark-bg);
+            color: var(--light-text);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+        }
+
+        #gameMainContainer {
+            display: block;
+            width: 100%;
+            max-height: 97vh;
+        }
+
+        #gameContainer {
+            width: 100%;
+            height: 97vh;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+        }
+
+        #gameimage {
+            width: 100%;
+            height: auto;
+        }
+
+        #gameboardcontainer {
+            width: 100%;
+            height: 100%;
+        }
+
+        #gameboard {
+            width: 100%;
+            height: 100%;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        button {
+            background-color: var(--primary-color);
+            color: var(--light-text);
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            box-shadow: 0 2px 4px var(--button-shadow);
+        }
+
+        button:hover {
+            background-color: var(--hover-color);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px var(--button-shadow);
+        }
+
+        button:active {
+            transform: translateY(0);
+            box-shadow: 0 2px 4px var(--button-shadow);
+        }
+
+        #resign-button {
+            background-color: #c33;
+            margin-top: 10px;
+        }
+
+        #resign-button:hover {
+            background-color: #d44;
+        }
+
+        input {
+            border-radius: 6px;
+            width: 200px;
+            padding: 8px 12px;
+            border: 2px solid var(--darker-bg);
+            background-color: var(--dark-bg);
+            color: var(--light-text);
+            font-size: 14px;
+            transition: all 0.2s ease;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 2px rgba(127, 166, 80, 0.2);
+        }
+
+        .playerInfo {
+            font-size: 25px;
+            display: flex;
+            align-items: center;
+            background-color: var(--darker-bg);
+            padding: 10px 15px;
+            border-radius: 8px;
+            margin: 10px 0;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+        }
+
+        .playerAvatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            margin-right: 12px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        .username {
+            color: var(--light-text);
+            text-align: left;
+            font-size: 16px;
+            font-weight: 500;
+            flex-grow: 1;
+            margin-right: 12px;
+        }
+
+        .elo {
+            text-align: left;
+            font-size: 14px;
+            color: var(--gray-text);
+            margin-left: 8px;
+        }
+
+        #gamestatus {
+            color: var(--light-text);
+            text-align: center;
+            justify-content: center;
+            border-radius: 8px;
+            padding: 15px;
+            background-color: var(--darker-bg);
+            margin: 10px 0;
+            font-size: 14px;
+        }
+
+        .playertimer {
+            font-size: 20px;
+            font-weight: 600;
+            font-family: 'Roboto Mono', monospace;
+            border-radius: 6px;
+            background-color: var(--timer-bg);
+            color: var(--light-text);
+            text-align: center;
+            padding: 8px 12px;
+            min-width: 80px;
+        }
+
+        .sidebar {
+            width: 100%;
+            display: block;
+            background-color: var(--darker-bg);
+            border-radius: 8px;
+            padding: 15px;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+        }
+
+        #menu {
+            width: 15%;
+            padding: 10px;
+        }
+
+        #menu img {
+            border-radius: 4px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        /* Promotion popup styles */
+        #promotionPopup {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: var(--darker-bg);
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+            z-index: 1000;
+        }
+
+        #promotionOptions {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            padding: 10px;
+        }
+
+        .promotion-piece {
+            width: 60px;
+            height: 60px;
+            cursor: pointer;
+            border: 2px solid transparent;
+            border-radius: 8px;
+            padding: 8px;
+            transition: all 0.2s ease;
+            background-color: var(--dark-bg);
+        }
+
+        .promotion-piece:hover {
+            border-color: var(--primary-color);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        }
+
+        #promotionOverlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(2px);
+            z-index: 999;
+        }
+
+        @media (min-width: 600px) {
+            body {
+                overflow: hidden; /*no scroolbar*/
+            }
+
+            #gameimage {
+                height: 85vh;
+                width: auto;
+            }
+
+            #gameContainer {
+                position: relative;
+                display: flex;
+                flex-direction: row;
+                flex-grow: 1;
+                margin: 20px;
+                width: 80%;
+            }
+
+            #gameMainContainer {
+                margin-left: 25%;
+            }
+
+            input {
+                width: 500px;
+            }
+
+            .playerInfo {
+                font-size: 25px;
+            }
+
+            .username {
+                width: 85%;
+                font-size: 16px;
+            }
+
+            .elo {
+                font-size: 14px;
+            }
+
+            .playertimer {
+                min-width: 100px;
+            }
+
+            .sidebar {
+                width: 35%;
+                height: 80vh;
+                margin-left: 20px;
+            }
+
+            #menu {
+                width: 10%;               
+                margin-top: 0;
+                margin-bottom: 0;
+                height: 96vh;
+                background-color: var(--darker-bg);
+                border-radius: 0 8px 8px 0;
+            }
+        }
+
+        /* Add smooth transitions */
+        * {
+            transition: background-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+        }
+</style>
+<div class="main">
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-2427220674328875"
+     crossorigin="anonymous"></script>
+    <!-- Add promotion popup HTML -->
+    <div id="promotionOverlay"></div>
+    <div id="promotionPopup">
+        <div id="promotionOptions">
+            <img src="/assets/chesspieces/wQ.png" class="promotion-piece" data-piece="q" alt="Queen">
+            <img src="/assets/chesspieces/wR.png" class="promotion-piece" data-piece="r" alt="Rook">
+            <img src="/assets/chesspieces/wB.png" class="promotion-piece" data-piece="b" alt="Bishop">
+            <img src="/assets/chesspieces/wN.png" class="promotion-piece" data-piece="n" alt="Knight">
+        </div>
+    </div>
+    <div id="gameContainer">
+        <div id="menu"><img src="/assets/logobanner.png" width="110" height="55"></div>
+        <div id="gameMainContainer">
+            <img id="gameimage" style="display: none;">
+            <div class="playerInfo" id="otherData">
+                <img src="/assets/iconwhite.png" class="playerAvatar" width="40" height="40">
+                <div class="username" id="otherUsername">User</div>
+                <div class="playertimer" id="otherTime">30:00</div>
+            </div>
+            <div id="gameboardcontainer">
+                <div id="gameboard"></div>
+            </div>
+            <div class="playerInfo" id="yourData">
+                <img src="/assets/iconwhite.png" class="playerAvatar" width="40" height="40">
+                <div class="username" id="yourUsername">User</div>
+                <div class="playertimer" id="yourTime">30:00</div>
+            </div>
+            <div class="move-input">
+                <input id="moveinput" type="text" placeholder="Enter move... (eg. e2e4 or 21-17)"/>
+                <button id="movebutton">Move</button>
+            </div>
+        </div>
+        <div class="sidebar">
+            <div id="gamestatus">Waiting for opponent...</div>
+            <button id="resign-button">Resign</button>
+        </div>
+    </div>
+    <script src="/assets/scripts/gameboard.js"></script>
+    <script src="/assets/scripts/qrcode.min.js"></script>
+    <script src="/socket.io/socket.io.js"></script>
+    <div id="roomId" style="display=none;">{roomId}</div>
+    <span id="piecesstyle"></span>
+    <script>
+        let roomId = parseInt(document.getElementById("roomId").innerText);
+
+        let yourTime = 1800;
+        let otherTime = 1800;
+        let oldGameInfo = {};
+        let isMyTurn = false;
+    
+        let globalYourTeam = "white";
+        let globalOtherTeam = "black";
+
+        const soundMove = new Audio("assets/sounds/move.wav");
+        const soundCapture = new Audio("assets/sounds/capture.wav");
+
+        // Add promotion handling functions
+        let pendingMove = null;
+
+        function formatTime(timeseconds) {
+            var timeWithoutDecimals = Math.ceil(timeseconds);
+            var timeMinutes = Math.floor(timeWithoutDecimals / 60);
+            const timeHours = Math.floor(timeMinutes / 60);
+            timeMinutes = timeMinutes % 60;
+            if (timeHours > 0) {
+                return `${timeHours}:${(timeMinutes % 60).toString().padStart(2, '0')}:${(timeWithoutDecimals % 60).toString().padStart(2, '0')}`;
+            }else{
+                return timeMinutes + ":" + (timeWithoutDecimals % 60).toString().padStart(2, '0');
+            }
+        }
+
+        setInterval(() => {
+            if (oldGameInfo.isStarted) {
+                if (isMyTurn) {
+                    yourTime -= 0.2;
+                }else{
+                    otherTime -= 0.2;
+                }
+            }
+
+            document.getElementById("yourUsername").innerText = oldGameInfo[globalYourTeam + "Name"];
+            document.getElementById("yourTime").innerText = formatTime(yourTime);
+
+            document.getElementById("otherUsername").innerText = oldGameInfo[globalOtherTeam + "Name"];
+            document.getElementById("otherTime").innerText = formatTime(otherTime);
+            
+            if (oldGameInfo.gametype === "chess" && oldGameInfo.variant === "chess") {
+                //document.getElementById("otherData").innerText = oldGameInfo[globalOtherTeam + "Name"] + " (" + oldGameInfo[globalOtherTeam + "Elo"] + ") " + formatTime(otherTime);
+                //document.getElementById("yourData").innerText = oldGameInfo[globalYourTeam + "Name"] + " (" + oldGameInfo[globalYourTeam + "Elo"] + ") " + formatTime(yourTime);
+                
+            
+                document.getElementById("otherUsername").innerHTML += ` <span class="elo" id="otherElo"></span>`;
+                document.getElementById("yourUsername").innerHTML += ` <span class="elo" id="yourElo"></span>`;
+                document.getElementById("yourElo").innerText = "(" + oldGameInfo[globalYourTeam + "Elo"] + ")";
+                document.getElementById("otherElo").innerText = "(" + oldGameInfo[globalOtherTeam + "Elo"] + ")";
+            } else {
+                //document.getElementById("otherData").innerText = oldGameInfo[globalOtherTeam + "Name"] + " " + formatTime(otherTime);
+                //document.getElementById("yourData").innerText = oldGameInfo[globalYourTeam + "Name"] + " " + formatTime(yourTime);
+            }
+        }, 200);
+    
+        var letters = 'abcdefghijklmnopqrstuvwxyz';
+
+        function chessSquareToCheckersIndex(chessNotation, rankCount = 8, fileCount = 8) {
+            let index = 1;
+
+            for (let i = rankCount; i >= 1; i--) {
+                for (let j = ((i % 2) == 0 ? 1 : 0); j < fileCount; j += 2) {
+                    let letter = letters[j];
+
+                    if (letter + i == chessNotation) {
+                        return ((index - 1) / 2) + 1;
+                    }
+
+                    index += 2;
+                }
+            }
+
+            return undefined;
+        }
+
+        function getDests(legalMoves, boardranks) {
+            var moves = {};
+            letters.split("").forEach((letter) => {
+                for (let number = 1; number <= boardranks; number++) {
+                    let legalMovesFormatted = {};
+                    legalMoves.forEach(legalMove => {
+                        if (legalMove.startsWith((letter + number))) {
+                            const destSquare = legalMove.slice(2, 4);
+                            if (legalMove.length === 5) { // Promotion move
+                                legalMovesFormatted[destSquare] = true;
+                            } else {
+                                legalMovesFormatted[destSquare] = true;
+                            }
+                        }
+                    });
+                    if (Object.keys(legalMovesFormatted).length > 0) {
+                        moves[letter + number] = legalMovesFormatted;
+                    }
+                }
+            });
+            return moves;
+        }
+
+        //let isViewOnlyMode = {{isViewOnlyMode}};
+        let isViewOnlyMode = false;
+
+        let board = null;
+        let socket;
+        let gameBoard = document.getElementById("gameboard");
+        let oldDimensions = {width: 8, height: 8};
+        
+        function joinRoom() {
+            socket.emit('joinRoomWeb', roomId, window.localStorage.getItem('authid'), window.localStorage.getItem('authpassword'), window.location.href, '{{invitedUserDiscordId}}');
+        }
+        
+        
+        document.getElementById('resign-button').addEventListener('click', () => {
+            socket.emit('resign');
+        });
+
+        let gameboardconfig = {
+            fen: 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR',
+            width: 8,
+            height: 8,
+            pieceTheme: "/assets/chesspieces/%piece%.png",
+            isFlipped: false,
+            onMove: (orig, dest) => {
+                if (oldGameInfo.gametype === "checkers") {
+                    socket.emit('makeMove', chessSquareToCheckersIndex(orig, oldGameInfo.boardDimensions.height, oldGameInfo.boardDimensions.width) + "-" + chessSquareToCheckersIndex(dest, oldGameInfo.boardDimensions.height, oldGameInfo.boardDimensions.width));
+                    return;
+                }
+                
+                // Find all legal moves from the origin square
+                const originLegalMoves = oldGameInfo.legalMoves.filter(move => 
+                move.startsWith(orig) && move.slice(2, 4) === dest
+            );
+            
+            // If there are multiple legal moves to the same square, it's a promotion
+            if (originLegalMoves.length > 1) {
+                showPromotionPopup(orig, dest);
+            } else if (originLegalMoves.length === 1) {
+                // If there's exactly one move and it's a promotion move (length 5)
+                if (originLegalMoves[0].length === 5) {
+                    showPromotionPopup(orig, dest);
+                } else {
+                    socket.emit('makeMove', orig + dest);
+                    }
+                }
+            },
+        }
+        
+        let gameBoardInterval = setInterval(() => {
+            if (createGameBoard !== undefined) {
+                board = createGameBoard(gameBoard, gameboardconfig);
+                clearInterval(gameBoardInterval);
+            }
+        }, 100);
+       
+
+        function showPromotionPopup(orig, dest) {
+            pendingMove = { orig, dest };
+            const popup = document.getElementById('promotionPopup');
+            const overlay = document.getElementById('promotionOverlay');
+            const options = document.getElementById('promotionOptions');
+            const isWhite = oldGameInfo.turn;
+            
+            // Update piece images to match the current player's color
+            options.querySelectorAll('.promotion-piece').forEach(piece => {
+                const pieceType = piece.dataset.piece;
+                piece.src = `/assets/chesspieces/${isWhite ? 'w' : 'b'}${pieceType.toUpperCase()}.png`;
+            });
+            
+            popup.style.display = 'block';
+            overlay.style.display = 'block';
+        }
+
+        function hidePromotionPopup() {
+            const popup = document.getElementById('promotionPopup');
+            const overlay = document.getElementById('promotionOverlay');
+            popup.style.display = 'none';
+            overlay.style.display = 'none';
+            pendingMove = null;
+        }
+
+        // Add click handlers for promotion pieces
+        document.querySelectorAll('.promotion-piece').forEach(piece => {
+            piece.addEventListener('click', () => {
+                if (pendingMove) {
+                    const promotionPiece = piece.dataset.piece;
+                    socket.emit('makeMove', pendingMove.orig + pendingMove.dest + promotionPiece);
+                    hidePromotionPopup();
+                }
+            });
+        });
+
+        // Close promotion popup when clicking overlay
+        document.getElementById('promotionOverlay').addEventListener('click', hidePromotionPopup);
+
+        let socketIoInterval = setInterval(() => {
+            if (io !== undefined) {
+                socket = io({
+                    transports: ['websocket'],
+                    reconnection: true,
+                });
+                socket.once('connect', () => {
+                    joinRoom();
+                });
+                socket.on('moveMade', (newimagedatauri, newGameStatusText, gameInfo, yourTeam) => {
+                if (document.getElementById("piecesstyle").innerHTML === "") {
+                    if (gameInfo.gametype == "chess") {
+                        gameboardconfig.pieceTheme = "/assets/chesspieces/%piece%.png";
+                    } else if (gameInfo.gametype == "checkers") {
+                        gameboardconfig.pieceTheme = "/assets/checkerspieces/%piece%.png";
+                    } else if (gameInfo.gametype == "chess2.0") {
+                        gameboardconfig.pieceTheme = "/assets/chess2.0pieces/%piece%.png";
+                    }
+                }
+                if ((gameInfo.gametype === "chess" && !["amazons", "crazyhouse"].includes(gameInfo.variant)) || gameInfo.gametype === "checkers" || gameInfo.gametype === "chess2.0") {
+                    document.getElementById("moveinput").style.display = "none";
+                    document.getElementById("movebutton").style.display = "none";
+                    document.getElementById("gameimage").style.display = "none";
+                    gameBoard.style.display = "block";
+                    document.getElementById("yourData").style.display = "flex";
+                    document.getElementById("otherData").style.display = "flex";
+                    gameboardconfig.fen = gameInfo.fen;
+                    gameboardconfig.isFlipped = !(yourTeam === "white");
+                    gameboardconfig.legalMoves = (!isViewOnlyMode && gameInfo.turn === (yourTeam === "white") ? getDests(gameInfo.legalMoves, gameInfo.boardDimensions.height) : {});
+                    gameboardconfig.width = gameInfo.boardDimensions.width;
+                    gameboardconfig.height = gameInfo.boardDimensions.height;
+
+                    let lastMove = '';
+                    /*if (gameInfo.moves.length > 0) {
+                        lastMove = gameInfo.moves[gameInfo.moves.length - 1];
+                        if (lastMove.split(" ").join("").length > 0) {
+                            //chessgroundconfig.lastMove = [lastMove.charAt(0) + lastMove.charAt(1), lastMove.charAt(2) + lastMove.charAt(3)];
+                        }else{
+                            lastMove = '';
+                        }
+                    }*/
+
+                    if (lastMove.length === 5) {
+                        soundCapture.play();
+                    }
+                    if (lastMove.length === 4) {
+                        soundMove.play();
+                    }
+                    board = createGameBoard(gameBoard, gameboardconfig);
+
+                    globalOtherTeam = (yourTeam == "white" ? "black" : "white");
+                    if (gameInfo.boardDimensions != oldDimensions) {
+                        if (gameBoard.classList.contains(`board${oldDimensions.width}x${oldDimensions.height}`)) {
+                            gameBoard.classList.remove(`board${oldDimensions.width}x${oldDimensions.height}`);
+                        }
+                        gameBoard.classList.add(`board${gameInfo.boardDimensions.width}x${gameInfo.boardDimensions.height}`);
+                        oldDimensions = gameInfo.boardDimensions;
+                    }
+                    //setGameBoardSize();
+                    yourTime = gameInfo[yourTeam + "Time"];
+                    otherTime = gameInfo[globalOtherTeam + "Time"];
+                    let pieces = document.getElementsByTagName("piece");
+                    for (let index = 0; index < pieces.length; index++) {
+                        const element = pieces[index];
+                        let piecesize = (gameBoard.clientWidth > gameBoard.clientHeight ?  (gameBoard.clientHeight / oldDimensions.height) + "px" : (gameBoard.clientWidth / oldDimensions.width) + "px");
+                        element.style.width = piecesize;
+                        element.style.height = piecesize;
+                    }
+                    oldGameInfo = gameInfo;
+                    isMyTurn = (yourTeam == 'white') == gameInfo.turn;
+                    globalYourTeam = yourTeam;
+                } else {
+                    document.getElementById("moveinput").style.display = "block";
+                    document.getElementById("movebutton").style.display = "block";
+                    document.getElementById("gameimage").style.display = "block";
+                    ple .style.display = "none";
+                    document.getElementById("yourData").style.display = "none";
+                    document.getElementById("otherData").style.display = "none";
+                }
+
+                document.getElementById("gameimage").src = newimagedatauri;
+
+                if (gameInfo.isStarted) {
+                    document.getElementById('gamestatus').innerHTML = '';
+                }
+
+                if (newGameStatusText !== undefined && newGameStatusText !== '') {
+                    document.getElementById('gamestatus').innerHTML = newGameStatusText;
+                }
+
+                if (isViewOnlyMode) {
+                    socket.emit('spectateRoom', roomId);
+                }
+
+            });
+
+            socket.on('DisableViewOnlyMode', () => {
+                joinRoom();
+                isViewOnlyMode = false;
+            })
+                clearInterval(socketIoInterval);
+            }
+        }, 100);
+
+        
+        document.getElementById("gamestatus").innerHTML = `<h1 style="color: white">Code: ${roomId}</h1><div>http://${window.location.href.split("/")[2]}/l/${roomId}</div><br/>&nbsp;<table id="joinqrcode" style="width: 150px; height: 150px; margin-left: auto; margin-right: auto;"</table>`;
+        var joinqrcode = new QRCode(document.getElementById("joinqrcode"), {
+            text: `http://${window.location.href.split("/")[2]}/l/${roomId}`,
+            width: 150,
+            height: 150,
+            colorDark : "#000000",
+            colorLight : "#ffffff",
+            correctLevel : QRCode.CorrectLevel.H
+        });
+    
+
+
+        document.getElementById("movebutton").addEventListener('click', () => {
+            socket.emit('makeMove', document.getElementById("moveinput").value);
+            document.getElementById("moveinput").value = "";
+        });
+
+        setInterval(() => {
+            let squares = document.getElementsByTagName("square");
+            for (let index = 0; index < squares.length; index++) {
+                const element = squares[index];
+                let squaresize = (gameBoard.clientWidth > gameBoard.clientHeight ?  (gameBoard.clientHeight / oldDimensions.height) + "px" : (gameBoard.clientWidth / oldDimensions.width) + "px");
+                element.style.width = squaresize;
+                element.style.height = squaresize;
+            }
+            let margin = ((document.body.clientWidth - gameBoard.clientWidth) / 2) + "px";
+            //gameBoard.style.marginLeft = margin;
+            //gameBoard.style.marginRight = margin;
+        }, 400);
+    </script>
+</div>

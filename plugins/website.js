@@ -1,3 +1,5 @@
+const { exists } = require('node:fs');
+
 if (appconfig.website.enabled) {
     const express = require('express');
     const { createServer } = require('node:http');
@@ -191,20 +193,6 @@ if (appconfig.website.enabled) {
                 createRoomAndShowToClient(gametype, variant, res, time, increment, undefined, true);
             }
         }catch{}
-    });
-    
-    app.get('/:roomId', (req, res) => {
-        try {
-            let roomId = parseInt(req.params.roomId);
-            let isViewOnlyMode = (rooms[roomId]) && !rooms[roomId].white.isAvaliable && !rooms[roomId].black.isAvaliable;
-            res.render(join(rootpath, 'assets', 'website', 'room.html'), {roomId, isViewOnlyMode, invitedUserDiscordId: req.query.invitedUserDiscordId, discord_client_id: appconfig.auth.discord.client_id});
-        }catch(error) {
-            console.log(error);
-        }
-    });
-
-    app.get('/', (req, res) => {
-        res.render(join(rootpath, 'assets', 'website', 'index.html'), {discord_client_id: appconfig.auth.discord.client_id});
     });
 
     app.get('/analyse', (req, res) => {
@@ -703,6 +691,24 @@ if (appconfig.website.enabled) {
         if (rooms[roomId].black.socketId) {
             rooms[roomId].black.socket.emit('joinPermitted', roomId, 'black');
         }
+    });
+
+    app.get('/api/roomexists/:roomId', (req, res) => {
+        let roomId = req.params.roomId;
+        if (rooms[roomId]) {
+            res.send({exists: true});
+        } else {
+            res.send({exists: false});
+        }
+    });
+
+    app.get('/add-discord-bot', (req, res) => {
+        res.redirect(appconfig.discordbot.bot_addition_link);
+    });
+
+    app.use(express.static(path.join(rootpath, 'frontend', 'dist')));
+    app.get('*', (req, res) => {
+        res.sendFile(path.join(rootpath, 'frontend', 'dist', 'index.html'));
     });
 
     server.listen(appconfig.website.port, () => {
