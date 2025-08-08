@@ -155,6 +155,5 @@ trainbot/
 sqlite3.def
 sqlite3.dll
 board.png
-board.png
 /temp
 /frontend/.vscode

@@ -36,6 +36,9 @@ if (appconfig.website.enabled) {
 
     let sockets = [];
 
+    // Track disconnected players with their timers for 60-second grace period
+    let disconnectedPlayers = new Map(); // roomId_color -> { timer, roomId, color, discordId, socketDiscordId }
+
     var discordOauth2;
     var discordOauth2mobile;
 
@@ -437,6 +440,56 @@ if (appconfig.website.enabled) {
                     let playerRoom = getPlayerRoom(socket.id);
                     let playerRoomByDiscordId = (isUserValid ? getPlayerRoomByDiscordId(userdata.discordId) : undefined);
 
+                    // Check if this player is trying to reconnect from a disconnection
+                    let reconnectedPlayer = null;
+                    for (let [disconnectKey, disconnectData] of disconnectedPlayers.entries()) {
+                        if (disconnectData.roomId == roomId) {
+                            // Check if this is a reconnection by Discord ID or socketDiscordId
+                            if (isUserValid && userdata.discordId && 
+                                (disconnectData.discordId === userdata.discordId || 
+                                 disconnectData.socketDiscordId === userdata.discordId)) {
+                                reconnectedPlayer = { key: disconnectKey, data: disconnectData };
+                                break;
+                            }
+                            // For guests (no Discord ID), allow reconnection if there's only one disconnected player in the room
+                            else if (!isUserValid && !disconnectData.discordId && !disconnectData.socketDiscordId) {
+                                // Check if this is the only disconnected player in this room
+                                let disconnectedPlayersInRoom = Array.from(disconnectedPlayers.entries())
+                                    .filter(([key, data]) => data.roomId == roomId);
+                                if (disconnectedPlayersInRoom.length === 1) {
+                                    reconnectedPlayer = { key: disconnectKey, data: disconnectData };
+                                    break;
+                                }
+                            }
+                        }
+                    }
+
+                    // Handle reconnection
+                    if (reconnectedPlayer) {
+                        // Clear the disconnect timer
+                        clearTimeout(reconnectedPlayer.data.timer);
+                        disconnectedPlayers.delete(reconnectedPlayer.key);
+                        
+                        // Restore the player's connection
+                        rooms[roomId][reconnectedPlayer.data.color].socketId = socket.id;
+                        rooms[roomId][reconnectedPlayer.data.color].socket = socket;
+                        
+                        // Send game state to reconnected player
+                        let gameInfo = utils.getGameInfo(roomId);
+                        let pnginfo = await utils.BoardToPng(rooms[roomId].game, reconnectedPlayer.data.color == 'black', rooms[roomId].white, rooms[roomId].black, rooms[roomId].gametype, rooms[roomId].variant);
+                        socket.emit('moveMade', imageDataURI.encode(pnginfo, 'png'), 'Reconnected successfully!', gameInfo, reconnectedPlayer.data.color);
+                        
+                        // Notify the other player about the reconnection
+                        let otherColor = reconnectedPlayer.data.color === 'white' ? 'black' : 'white';
+                        if (rooms[roomId][otherColor].socket) {
+                            rooms[roomId][otherColor].socket.emit('playerReconnected', {
+                                color: reconnectedPlayer.data.color,
+                                message: `${reconnectedPlayer.data.color} player reconnected.`
+                            });
+                        }
+                        return;
+                    }
+
                     if (!playerRoom && playerRoomByDiscordId) {
                         if (playerRoomByDiscordId.roomId == roomId) {
                             rooms[roomId][playerRoomByDiscordId.color].socketId = socket.id;
@@ -572,9 +625,47 @@ if (appconfig.website.enabled) {
             if (playerRoom) {
                 let roomId = playerRoom.roomId;
                 
-                if (rooms[roomId].isStarted && !rooms[roomId][playerRoom.color].discordId) {
-                    rooms[roomId].winner = (playerRoom.color == "white" ? "b" : "w");
-                    rooms[roomId].end();
+                if (rooms[roomId].isStarted) {
+                    // Start 60-second grace period for disconnected player
+                    let disconnectKey = `${roomId}_${playerRoom.color}`;
+                    
+                    // Clear any existing timer for this player
+                    if (disconnectedPlayers.has(disconnectKey)) {
+                        clearTimeout(disconnectedPlayers.get(disconnectKey).timer);
+                    }
+                    
+                    // Mark player as disconnected but don't end game immediately
+                    rooms[roomId][playerRoom.color].socketId = null;
+                    rooms[roomId][playerRoom.color].socket = null;
+                    
+                    // Start 60-second countdown
+                    let disconnectTimer = setTimeout(() => {
+                        // After 60 seconds, end the game if player hasn't reconnected
+                        if (rooms[roomId] && rooms[roomId].isStarted) {
+                            rooms[roomId].winner = (playerRoom.color == "white" ? "b" : "w");
+                            rooms[roomId].end();
+                        }
+                        // Clean up the disconnected player record
+                        disconnectedPlayers.delete(disconnectKey);
+                    }, 60000); // 60 seconds
+                    
+                    // Store the disconnect info
+                    disconnectedPlayers.set(disconnectKey, {
+                        timer: disconnectTimer,
+                        roomId: roomId,
+                        color: playerRoom.color,
+                        discordId: rooms[roomId][playerRoom.color].discordId,
+                        socketDiscordId: rooms[roomId][playerRoom.color].socketDiscordId
+                    });
+                    
+                    // Notify the other player about the disconnection
+                    let otherColor = playerRoom.color === 'white' ? 'black' : 'white';
+                    if (rooms[roomId][otherColor].socket) {
+                        rooms[roomId][otherColor].socket.emit('playerDisconnected', {
+                            color: playerRoom.color,
+                            message: `${playerRoom.color} player disconnected. They have 60 seconds to reconnect.`
+                        });
+                    }
                 }
             }
         });
@@ -586,6 +677,56 @@ if (appconfig.website.enabled) {
 
                 let playerRoom = getPlayerRoom(socket.id);
                 let playerRoomByDiscordId = (isUserValid ? getPlayerRoomByDiscordId(userdata.discordId) : undefined);
+
+                // Check if this player is trying to reconnect from a disconnection
+                let reconnectedPlayer = null;
+                for (let [disconnectKey, disconnectData] of disconnectedPlayers.entries()) {
+                    if (disconnectData.roomId == roomId) {
+                        // Check if this is a reconnection by Discord ID or socketDiscordId
+                        if (isUserValid && userdata.discordId && 
+                            (disconnectData.discordId === userdata.discordId || 
+                             disconnectData.socketDiscordId === userdata.discordId)) {
+                            reconnectedPlayer = { key: disconnectKey, data: disconnectData };
+                            break;
+                        }
+                        // For guests (no Discord ID), allow reconnection if there's only one disconnected player in the room
+                        else if (!isUserValid && !disconnectData.discordId && !disconnectData.socketDiscordId) {
+                            // Check if this is the only disconnected player in this room
+                            let disconnectedPlayersInRoom = Array.from(disconnectedPlayers.entries())
+                                .filter(([key, data]) => data.roomId == roomId);
+                            if (disconnectedPlayersInRoom.length === 1) {
+                                reconnectedPlayer = { key: disconnectKey, data: disconnectData };
+                                break;
+                            }
+                        }
+                    }
+                }
+
+                // Handle reconnection
+                if (reconnectedPlayer) {
+                    // Clear the disconnect timer
+                    clearTimeout(reconnectedPlayer.data.timer);
+                    disconnectedPlayers.delete(reconnectedPlayer.key);
+                    
+                    // Restore the player's connection
+                    rooms[roomId][reconnectedPlayer.data.color].socketId = socket.id;
+                    rooms[roomId][reconnectedPlayer.data.color].socket = socket;
+                    
+                    // Send game state to reconnected player
+                    let gameInfo = utils.getGameInfo(roomId);
+                    let pnginfo = await utils.BoardToPng(rooms[roomId].game, reconnectedPlayer.data.color == 'black', rooms[roomId].white, rooms[roomId].black, rooms[roomId].gametype, rooms[roomId].variant);
+                    socket.emit('moveMade', imageDataURI.encode(pnginfo, 'png'), 'Reconnected successfully!', gameInfo, reconnectedPlayer.data.color);
+                    
+                    // Notify the other player about the reconnection
+                    let otherColor = reconnectedPlayer.data.color === 'white' ? 'black' : 'white';
+                    if (rooms[roomId][otherColor].socket) {
+                        rooms[roomId][otherColor].socket.emit('playerReconnected', {
+                            color: reconnectedPlayer.data.color,
+                            message: `${reconnectedPlayer.data.color} player reconnected.`
+                        });
+                    }
+                    return;
+                }
 
                 if (!playerRoom && playerRoomByDiscordId) {
                     if (playerRoomByDiscordId.roomId == roomId) {
@@ -682,6 +823,19 @@ if (appconfig.website.enabled) {
 
 
     roomEvents.onGameEnd.push(onGameEnd);
+
+    // Clean up disconnect timers when a room ends
+    function onRoomCleanup(roomId) {
+        // Clear any pending disconnect timers for this room
+        for (let [disconnectKey, disconnectData] of disconnectedPlayers.entries()) {
+            if (disconnectData.roomId == roomId) {
+                clearTimeout(disconnectData.timer);
+                disconnectedPlayers.delete(disconnectKey);
+            }
+        }
+    }
+
+    roomEvents.onGameEnd.push(onRoomCleanup);
 
 
     roomEvents.onGameStart.push((roomId) => {

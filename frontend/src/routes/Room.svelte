@@ -1,681 +1,789 @@
 <script>
+    import { onMount, onDestroy } from 'svelte';
+    import { 
+        Layout, 
+        GameBoard, 
+        PlayerInfo, 
+        GameStatus, 
+        MoveInput, 
+        PromotionPopup,
+        Button 
+    } from '../lib/components';
+
     export let roomId;
 
-     fetch(`/api/roomexists/${roomId}`).then(response => response.json()).then(data => {
+    // Check if room exists
+    fetch(`/api/roomexists/${roomId}`).then(response => response.json()).then(data => {
         if (!data.exists) {
             window.location.href = "/";
         }
     });
+
+    // Game state
+    let socket;
+    let gameInfo = {};
+    let isMyTurn = false;
+    let globalYourTeam = "white";
+    let globalOtherTeam = "black";
+    let isViewOnlyMode = false;
+    let yourTime = 1800;
+    let otherTime = 1800;
+    let gameStatus = "Waiting for opponent...";
+    let showPromotionPopup = false;
+    let pendingMove = null;
+    let promotionIsWhite = true;
+
+    // Connection status
+    let connectionStatus = "connecting"; // connecting, connected, disconnected, reconnecting
+    let reconnectAttempts = 0;
+    let maxReconnectAttempts = 10;
+    let opponentDisconnected = false;
+
+    // Board configuration
+    let boardConfig = {
+        fen: 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR',
+        width: 8,
+        height: 8,
+        pieceTheme: "/assets/chesspieces/%piece%.png",
+        isFlipped: false,
+        legalMoves: {},
+        onMove: handleBoardMove
+    };
+
+    // Game display states
+    let showBoard = true;
+    let showMoveInput = false;
+    let showQR = true;
+
+    // Sound effects
+    let soundMove, soundCapture;
+
+    onMount(() => {
+        initializeSounds();
+        initializeSocket();
+        startTimers();
+        loadExternalScripts();
+    });
+
+    onDestroy(() => {
+        if (socket) {
+            socket.disconnect();
+        }
+    });
+
+    function initializeSounds() {
+        soundMove = new Audio("assets/sounds/move.wav");
+        soundCapture = new Audio("assets/sounds/capture.wav");
+    }
+
+    function loadExternalScripts() {
+        // Load required scripts
+        const scripts = [
+            '/assets/scripts/gameboard.js',
+            '/assets/scripts/qrcode.min.js',
+            '/socket.io/socket.io.js'
+        ];
+
+        scripts.forEach(src => {
+            const script = document.createElement('script');
+            script.src = src;
+            document.head.appendChild(script);
+        });
+    }
+
+    function initializeSocket() {
+        const interval = setInterval(() => {
+            if (typeof window !== 'undefined' && window.io) {
+                socket = window.io({
+                    transports: ['websocket', 'polling'],
+                    reconnection: true,
+                    reconnectionDelay: 1000,
+                    reconnectionDelayMax: 5000,
+                    maxReconnectionAttempts: maxReconnectAttempts,
+                    timeout: 20000,
+                    forceNew: true
+                });
+
+                // Connection established
+                socket.on('connect', () => {
+                    console.log('Socket connected');
+                    connectionStatus = "connected";
+                    reconnectAttempts = 0;
+                    joinRoom();
+                });
+
+                // Connection lost
+                socket.on('disconnect', (reason) => {
+                    console.log('Socket disconnected:', reason);
+                    connectionStatus = "disconnected";
+                    
+                    // Don't show disconnected state for intentional disconnects
+                    if (reason === 'io client disconnect' || reason === 'io server disconnect') {
+                        return;
+                    }
+                });
+
+                // Attempting to reconnect
+                socket.on('reconnect_attempt', (attemptNumber) => {
+                    console.log('Reconnection attempt:', attemptNumber);
+                    connectionStatus = "reconnecting";
+                    reconnectAttempts = attemptNumber;
+                });
+
+                // Successfully reconnected
+                socket.on('reconnect', (attemptNumber) => {
+                    console.log('Successfully reconnected after', attemptNumber, 'attempts');
+                    connectionStatus = "connected";
+                    reconnectAttempts = 0;
+                    joinRoom(); // Automatically rejoin the room
+                });
+
+                // Failed to reconnect
+                socket.on('reconnect_failed', () => {
+                    console.log('Failed to reconnect after', maxReconnectAttempts, 'attempts');
+                    connectionStatus = "disconnected";
+                    gameStatus = "Connection lost. Please refresh the page.";
+                });
+
+                // Connection error
+                socket.on('connect_error', (error) => {
+                    console.log('Connection error:', error);
+                    connectionStatus = "disconnected";
+                });
+
+                // Game-specific events
+                socket.on('moveMade', handleMoveMade);
+                socket.on('DisableViewOnlyMode', () => {
+                    joinRoom();
+                    isViewOnlyMode = false;
+                });
+
+                // Handle opponent disconnection from backend
+                socket.on('playerDisconnected', (data) => {
+                    console.log('Player disconnected:', data);
+                    opponentDisconnected = true;
+                    gameStatus = data.message || "Opponent disconnected. They have 60 seconds to reconnect.";
+                });
+
+                // Handle opponent reconnection from backend
+                socket.on('playerReconnected', (data) => {
+                    console.log('Player reconnected:', data);
+                    opponentDisconnected = false;
+                    gameStatus = data.message || "Opponent reconnected.";
+                    
+                    // Clear the status message after a few seconds
+                    setTimeout(() => {
+                        if (gameInfo.isStarted) {
+                            gameStatus = "";
+                        }
+                    }, 3000);
+                });
+
+                clearInterval(interval);
+            }
+        }, 100);
+    }
+
+    function joinRoom() {
+        socket.emit('joinRoomWeb', roomId, window.localStorage.getItem('authid'), window.localStorage.getItem('authpassword'), window.location.href, '');
+    }
+
+    function handleBoardMove(orig, dest) {
+        if (gameInfo.gametype === "checkers") {
+            const origIndex = chessSquareToCheckersIndex(orig, gameInfo.boardDimensions.height, gameInfo.boardDimensions.width);
+            const destIndex = chessSquareToCheckersIndex(dest, gameInfo.boardDimensions.height, gameInfo.boardDimensions.width);
+            socket.emit('makeMove', `${origIndex}-${destIndex}`);
+            return;
+        }
+        
+        // Find all legal moves from the origin square
+        const originLegalMoves = gameInfo.legalMoves?.filter(move => 
+            move.startsWith(orig) && move.slice(2, 4) === dest
+        ) || [];
+        
+        // If there are multiple legal moves to the same square, it's a promotion
+        if (originLegalMoves.length > 1) {
+            showPromotionDialog(orig, dest);
+        } else if (originLegalMoves.length === 1) {
+            // If there's exactly one move and it's a promotion move (length 5)
+            if (originLegalMoves[0].length === 5) {
+                showPromotionDialog(orig, dest);
+            } else {
+                socket.emit('makeMove', orig + dest);
+            }
+        }
+    }
+
+    function showPromotionDialog(orig, dest) {
+        pendingMove = { orig, dest };
+        promotionIsWhite = gameInfo.turn;
+        showPromotionPopup = true;
+    }
+
+    function handlePromotion(pieceType) {
+        if (pendingMove) {
+            socket.emit('makeMove', pendingMove.orig + pendingMove.dest + pieceType);
+            showPromotionPopup = false;
+            pendingMove = null;
+        }
+    }
+
+    function handleTextMove(moveText) {
+        socket.emit('makeMove', moveText);
+    }
+
+    function handleResign() {
+        socket.emit('resign');
+    }
+
+    function handleMoveMade(imageDataUri, statusText, newGameInfo, yourTeam) {
+        gameInfo = newGameInfo;
+        globalYourTeam = yourTeam;
+        globalOtherTeam = yourTeam === "white" ? "black" : "white";
+
+        // Update board configuration
+        if (gameInfo.gametype && (gameInfo.gametype === "chess" && !["amazons", "crazyhouse"].includes(gameInfo.variant)) || gameInfo.gametype === "checkers" || gameInfo.gametype === "chess2.0") {
+            showBoard = true;
+            showMoveInput = false;
+            
+            boardConfig = {
+                ...boardConfig,
+                fen: gameInfo.fen,
+                isFlipped: !(yourTeam === "white"),
+                legalMoves: (!isViewOnlyMode && gameInfo.turn === (yourTeam === "white") ? getDests(gameInfo.legalMoves, gameInfo.boardDimensions?.height || 8) : {}),
+                width: gameInfo.boardDimensions?.width || 8,
+                height: gameInfo.boardDimensions?.height || 8,
+                pieceTheme: getThemeForGameType(gameInfo.gametype)
+            };
+        } else {
+            showBoard = false;
+            showMoveInput = true;
+        }
+
+        // Update times
+        yourTime = gameInfo[yourTeam + "Time"] || yourTime;
+        otherTime = gameInfo[globalOtherTeam + "Time"] || otherTime;
+
+        // Update turn status
+        isMyTurn = (yourTeam === 'white') === gameInfo.turn;
+
+        // Update status
+        if (gameInfo.isStarted) {
+            gameStatus = "";
+        }
+        
+        if (statusText) {
+            gameStatus = statusText;
+        }
+
+        // Play sounds
+        if (gameInfo.moves?.length > 0) {
+            const lastMove = gameInfo.moves[gameInfo.moves.length - 1];
+            if (lastMove.length === 5) {
+                soundCapture?.play();
+            } else if (lastMove.length === 4) {
+                soundMove?.play();
+            }
+        }
+    }
+
+    function getThemeForGameType(gameType) {
+        switch (gameType) {
+            case "chess": return "/assets/chesspieces/%piece%.png";
+            case "checkers": return "/assets/checkerspieces/%piece%.png";
+            case "chess2.0": return "/assets/chess2.0pieces/%piece%.png";
+            default: return "/assets/chesspieces/%piece%.png";
+        }
+    }
+
+    function startTimers() {
+        setInterval(() => {
+            if (gameInfo.isStarted) {
+                if (isMyTurn) {
+                    yourTime = Math.max(0, yourTime - 0.2);
+                } else {
+                    otherTime = Math.max(0, otherTime - 0.2);
+                }
+            }
+        }, 200);
+    }
+
+    function formatTime(timeSeconds) {
+        const timeWithoutDecimals = Math.ceil(timeSeconds);
+        const timeMinutes = Math.floor(timeWithoutDecimals / 60);
+        const timeHours = Math.floor(timeMinutes / 60);
+        const minutes = timeMinutes % 60;
+        const seconds = timeWithoutDecimals % 60;
+        
+        if (timeHours > 0) {
+            return `${timeHours}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+        } else {
+            return `${minutes}:${seconds.toString().padStart(2, '0')}`;
+        }
+    }
+
+    // Helper functions (keeping original logic)
+    function chessSquareToCheckersIndex(chessNotation, rankCount = 8, fileCount = 8) {
+        const letters = 'abcdefghijklmnopqrstuvwxyz';
+        let index = 1;
+
+        for (let i = rankCount; i >= 1; i--) {
+            for (let j = ((i % 2) == 0 ? 1 : 0); j < fileCount; j += 2) {
+                let letter = letters[j];
+                if (letter + i == chessNotation) {
+                    return ((index - 1) / 2) + 1;
+                }
+                index += 2;
+            }
+        }
+        return undefined;
+    }
+
+    function getDests(legalMoves, boardRanks) {
+        const letters = 'abcdefghijklmnopqrstuvwxyz';
+        const moves = {};
+        
+        letters.split("").forEach((letter) => {
+            for (let number = 1; number <= boardRanks; number++) {
+                let legalMovesFormatted = {};
+                legalMoves?.forEach(legalMove => {
+                    if (legalMove.startsWith((letter + number))) {
+                        const destSquare = legalMove.slice(2, 4);
+                        legalMovesFormatted[destSquare] = true;
+                    }
+                });
+                if (Object.keys(legalMovesFormatted).length > 0) {
+                    moves[letter + number] = legalMovesFormatted;
+                }
+            }
+        });
+        return moves;
+    }
+
+    // Reactive statements for player info
+    $: yourPlayerInfo = {
+        username: gameInfo[globalYourTeam + "Name"] || "Guest",
+        elo: gameInfo[globalYourTeam + "Elo"],
+        time: formatTime(yourTime),
+        isCurrentPlayer: isMyTurn
+    };
+
+    $: otherPlayerInfo = {
+        username: gameInfo[globalOtherTeam + "Name"] || "Guest", 
+        elo: gameInfo[globalOtherTeam + "Elo"],
+        time: formatTime(otherTime),
+        isCurrentPlayer: !isMyTurn && gameInfo.isStarted
+    };
+
+    $: roomUrl = `${window?.location?.origin}/l/${roomId}`;
+
+    // Connection status message
+    $: connectionMessage = getConnectionMessage(connectionStatus, reconnectAttempts);
+
+    function getConnectionMessage(status, attempts) {
+        switch (status) {
+            case "connecting":
+                return "Connecting...";
+            case "connected":
+                return null; // No message when connected
+            case "disconnected":
+                return "Connection lost";
+            case "reconnecting":
+                return `Reconnecting... (${attempts}/${maxReconnectAttempts})`;
+            default:
+                return null;
+        }
+    }
+
+    function manualReconnect() {
+        if (socket) {
+            socket.disconnect();
+        }
+        connectionStatus = "connecting";
+        reconnectAttempts = 0;
+        
+        // Wait a moment then reinitialize
+        setTimeout(() => {
+            initializeSocket();
+        }, 500);
+    }
 </script>
+
+<Layout showLogo={false}>
+    <div class="game-container">
+        <!-- Connection Status Indicator -->
+        {#if connectionMessage}
+            <div class="connection-status" class:reconnecting={connectionStatus === 'reconnecting'} class:disconnected={connectionStatus === 'disconnected'}>
+                <div class="status-content">
+                    {#if connectionStatus === 'reconnecting'}
+                        <div class="spinner"></div>
+                    {:else if connectionStatus === 'disconnected'}
+                        <div class="disconnect-icon">⚠️</div>
+                    {/if}
+                    <span>{connectionMessage}</span>
+                    {#if connectionStatus === 'disconnected' && gameStatus.includes('refresh')}
+                        <button class="reconnect-btn" on:click={manualReconnect}>
+                            Retry
+                        </button>
+                    {/if}
+                </div>
+            </div>
+        {/if}
+
+        <div class="game-layout">
+            <!-- Left sidebar - Mobile hidden -->
+            <div class="left-sidebar">
+                <img 
+                    src="/assets/logobanner.png" 
+                    alt="O Xadrez" 
+                    class="sidebar-logo"
+                    on:click={() => window.location.href = '/'}
+                    on:keydown={(e) => e.key === 'Enter' && (window.location.href = '/')}
+                    tabindex="0"
+                />
+            </div>
+
+            <!-- Main game area -->
+            <div class="main-game-area">
+                <!-- Opponent info -->
+                <PlayerInfo {...otherPlayerInfo} />
+
+                <!-- Game board or image -->
+                <div class="board-container">
+                    {#if showBoard}
+                        <GameBoard config={boardConfig} isVisible={showBoard} />
+                    {:else}
+                        <img id="gameimage" src="" alt="Game board" class="game-image" />
+                    {/if}
+                </div>
+
+                <!-- Your player info -->
+                <PlayerInfo {...yourPlayerInfo} />
+
+                <!-- Move input for non-standard games -->
+                {#if showMoveInput}
+                    <MoveInput onMove={handleTextMove} />
+                {/if}
+            </div>
+
+            <!-- Right sidebar -->
+            <div class="right-sidebar">
+                <GameStatus 
+                    {roomId} 
+                    status={gameStatus} 
+                    showQR={showQR && !gameInfo.isStarted}
+                    shareUrl={roomUrl}
+                />
+                
+                <Button 
+                    variant="danger" 
+                    onClick={handleResign}
+                    size="large"
+                >
+                    Resign
+                </Button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Promotion popup -->
+    <PromotionPopup 
+        isVisible={showPromotionPopup}
+        isWhite={promotionIsWhite}
+        onPromote={handlePromotion}
+    />
+</Layout>
+
 <style>
-        :root {
-            --primary-color: #7fa650;
-            --dark-bg: #302e2b;
-            --darker-bg: #262522;
-            --light-text: #ffffff;
-            --gray-text: #9c9c9c;
-            --timer-bg: #57544a;
-            --hover-color: #8fb760;
-            --button-shadow: rgba(0, 0, 0, 0.2);
+    .game-container {
+        height: 100vh;
+        overflow: hidden;
+        position: relative;
+    }
+
+    /* Connection Status Indicator */
+    .connection-status {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background-color: #4CAF50;
+        color: white;
+        padding: 8px 16px;
+        border-radius: 20px;
+        font-size: 14px;
+        font-weight: 500;
+        z-index: 1000;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+        transition: all 0.3s ease;
+    }
+
+    .connection-status.reconnecting {
+        background-color: #FF9800;
+        animation: pulse 2s infinite;
+    }
+
+    .connection-status.disconnected {
+        background-color: #f44336;
+    }
+
+    .status-content {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .spinner {
+        width: 16px;
+        height: 16px;
+        border: 2px solid rgba(255, 255, 255, 0.3);
+        border-top: 2px solid white;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+    }
+
+    .disconnect-icon {
+        font-size: 16px;
+    }
+
+    .reconnect-btn {
+        background: rgba(255, 255, 255, 0.2);
+        border: 1px solid rgba(255, 255, 255, 0.4);
+        color: white;
+        padding: 4px 8px;
+        border-radius: 8px;
+        font-size: 12px;
+        cursor: pointer;
+        transition: background-color 0.2s ease;
+    }
+
+    .reconnect-btn:hover {
+        background: rgba(255, 255, 255, 0.3);
+    }
+
+    @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+
+    @keyframes pulse {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.7; }
+    }
+
+    .game-layout {
+        display: grid;
+        grid-template-columns: 1fr auto;
+        height: 100vh;
+        gap: 16px;
+        padding: 16px;
+        padding-left: 136px; /* 120px sidebar + 16px gap */
+        box-sizing: border-box;
+    }
+
+    .left-sidebar {
+        background-color: #262522;
+        border-radius: 8px;
+        padding: 16px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        width: 120px;
+        position: fixed;
+        left: 16px;
+        top: 16px;
+        height: calc(100vh - 32px);
+        z-index: 10;
+    }
+
+    .sidebar-logo {
+        width: 100%;
+        height: auto;
+        cursor: pointer;
+        transition: transform 0.2s ease;
+    }
+
+    .sidebar-logo:hover {
+        transform: scale(1.05);
+    }
+
+    .main-game-area {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        gap: 16px;
+        min-width: 0;
+    }
+
+    .board-container {
+        flex: 1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        max-width: 100%;
+        max-height: 100%;
+        width: 100%;
+    }
+
+    .game-image {
+        max-width: 100%;
+        max-height: 100%;
+        object-fit: contain;
+        border-radius: 8px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    }
+
+    .right-sidebar {
+        background-color: #262522;
+        border-radius: 8px;
+        padding: 20px;
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+        width: 300px;
+        height: fit-content;
+        max-height: calc(100vh - 32px);
+        overflow-y: auto;
+    }
+
+    /* Tablet Layout */
+    @media (max-width: 1024px) {
+        .game-layout {
+            grid-template-columns: 1fr 280px;
+            gap: 12px;
+            padding: 12px;
+            padding-left: 12px; /* Reset padding since sidebar is hidden */
         }
 
-        body {
-            background-color: var(--dark-bg);
-            color: var(--light-text);
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            margin: 0;
-            padding: 0;
+        .left-sidebar {
+            display: none;
         }
 
-        #gameMainContainer {
-            display: block;
-            width: 100%;
-            max-height: 97vh;
+        .right-sidebar {
+            width: 280px;
+            padding: 16px;
+        }
+    }
+
+    /* Mobile Layout */
+    @media (max-width: 768px) {
+        .game-container {
+            height: 100vh;
         }
 
-        #gameContainer {
-            width: 100%;
-            height: 97vh;
-            justify-content: center;
+        .connection-status {
+            top: 80px; /* Below the logo on mobile */
+            right: 10px;
+            left: 10px;
+            right: auto;
+            margin: 0 auto;
+            width: fit-content;
+            font-size: 12px;
+            padding: 6px 12px;
+        }
+
+        .game-layout {
+            grid-template-columns: 1fr;
+            grid-template-rows: 1fr auto;
+            gap: 8px;
+            padding: 8px;
+            padding-left: 8px; /* Reset padding since sidebar is repositioned */
+            padding-top: 80px; /* Space for top logo */
+        }
+
+        .left-sidebar {
+            position: fixed;
+            top: 8px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: auto;
+            height: auto;
+            padding: 8px 16px;
+            flex-direction: row;
             align-items: center;
-            text-align: center;
+            justify-content: center;
+            border-radius: 8px;
+            z-index: 20;
         }
 
-        #gameimage {
-            width: 100%;
+        .sidebar-logo {
+            width: 120px;
             height: auto;
         }
 
-        #gameboardcontainer {
-            width: 100%;
-            height: 100%;
+        .main-game-area {
+            gap: 12px;
         }
 
-        #gameboard {
-            width: 100%;
-            height: 100%;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-            border-radius: 8px;
-            overflow: hidden;
+        .board-container {
+            min-height: 240px; /* Reduced to account for top logo */
         }
 
-        button {
-            background-color: var(--primary-color);
-            color: var(--light-text);
-            border: none;
-            padding: 10px 20px;
-            border-radius: 6px;
-            font-size: 14px;
-            font-weight: 500;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            box-shadow: 0 2px 4px var(--button-shadow);
+        .right-sidebar {
+            width: auto;
+            padding: 12px;
+            background-color: transparent;
+            max-height: none;
+            order: 2;
+        }
+    }
+
+    /* Small Mobile */
+    @media (max-width: 480px) {
+        .game-layout {
+            padding: 4px;
+            padding-left: 4px; /* Reset padding since sidebar is repositioned */
+            padding-top: 70px; /* Reduced space for smaller screen */
+            gap: 6px;
         }
 
-        button:hover {
-            background-color: var(--hover-color);
-            transform: translateY(-1px);
-            box-shadow: 0 4px 8px var(--button-shadow);
+        .left-sidebar {
+            top: 4px;
+            padding: 6px 12px;
         }
 
-        button:active {
-            transform: translateY(0);
-            box-shadow: 0 2px 4px var(--button-shadow);
+        .sidebar-logo {
+            width: 100px;
         }
 
-        #resign-button {
-            background-color: #c33;
-            margin-top: 10px;
+        .main-game-area {
+            gap: 8px;
         }
 
-        #resign-button:hover {
-            background-color: #d44;
+        .board-container {
+            min-height: 200px; /* Reduced for small mobile with top logo */
         }
 
-        input {
-            border-radius: 6px;
-            width: 200px;
-            padding: 8px 12px;
-            border: 2px solid var(--darker-bg);
-            background-color: var(--dark-bg);
-            color: var(--light-text);
-            font-size: 14px;
-            transition: all 0.2s ease;
-        }
-
-        input:focus {
-            outline: none;
-            border-color: var(--primary-color);
-            box-shadow: 0 0 0 2px rgba(127, 166, 80, 0.2);
-        }
-
-        .playerInfo {
-            font-size: 25px;
-            display: flex;
-            align-items: center;
-            background-color: var(--darker-bg);
-            padding: 10px 15px;
-            border-radius: 8px;
-            margin: 10px 0;
-            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
-        }
-
-        .playerAvatar {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            margin-right: 12px;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-        }
-
-        .username {
-            color: var(--light-text);
-            text-align: left;
-            font-size: 16px;
-            font-weight: 500;
-            flex-grow: 1;
-            margin-right: 12px;
-        }
-
-        .elo {
-            text-align: left;
-            font-size: 14px;
-            color: var(--gray-text);
-            margin-left: 8px;
-        }
-
-        #gamestatus {
-            color: var(--light-text);
-            text-align: center;
-            justify-content: center;
-            border-radius: 8px;
-            padding: 15px;
-            background-color: var(--darker-bg);
-            margin: 10px 0;
-            font-size: 14px;
-        }
-
-        .playertimer {
-            font-size: 20px;
-            font-weight: 600;
-            font-family: 'Roboto Mono', monospace;
-            border-radius: 6px;
-            background-color: var(--timer-bg);
-            color: var(--light-text);
-            text-align: center;
-            padding: 8px 12px;
-            min-width: 80px;
-        }
-
-        .sidebar {
-            width: 100%;
-            display: block;
-            background-color: var(--darker-bg);
-            border-radius: 8px;
-            padding: 15px;
-            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
-        }
-
-        #menu {
-            width: 15%;
-            padding: 10px;
-        }
-
-        #menu img {
-            border-radius: 4px;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-        }
-
-        /* Promotion popup styles */
-        #promotionPopup {
-            display: none;
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background-color: var(--darker-bg);
-            padding: 20px;
-            border-radius: 12px;
-            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
-            z-index: 1000;
-        }
-
-        #promotionOptions {
-            display: flex;
-            gap: 15px;
-            justify-content: center;
-            padding: 10px;
-        }
-
-        .promotion-piece {
-            width: 60px;
-            height: 60px;
-            cursor: pointer;
-            border: 2px solid transparent;
-            border-radius: 8px;
+        .right-sidebar {
             padding: 8px;
-            transition: all 0.2s ease;
-            background-color: var(--dark-bg);
+        }
+    }
+
+    /* Landscape Mobile */
+    @media (max-width: 768px) and (orientation: landscape) {
+        .game-layout {
+            grid-template-columns: 1fr 240px;
+            grid-template-rows: 1fr;
+            padding-left: 8px; /* Reset padding since sidebar is repositioned */
+            padding-top: 60px; /* Reduced space for landscape */
         }
 
-        .promotion-piece:hover {
-            border-color: var(--primary-color);
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        .left-sidebar {
+            top: 4px;
+            padding: 4px 12px;
         }
 
-        #promotionOverlay {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(0, 0, 0, 0.7);
-            backdrop-filter: blur(2px);
-            z-index: 999;
+        .sidebar-logo {
+            width: 80px; /* Smaller logo for landscape */
         }
 
-        @media (min-width: 600px) {
-            body {
-                overflow: hidden; /*no scroolbar*/
-            }
-
-            #gameimage {
-                height: 85vh;
-                width: auto;
-            }
-
-            #gameContainer {
-                position: relative;
-                display: flex;
-                flex-direction: row;
-                flex-grow: 1;
-                margin: 20px;
-                width: 80%;
-            }
-
-            #gameMainContainer {
-                margin-left: 25%;
-            }
-
-            input {
-                width: 500px;
-            }
-
-            .playerInfo {
-                font-size: 25px;
-            }
-
-            .username {
-                width: 85%;
-                font-size: 16px;
-            }
-
-            .elo {
-                font-size: 14px;
-            }
-
-            .playertimer {
-                min-width: 100px;
-            }
-
-            .sidebar {
-                width: 35%;
-                height: 80vh;
-                margin-left: 20px;
-            }
-
-            #menu {
-                width: 10%;               
-                margin-top: 0;
-                margin-bottom: 0;
-                height: 96vh;
-                background-color: var(--darker-bg);
-                border-radius: 0 8px 8px 0;
-            }
+        .right-sidebar {
+            background-color: #262522;
+            order: 0;
+            width: 240px;
+            padding: 12px;
+            max-height: calc(100vh - 16px);
+            overflow-y: auto;
         }
-
-        /* Add smooth transitions */
-        * {
-            transition: background-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
-        }
+    }
 </style>
-<div class="main">
-    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-2427220674328875"
-     crossorigin="anonymous"></script>
-    <!-- Add promotion popup HTML -->
-    <div id="promotionOverlay"></div>
-    <div id="promotionPopup">
-        <div id="promotionOptions">
-            <img src="/assets/chesspieces/wQ.png" class="promotion-piece" data-piece="q" alt="Queen">
-            <img src="/assets/chesspieces/wR.png" class="promotion-piece" data-piece="r" alt="Rook">
-            <img src="/assets/chesspieces/wB.png" class="promotion-piece" data-piece="b" alt="Bishop">
-            <img src="/assets/chesspieces/wN.png" class="promotion-piece" data-piece="n" alt="Knight">
-        </div>
-    </div>
-    <div id="gameContainer">
-        <div id="menu"><img src="/assets/logobanner.png" width="110" height="55"></div>
-        <div id="gameMainContainer">
-            <img id="gameimage" style="display: none;">
-            <div class="playerInfo" id="otherData">
-                <img src="/assets/iconwhite.png" class="playerAvatar" width="40" height="40">
-                <div class="username" id="otherUsername">User</div>
-                <div class="playertimer" id="otherTime">30:00</div>
-            </div>
-            <div id="gameboardcontainer">
-                <div id="gameboard"></div>
-            </div>
-            <div class="playerInfo" id="yourData">
-                <img src="/assets/iconwhite.png" class="playerAvatar" width="40" height="40">
-                <div class="username" id="yourUsername">User</div>
-                <div class="playertimer" id="yourTime">30:00</div>
-            </div>
-            <div class="move-input">
-                <input id="moveinput" type="text" placeholder="Enter move... (eg. e2e4 or 21-17)"/>
-                <button id="movebutton">Move</button>
-            </div>
-        </div>
-        <div class="sidebar">
-            <div id="gamestatus">Waiting for opponent...</div>
-            <button id="resign-button">Resign</button>
-        </div>
-    </div>
-    <script src="/assets/scripts/gameboard.js"></script>
-    <script src="/assets/scripts/qrcode.min.js"></script>
-    <script src="/socket.io/socket.io.js"></script>
-    <div id="roomId" style="display=none;">{roomId}</div>
-    <span id="piecesstyle"></span>
-    <script>
-        let roomId = parseInt(document.getElementById("roomId").innerText);
-
-        let yourTime = 1800;
-        let otherTime = 1800;
-        let oldGameInfo = {};
-        let isMyTurn = false;
-    
-        let globalYourTeam = "white";
-        let globalOtherTeam = "black";
-
-        const soundMove = new Audio("assets/sounds/move.wav");
-        const soundCapture = new Audio("assets/sounds/capture.wav");
-
-        // Add promotion handling functions
-        let pendingMove = null;
-
-        function formatTime(timeseconds) {
-            var timeWithoutDecimals = Math.ceil(timeseconds);
-            var timeMinutes = Math.floor(timeWithoutDecimals / 60);
-            const timeHours = Math.floor(timeMinutes / 60);
-            timeMinutes = timeMinutes % 60;
-            if (timeHours > 0) {
-                return `${timeHours}:${(timeMinutes % 60).toString().padStart(2, '0')}:${(timeWithoutDecimals % 60).toString().padStart(2, '0')}`;
-            }else{
-                return timeMinutes + ":" + (timeWithoutDecimals % 60).toString().padStart(2, '0');
-            }
-        }
-
-        setInterval(() => {
-            if (oldGameInfo.isStarted) {
-                if (isMyTurn) {
-                    yourTime -= 0.2;
-                }else{
-                    otherTime -= 0.2;
-                }
-            }
-
-            document.getElementById("yourUsername").innerText = oldGameInfo[globalYourTeam + "Name"];
-            document.getElementById("yourTime").innerText = formatTime(yourTime);
-
-            document.getElementById("otherUsername").innerText = oldGameInfo[globalOtherTeam + "Name"];
-            document.getElementById("otherTime").innerText = formatTime(otherTime);
-            
-            if (oldGameInfo.gametype === "chess" && oldGameInfo.variant === "chess") {
-                //document.getElementById("otherData").innerText = oldGameInfo[globalOtherTeam + "Name"] + " (" + oldGameInfo[globalOtherTeam + "Elo"] + ") " + formatTime(otherTime);
-                //document.getElementById("yourData").innerText = oldGameInfo[globalYourTeam + "Name"] + " (" + oldGameInfo[globalYourTeam + "Elo"] + ") " + formatTime(yourTime);
-                
-            
-                document.getElementById("otherUsername").innerHTML += ` <span class="elo" id="otherElo"></span>`;
-                document.getElementById("yourUsername").innerHTML += ` <span class="elo" id="yourElo"></span>`;
-                document.getElementById("yourElo").innerText = "(" + oldGameInfo[globalYourTeam + "Elo"] + ")";
-                document.getElementById("otherElo").innerText = "(" + oldGameInfo[globalOtherTeam + "Elo"] + ")";
-            } else {
-                //document.getElementById("otherData").innerText = oldGameInfo[globalOtherTeam + "Name"] + " " + formatTime(otherTime);
-                //document.getElementById("yourData").innerText = oldGameInfo[globalYourTeam + "Name"] + " " + formatTime(yourTime);
-            }
-        }, 200);
-    
-        var letters = 'abcdefghijklmnopqrstuvwxyz';
-
-        function chessSquareToCheckersIndex(chessNotation, rankCount = 8, fileCount = 8) {
-            let index = 1;
-
-            for (let i = rankCount; i >= 1; i--) {
-                for (let j = ((i % 2) == 0 ? 1 : 0); j < fileCount; j += 2) {
-                    let letter = letters[j];
-
-                    if (letter + i == chessNotation) {
-                        return ((index - 1) / 2) + 1;
-                    }
-
-                    index += 2;
-                }
-            }
-
-            return undefined;
-        }
-
-        function getDests(legalMoves, boardranks) {
-            var moves = {};
-            letters.split("").forEach((letter) => {
-                for (let number = 1; number <= boardranks; number++) {
-                    let legalMovesFormatted = {};
-                    legalMoves.forEach(legalMove => {
-                        if (legalMove.startsWith((letter + number))) {
-                            const destSquare = legalMove.slice(2, 4);
-                            if (legalMove.length === 5) { // Promotion move
-                                legalMovesFormatted[destSquare] = true;
-                            } else {
-                                legalMovesFormatted[destSquare] = true;
-                            }
-                        }
-                    });
-                    if (Object.keys(legalMovesFormatted).length > 0) {
-                        moves[letter + number] = legalMovesFormatted;
-                    }
-                }
-            });
-            return moves;
-        }
-
-        //let isViewOnlyMode = {{isViewOnlyMode}};
-        let isViewOnlyMode = false;
-
-        let board = null;
-        let socket;
-        let gameBoard = document.getElementById("gameboard");
-        let oldDimensions = {width: 8, height: 8};
-        
-        function joinRoom() {
-            socket.emit('joinRoomWeb', roomId, window.localStorage.getItem('authid'), window.localStorage.getItem('authpassword'), window.location.href, '{{invitedUserDiscordId}}');
-        }
-        
-        
-        document.getElementById('resign-button').addEventListener('click', () => {
-            socket.emit('resign');
-        });
-
-        let gameboardconfig = {
-            fen: 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR',
-            width: 8,
-            height: 8,
-            pieceTheme: "/assets/chesspieces/%piece%.png",
-            isFlipped: false,
-            onMove: (orig, dest) => {
-                if (oldGameInfo.gametype === "checkers") {
-                    socket.emit('makeMove', chessSquareToCheckersIndex(orig, oldGameInfo.boardDimensions.height, oldGameInfo.boardDimensions.width) + "-" + chessSquareToCheckersIndex(dest, oldGameInfo.boardDimensions.height, oldGameInfo.boardDimensions.width));
-                    return;
-                }
-                
-                // Find all legal moves from the origin square
-                const originLegalMoves = oldGameInfo.legalMoves.filter(move => 
-                move.startsWith(orig) && move.slice(2, 4) === dest
-            );
-            
-            // If there are multiple legal moves to the same square, it's a promotion
-            if (originLegalMoves.length > 1) {
-                showPromotionPopup(orig, dest);
-            } else if (originLegalMoves.length === 1) {
-                // If there's exactly one move and it's a promotion move (length 5)
-                if (originLegalMoves[0].length === 5) {
-                    showPromotionPopup(orig, dest);
-                } else {
-                    socket.emit('makeMove', orig + dest);
-                    }
-                }
-            },
-        }
-        
-        let gameBoardInterval = setInterval(() => {
-            if (createGameBoard !== undefined) {
-                board = createGameBoard(gameBoard, gameboardconfig);
-                clearInterval(gameBoardInterval);
-            }
-        }, 100);
-       
-
-        function showPromotionPopup(orig, dest) {
-            pendingMove = { orig, dest };
-            const popup = document.getElementById('promotionPopup');
-            const overlay = document.getElementById('promotionOverlay');
-            const options = document.getElementById('promotionOptions');
-            const isWhite = oldGameInfo.turn;
-            
-            // Update piece images to match the current player's color
-            options.querySelectorAll('.promotion-piece').forEach(piece => {
-                const pieceType = piece.dataset.piece;
-                piece.src = `/assets/chesspieces/${isWhite ? 'w' : 'b'}${pieceType.toUpperCase()}.png`;
-            });
-            
-            popup.style.display = 'block';
-            overlay.style.display = 'block';
-        }
-
-        function hidePromotionPopup() {
-            const popup = document.getElementById('promotionPopup');
-            const overlay = document.getElementById('promotionOverlay');
-            popup.style.display = 'none';
-            overlay.style.display = 'none';
-            pendingMove = null;
-        }
-
-        // Add click handlers for promotion pieces
-        document.querySelectorAll('.promotion-piece').forEach(piece => {
-            piece.addEventListener('click', () => {
-                if (pendingMove) {
-                    const promotionPiece = piece.dataset.piece;
-                    socket.emit('makeMove', pendingMove.orig + pendingMove.dest + promotionPiece);
-                    hidePromotionPopup();
-                }
-            });
-        });
-
-        // Close promotion popup when clicking overlay
-        document.getElementById('promotionOverlay').addEventListener('click', hidePromotionPopup);
-
-        let socketIoInterval = setInterval(() => {
-            if (io !== undefined) {
-                socket = io({
-                    transports: ['websocket'],
-                    reconnection: true,
-                });
-                socket.once('connect', () => {
-                    joinRoom();
-                });
-                socket.on('moveMade', (newimagedatauri, newGameStatusText, gameInfo, yourTeam) => {
-                if (document.getElementById("piecesstyle").innerHTML === "") {
-                    if (gameInfo.gametype == "chess") {
-                        gameboardconfig.pieceTheme = "/assets/chesspieces/%piece%.png";
-                    } else if (gameInfo.gametype == "checkers") {
-                        gameboardconfig.pieceTheme = "/assets/checkerspieces/%piece%.png";
-                    } else if (gameInfo.gametype == "chess2.0") {
-                        gameboardconfig.pieceTheme = "/assets/chess2.0pieces/%piece%.png";
-                    }
-                }
-                if ((gameInfo.gametype === "chess" && !["amazons", "crazyhouse"].includes(gameInfo.variant)) || gameInfo.gametype === "checkers" || gameInfo.gametype === "chess2.0") {
-                    document.getElementById("moveinput").style.display = "none";
-                    document.getElementById("movebutton").style.display = "none";
-                    document.getElementById("gameimage").style.display = "none";
-                    gameBoard.style.display = "block";
-                    document.getElementById("yourData").style.display = "flex";
-                    document.getElementById("otherData").style.display = "flex";
-                    gameboardconfig.fen = gameInfo.fen;
-                    gameboardconfig.isFlipped = !(yourTeam === "white");
-                    gameboardconfig.legalMoves = (!isViewOnlyMode && gameInfo.turn === (yourTeam === "white") ? getDests(gameInfo.legalMoves, gameInfo.boardDimensions.height) : {});
-                    gameboardconfig.width = gameInfo.boardDimensions.width;
-                    gameboardconfig.height = gameInfo.boardDimensions.height;
-
-                    let lastMove = '';
-                    /*if (gameInfo.moves.length > 0) {
-                        lastMove = gameInfo.moves[gameInfo.moves.length - 1];
-                        if (lastMove.split(" ").join("").length > 0) {
-                            //chessgroundconfig.lastMove = [lastMove.charAt(0) + lastMove.charAt(1), lastMove.charAt(2) + lastMove.charAt(3)];
-                        }else{
-                            lastMove = '';
-                        }
-                    }*/
-
-                    if (lastMove.length === 5) {
-                        soundCapture.play();
-                    }
-                    if (lastMove.length === 4) {
-                        soundMove.play();
-                    }
-                    board = createGameBoard(gameBoard, gameboardconfig);
-
-                    globalOtherTeam = (yourTeam == "white" ? "black" : "white");
-                    if (gameInfo.boardDimensions != oldDimensions) {
-                        if (gameBoard.classList.contains(`board${oldDimensions.width}x${oldDimensions.height}`)) {
-                            gameBoard.classList.remove(`board${oldDimensions.width}x${oldDimensions.height}`);
-                        }
-                        gameBoard.classList.add(`board${gameInfo.boardDimensions.width}x${gameInfo.boardDimensions.height}`);
-                        oldDimensions = gameInfo.boardDimensions;
-                    }
-                    //setGameBoardSize();
-                    yourTime = gameInfo[yourTeam + "Time"];
-                    otherTime = gameInfo[globalOtherTeam + "Time"];
-                    let pieces = document.getElementsByTagName("piece");
-                    for (let index = 0; index < pieces.length; index++) {
-                        const element = pieces[index];
-                        let piecesize = (gameBoard.clientWidth > gameBoard.clientHeight ?  (gameBoard.clientHeight / oldDimensions.height) + "px" : (gameBoard.clientWidth / oldDimensions.width) + "px");
-                        element.style.width = piecesize;
-                        element.style.height = piecesize;
-                    }
-                    oldGameInfo = gameInfo;
-                    isMyTurn = (yourTeam == 'white') == gameInfo.turn;
-                    globalYourTeam = yourTeam;
-                } else {
-                    document.getElementById("moveinput").style.display = "block";
-                    document.getElementById("movebutton").style.display = "block";
-                    document.getElementById("gameimage").style.display = "block";
-                    ple .style.display = "none";
-                    document.getElementById("yourData").style.display = "none";
-                    document.getElementById("otherData").style.display = "none";
-                }
-
-                document.getElementById("gameimage").src = newimagedatauri;
-
-                if (gameInfo.isStarted) {
-                    document.getElementById('gamestatus').innerHTML = '';
-                }
-
-                if (newGameStatusText !== undefined && newGameStatusText !== '') {
-                    document.getElementById('gamestatus').innerHTML = newGameStatusText;
-                }
-
-                if (isViewOnlyMode) {
-                    socket.emit('spectateRoom', roomId);
-                }
-
-            });
-
-            socket.on('DisableViewOnlyMode', () => {
-                joinRoom();
-                isViewOnlyMode = false;
-            })
-                clearInterval(socketIoInterval);
-            }
-        }, 100);
-
-        
-        document.getElementById("gamestatus").innerHTML = `<h1 style="color: white">Code: ${roomId}</h1><div>http://${window.location.href.split("/")[2]}/l/${roomId}</div><br/>&nbsp;<table id="joinqrcode" style="width: 150px; height: 150px; margin-left: auto; margin-right: auto;"</table>`;
-        var joinqrcode = new QRCode(document.getElementById("joinqrcode"), {
-            text: `http://${window.location.href.split("/")[2]}/l/${roomId}`,
-            width: 150,
-            height: 150,
-            colorDark : "#000000",
-            colorLight : "#ffffff",
-            correctLevel : QRCode.CorrectLevel.H
-        });
-    
-
-
-        document.getElementById("movebutton").addEventListener('click', () => {
-            socket.emit('makeMove', document.getElementById("moveinput").value);
-            document.getElementById("moveinput").value = "";
-        });
-
-        setInterval(() => {
-            let squares = document.getElementsByTagName("square");
-            for (let index = 0; index < squares.length; index++) {
-                const element = squares[index];
-                let squaresize = (gameBoard.clientWidth > gameBoard.clientHeight ?  (gameBoard.clientHeight / oldDimensions.height) + "px" : (gameBoard.clientWidth / oldDimensions.width) + "px");
-                element.style.width = squaresize;
-                element.style.height = squaresize;
-            }
-            let margin = ((document.body.clientWidth - gameBoard.clientWidth) / 2) + "px";
-            //gameBoard.style.marginLeft = margin;
-            //gameBoard.style.marginRight = margin;
-        }, 400);
-    </script>
-</div>
