@@ -468,6 +468,14 @@
 
             <!-- Right sidebar -->
             <div class="right-sidebar">
+                <!-- Room Code Display -->
+                {#if !gameInfo.isStarted}
+                    <div class="room-code-display">
+                        <span class="room-code-label">Room Code:</span>
+                        <span class="room-code-value">{roomId}</span>
+                    </div>
+                {/if}
+                
                 <GameStatus 
                     {roomId} 
                     status={gameStatus} 
@@ -644,6 +652,30 @@
         height: fit-content;
         max-height: calc(100vh - 32px);
         overflow-y: auto;
+    }
+
+    .room-code-display {
+        background-color: #3a3832;
+        border-radius: 8px;
+        padding: 12px 16px;
+        text-align: center;
+        border: 1px solid #4a463e;
+    }
+
+    .room-code-label {
+        color: #b8b4a8;
+        font-size: 14px;
+        font-weight: 500;
+        display: block;
+        margin-bottom: 4px;
+    }
+
+    .room-code-value {
+        color: #ffffff;
+        font-size: 18px;
+        font-weight: 700;
+        font-family: 'Courier New', monospace;
+        letter-spacing: 2px;
     }
 
     /* Tablet Layout */
