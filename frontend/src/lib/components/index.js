@@ -11,3 +11,10 @@ export { default as QRCode } from './QRCode.svelte';
 export { default as GameStatus } from './GameStatus.svelte';
 export { default as MoveInput } from './MoveInput.svelte';
 export { default as PromotionPopup } from './PromotionPopup.svelte';
+
+// New shadcn-svelte components
+export { default as Card } from './Card.svelte';
+export { default as CardHeader } from './CardHeader.svelte';
+export { default as CardContent } from './CardContent.svelte';
+export { default as CardTitle } from './CardTitle.svelte';
+export { default as CardDescription } from './CardDescription.svelte';

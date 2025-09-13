@@ -1,5 +1,7 @@
 <script>
   import QRCode from './QRCode.svelte';
+  import { Card, CardContent, CardHeader, CardTitle } from './index.js';
+  import { Copy, QrCode, Users } from 'lucide-svelte';
 
   export let roomId = '';
   export let status = 'Waiting for opponent...';
@@ -7,89 +9,48 @@
   export let shareUrl = '';
 
   $: roomUrl = shareUrl || `${window?.location?.origin}/l/${roomId}`;
+
+  function copyToClipboard() {
+    navigator.clipboard.writeText(roomUrl);
+  }
 </script>
 
-<div class="game-status">
-  <div class="status-content">
+<Card>
+  <CardContent class="p-2">
     {#if roomId && !status}
-      <h2 class="room-code">Room: {roomId}</h2>
-      <div class="share-url">{roomUrl}</div>
-      {#if showQR}
-        <QRCode text={roomUrl} size={120} />
-      {/if}
+      <div class="text-center space-y-2">
+        <div class="flex items-center justify-center gap-1.5">
+          <Users class="w-3.5 h-3.5 text-primary" />
+          <h3 class="text-xs font-semibold text-foreground">Room: {roomId}</h3>
+        </div>
+        
+        <div class="bg-muted rounded-lg p-1.5">
+          <div class="text-xs text-muted-foreground mb-0.5">Share this link:</div>
+          <div class="font-mono text-xs text-foreground break-all">{roomUrl}</div>
+          <button 
+            on:click={copyToClipboard}
+            class="mt-0.5 inline-flex items-center gap-1 text-xs text-primary hover:text-primary/80 transition-colors"
+          >
+            <Copy class="w-2.5 h-2.5" />
+            Copy Link
+          </button>
+        </div>
+        
+        {#if showQR}
+          <div class="flex flex-col items-center gap-0.5">
+            <div class="flex items-center gap-1 text-xs text-muted-foreground">
+              <QrCode class="w-2.5 h-2.5" />
+              Scan to join
+            </div>
+            <QRCode text={roomUrl} size={60} />
+          </div>
+        {/if}
+      </div>
     {:else if status}
-      <div class="status-text">{@html status}</div>
+      <div class="text-center">
+        <div class="text-xs text-foreground">{@html status}</div>
+      </div>
     {/if}
-  </div>
-</div>
+  </CardContent>
+</Card>
 
-<style>
-  .game-status {
-    background-color: #262522;
-    border-radius: 8px;
-    padding: 20px;
-    text-align: center;
-    margin: 16px 0;
-  }
-
-  .status-content {
-    color: #ffffff;
-  }
-
-  .room-code {
-    font-size: 20px;
-    font-weight: 600;
-    margin-bottom: 12px;
-    color: #7fa650;
-  }
-
-  .share-url {
-    font-size: 14px;
-    color: #9c9c9c;
-    margin-bottom: 16px;
-    word-break: break-all;
-    font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
-  }
-
-  .status-text {
-    font-size: 16px;
-    line-height: 1.4;
-  }
-
-  .status-text :global(h1) {
-    color: #ffffff;
-    font-size: 18px;
-    margin: 0 0 8px 0;
-  }
-
-  .status-text :global(div) {
-    color: #9c9c9c;
-    font-size: 14px;
-    margin: 4px 0;
-  }
-
-  @media (max-width: 768px) {
-    .game-status {
-      padding: 16px;
-      margin: 12px 0;
-    }
-
-    .room-code {
-      font-size: 18px;
-      margin-bottom: 10px;
-    }
-
-    .share-url {
-      font-size: 12px;
-      margin-bottom: 12px;
-    }
-
-    .status-text {
-      font-size: 14px;
-    }
-
-    .status-text :global(h1) {
-      font-size: 16px;
-    }
-  }
-</style>

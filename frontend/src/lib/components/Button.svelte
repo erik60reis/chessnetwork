@@ -1,107 +1,40 @@
 <script>
-  export let variant = 'primary'; // primary, secondary, danger
-  export let size = 'medium'; // small, medium, large
+  import { cn } from '../utils.js';
+  
+  let className = '';
+  export { className as class };
+  
+  export let variant = 'default'; // default, destructive, outline, secondary, ghost, link
+  export let size = 'default'; // default, sm, lg, icon
   export let disabled = false;
   export let onClick = () => {};
+  
+  const variants = {
+    default: 'bg-primary text-primary-foreground hover:bg-primary/90',
+    destructive: 'bg-destructive text-destructive-foreground hover:bg-destructive/90',
+    outline: 'border border-input bg-background hover:bg-accent hover:text-accent-foreground',
+    secondary: 'bg-secondary text-secondary-foreground hover:bg-secondary/80',
+    ghost: 'hover:bg-accent hover:text-accent-foreground',
+    link: 'text-primary underline-offset-4 hover:underline',
+  };
+  
+  const sizes = {
+    default: 'h-10 px-4 py-2',
+    sm: 'h-9 rounded-md px-3',
+    lg: 'h-11 rounded-md px-8',
+    icon: 'h-10 w-10',
+  };
 </script>
 
 <button 
-  class="btn btn-{variant} btn-{size}" 
+  class={cn(
+    'inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50',
+    variants[variant],
+    sizes[size],
+    className
+  )}
   {disabled}
   on:click={onClick}
 >
   <slot></slot>
 </button>
-
-<style>
-  .btn {
-    border: none;
-    border-radius: 6px;
-    font-weight: 500;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    text-decoration: none;
-    font-family: inherit;
-  }
-
-  .btn:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-  }
-
-  .btn:active {
-    transform: translateY(0);
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-  }
-
-  .btn:disabled {
-    opacity: 0.6;
-    cursor: not-allowed;
-    transform: none;
-  }
-
-  /* Variants */
-  .btn-primary {
-    background-color: #7fa650;
-    color: #ffffff;
-  }
-
-  .btn-primary:hover:not(:disabled) {
-    background-color: #8fb760;
-  }
-
-  .btn-secondary {
-    background-color: #75716c;
-    color: #ffffff;
-  }
-
-  .btn-secondary:hover:not(:disabled) {
-    background-color: #85817c;
-  }
-
-  .btn-danger {
-    background-color: #c33;
-    color: #ffffff;
-  }
-
-  .btn-danger:hover:not(:disabled) {
-    background-color: #d44;
-  }
-
-  /* Sizes */
-  .btn-small {
-    padding: 6px 12px;
-    font-size: 12px;
-  }
-
-  .btn-medium {
-    padding: 10px 20px;
-    font-size: 14px;
-  }
-
-  .btn-large {
-    padding: 14px 28px;
-    font-size: 16px;
-  }
-
-  @media (max-width: 768px) {
-    .btn {
-      padding: 12px 16px;
-      font-size: 14px;
-    }
-    
-    .btn-small {
-      padding: 8px 12px;
-      font-size: 12px;
-    }
-    
-    .btn-large {
-      padding: 16px 24px;
-      font-size: 16px;
-    }
-  }
-</style>

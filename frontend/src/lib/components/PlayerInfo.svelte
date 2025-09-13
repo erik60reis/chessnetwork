@@ -1,4 +1,10 @@
 <script>
+  import { cn } from '../utils.js';
+  import { Crown, Clock } from 'lucide-svelte';
+  
+  let className = '';
+  export { className as class };
+  
   export let username = 'Guest';
   export let elo = null;
   export let time = '30:00';
@@ -6,123 +12,39 @@
   export let isCurrentPlayer = false;
 </script>
 
-<div class="player-info" class:current-player={isCurrentPlayer}>
-  <img src={avatar} alt="Player avatar" class="player-avatar" />
-  <div class="player-details">
-    <div class="username">
-      {username}
+<div class={cn(
+  'flex items-center gap-2 bg-card border rounded-lg p-2 transition-all duration-200',
+  isCurrentPlayer && 'border-primary bg-primary/5 shadow-lg',
+  className
+)}>
+  <div class="relative">
+    <img 
+      src={avatar} 
+      alt="Player avatar" 
+      class="w-7 h-7 rounded-full object-cover border border-border"
+    />
+    {#if isCurrentPlayer}
+      <Crown class="absolute -top-0.5 -right-0.5 w-3 h-3 text-primary fill-primary" />
+    {/if}
+  </div>
+  
+  <div class="flex-1 min-w-0">
+    <div class="flex items-center gap-1">
+      <span class="font-medium text-foreground truncate text-sm">{username}</span>
       {#if elo}
-        <span class="elo">({elo})</span>
+        <span class="text-xs text-muted-foreground">({elo})</span>
       {/if}
     </div>
   </div>
-  <div class="player-timer" class:active={isCurrentPlayer}>
+  
+  <div class={cn(
+    'flex items-center gap-1 px-2 py-1 rounded-md font-mono text-sm font-medium transition-all',
+    isCurrentPlayer 
+      ? 'bg-primary text-primary-foreground animate-pulse' 
+      : 'bg-muted text-muted-foreground'
+  )}>
+    <Clock class="w-3 h-3" />
     {time}
   </div>
 </div>
 
-<style>
-  .player-info {
-    display: flex;
-    align-items: center;
-    background-color: #262522;
-    padding: 12px 16px;
-    border-radius: 8px;
-    margin: 8px 0;
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
-    transition: all 0.2s ease;
-    width: 480px;
-    max-width: 100%;
-    box-sizing: border-box;
-  }
-
-  .player-info.current-player {
-    background-color: #2a4a1a;
-    border: 2px solid #7fa650;
-  }
-
-  .player-avatar {
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-    margin-right: 12px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-    object-fit: cover;
-  }
-
-  .player-details {
-    flex-grow: 1;
-    min-width: 0;
-  }
-
-  .username {
-    color: #ffffff;
-    font-size: 16px;
-    font-weight: 500;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-
-  .elo {
-    color: #9c9c9c;
-    font-size: 14px;
-    font-weight: normal;
-  }
-
-  .player-timer {
-    font-size: 18px;
-    font-weight: 600;
-    font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
-    border-radius: 6px;
-    background-color: #57544a;
-    color: #ffffff;
-    text-align: center;
-    padding: 8px 12px;
-    min-width: 80px;
-    transition: all 0.2s ease;
-  }
-
-  .player-timer.active {
-    background-color: #7fa650;
-    color: #ffffff;
-    animation: pulse 2s infinite;
-  }
-
-  @keyframes pulse {
-    0%, 100% {
-      opacity: 1;
-    }
-    50% {
-      opacity: 0.8;
-    }
-  }
-
-  @media (max-width: 768px) {
-    .player-info {
-      padding: 10px 12px;
-      margin: 6px 0;
-      width: 100%;
-      max-width: 480px;
-    }
-
-    .player-avatar {
-      width: 32px;
-      height: 32px;
-    }
-
-    .username {
-      font-size: 14px;
-    }
-
-    .elo {
-      font-size: 12px;
-    }
-
-    .player-timer {
-      font-size: 16px;
-      padding: 6px 10px;
-      min-width: 70px;
-    }
-  }
-</style>

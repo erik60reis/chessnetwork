@@ -5,8 +5,12 @@
     GameBoard, 
     QuickPlayGrid, 
     RoomJoin, 
-    GameOptions 
+    GameOptions,
+    Card,
+    CardContent,
+    Button
   } from '../lib/components';
+  import { Bot, Users, Settings } from 'lucide-svelte';
 
   let gameBoard;
   let boardConfig = {
@@ -28,227 +32,82 @@
 </script>
 
 <Layout showLogo={false}>
-  <div class="main-container">
-    <div class="content-grid">
-      <!-- Left Sidebar -->
-      <div class="left-sidebar">
-        <div class="logo-container">
-          <img 
-            src="/assets/logobanner.png" 
-            alt="O Xadrez Logo" 
-            class="main-logo"
-            on:click={() => window.location.href = '/'}
-            on:keydown={(e) => e.key === 'Enter' && (window.location.href = '/')}
-            tabindex="0"
-          />
-        </div>
-        <div class="sidebar-links">
-          <a href="/add-discord-bot" class="discord-link">
-            Add Discord Bot
-          </a>
-        </div>
-      </div>
+  <div class="min-h-screen bg-gradient-to-br from-background via-background to-muted/20">
+    <!-- Main Content -->
+    <div class="container mx-auto px-4 pb-12">
+      <div class="grid lg:grid-cols-3 gap-8 max-w-7xl mx-auto">
+        <!-- Left Sidebar - Navigation -->
+        <div class="lg:col-span-1">
+          <Card class="sticky top-6">
+            <CardContent class="p-6">
+              <div class="space-y-6">
+                <!-- Logo -->
+                <div class="text-center">
+                  <button 
+                    class="bg-transparent border-none p-0 cursor-pointer transition-transform duration-200 hover:scale-105"
+                    on:click={() => window.location.href = '/'}
+                    on:keydown={(e) => e.key === 'Enter' && (window.location.href = '/')}
+                    tabindex="0"
+                  >
+                    <img 
+                      src="/assets/logobanner.png" 
+                      alt="O Xadrez Logo" 
+                      class="h-16 w-auto mx-auto"
+                    />
+                  </button>
+                </div>
 
-      <!-- Chess Board Display (Desktop/Tablet Only) -->
-      <div class="board-section">
-        <GameBoard config={boardConfig} />
-      </div>
+                <!-- Quick Actions -->
+                <div class="space-y-3">
+                  <Button variant="outline" class="w-full justify-start" on:click={() => window.open('/add-discord-bot', '_blank')}>
+                    <Bot class="w-4 h-4 mr-2" />
+                    Add Discord Bot
+                  </Button>
+                  
+                  <Button variant="outline" class="w-full justify-start">
+                    <Users class="w-4 h-4 mr-2" />
+                    Join Community
+                  </Button>
+                  
+                  <Button variant="outline" class="w-full justify-start">
+                    <Settings class="w-4 h-4 mr-2" />
+                    Settings
+                  </Button>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
 
-      <!-- Game Controls -->
-      <div class="controls-section">
-        <QuickPlayGrid />
-        <RoomJoin />
-        <GameOptions />
+        <!-- Center - Chess Board (Desktop Only) -->
+        <div class="lg:col-span-1 hidden lg:block">
+          <Card class="h-fit">
+            <CardContent class="p-6">
+              <div class="aspect-square bg-card rounded-lg border-2 border-border flex items-center justify-center">
+                <GameBoard config={boardConfig} />
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        <!-- Right - Game Controls -->
+        <div class="lg:col-span-1">
+          <div class="space-y-6">
+            <QuickPlayGrid />
+            <RoomJoin />
+            <GameOptions />
+          </div>
+        </div>
       </div>
     </div>
   </div>
 </Layout>
 
 <style>
-  .main-container {
-    max-width: 1400px;
-    margin: 0 auto;
-    padding: 0 16px;
-    margin-left: 156px; /* 140px sidebar + 16px gap */
-  }
-
-  .content-grid {
-    display: grid;
-    grid-template-columns: 1fr 400px;
-    gap: 32px;
-    align-items: start;
-  }
-
-  .left-sidebar {
-    background-color: #262522;
-    border-radius: 12px;
-    padding: 20px 16px;
-    display: flex;
-    flex-direction: column;
-    gap: 24px;
-    height: calc(100vh - 40px);
-    position: fixed;
-    left: 16px;
-    top: 20px;
-    width: 140px;
-    z-index: 10;
-  }
-
-  .logo-container {
-    text-align: center;
-  }
-
-  .main-logo {
-    width: 100%;
-    height: auto;
-    cursor: pointer;
-    transition: transform 0.2s ease;
-  }
-
-  .main-logo:hover {
-    transform: scale(1.05);
-  }
-
-  .sidebar-links {
-    text-align: center;
-  }
-
-  .discord-link {
-    color: #7fa650;
-    text-decoration: none;
-    font-weight: 500;
-    font-size: 14px;
-    transition: color 0.2s ease;
-    word-wrap: break-word;
-  }
-
-  .discord-link:hover {
-    color: #8fb760;
-    text-decoration: underline;
-  }
-
-  .board-section {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    height: calc(100vh - 40px);
-    width: 100%;
-    background-color: #262522;
-    border-radius: 12px;
-    padding: 24px;
-    box-sizing: border-box;
-  }
-
-  .controls-section {
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
-  }
-
-  /* Tablet Layout */
-  @media (max-width: 1200px) {
-    .main-container {
-      margin-left: 136px; /* 120px sidebar + 16px gap */
-    }
-
-    .content-grid {
-      grid-template-columns: 1fr 350px;
-      gap: 24px;
-    }
-
-    .board-section {
-      height: calc(100vh - 40px);
-      padding: 20px;
-    }
-
-    .left-sidebar {
-      width: 120px;
-      padding: 16px 12px;
-      gap: 20px;
-      height: calc(100vh - 40px);
-    }
-  }
-
-  /* Mobile Layout */
-  @media (max-width: 768px) {
-    .main-container {
-      padding: 0 8px;
-      margin-left: 0; /* Reset margin for mobile */
-      padding-top: 80px; /* Space for top logo */
-    }
-
-    .content-grid {
-      grid-template-columns: 1fr;
-      gap: 12px;
-    }
-
-    .board-section {
-      display: none; /* Hide board on mobile to save space */
-    }
-
-    .left-sidebar {
-      position: fixed;
-      top: 8px;
-      left: 50%;
-      transform: translateX(-50%);
-      width: auto;
-      height: auto;
-      padding: 8px 16px;
-      gap: 12px;
-      flex-direction: row;
-      align-items: center;
-      justify-content: center;
-      border-radius: 8px;
-    }
-
-    .logo-container {
-      text-align: center;
-    }
-
-    .main-logo {
-      width: 120px;
-      height: auto;
-    }
-
-    .sidebar-links {
-      text-align: center;
-    }
-
-    .controls-section {
-      gap: 12px;
-    }
-
-    .discord-link {
-      font-size: 12px;
-      white-space: nowrap;
-    }
-  }
-
-  /* Small Mobile */
-  @media (max-width: 480px) {
-    .main-container {
-      padding: 0 6px;
-      margin-left: 0; /* Reset margin for mobile */
-      padding-top: 70px; /* Reduced space for smaller screen */
-    }
-
-    .content-grid {
-      grid-template-columns: 1fr;
-      gap: 8px;
-    }
-
-    .left-sidebar {
-      top: 4px;
-      padding: 6px 12px;
-      gap: 8px;
-    }
-
-    .main-logo {
-      width: 100px;
-    }
-
-    .discord-link {
-      font-size: 11px;
-    }
+  .bg-grid-pattern {
+    background-image: 
+      linear-gradient(rgba(255, 255, 255, 0.1) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255, 255, 255, 0.1) 1px, transparent 1px);
+    background-size: 20px 20px;
   }
 </style>

@@ -1,6 +1,8 @@
 <script>
   import Input from './Input.svelte';
   import Button from './Button.svelte';
+  import { Card, CardContent, CardHeader, CardTitle } from './index.js';
+  import { Users } from 'lucide-svelte';
 
   let roomCode = '';
 
@@ -17,70 +19,30 @@
   }
 </script>
 
-<div class="room-join">
-  <h2 class="section-title">Join Room</h2>
-  
-  <div class="join-form">
-    <Input
-      bind:value={roomCode}
-      placeholder="Enter room code"
-      fullWidth={true}
-      on:keydown={handleKeydown}
-    />
-    
-    <Button 
-      variant="secondary" 
-      onClick={joinRoom}
-      disabled={!roomCode.trim()}
-      size="large"
-    >
-      Join
-    </Button>
-  </div>
-</div>
-
-<style>
-  .room-join {
-    background-color: #262522;
-    border-radius: 8px;
-    padding: 20px;
-    margin-bottom: 20px;
-  }
-
-  .section-title {
-    color: #ffffff;
-    font-size: 18px;
-    font-weight: 600;
-    margin-bottom: 16px;
-    text-align: center;
-  }
-
-  .join-form {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-  }
-
-  @media (min-width: 480px) {
-    .join-form {
-      flex-direction: row;
-      align-items: flex-end;
-    }
-    
-    .join-form :global(.input-container) {
-      flex: 1;
-    }
-  }
-
-  @media (max-width: 768px) {
-    .room-join {
-      padding: 16px;
-      margin-bottom: 16px;
-    }
-
-    .section-title {
-      font-size: 16px;
-      margin-bottom: 12px;
-    }
-  }
-</style>
+<Card>
+  <CardHeader class="pb-3">
+    <CardTitle class="flex items-center gap-2">
+      <Users class="w-5 h-5" />
+      Join Room
+    </CardTitle>
+  </CardHeader>
+  <CardContent>
+    <div class="space-y-3">
+      <Input
+        bind:value={roomCode}
+        placeholder="Enter room code"
+        on:keydown={handleKeydown}
+        class="font-mono text-center"
+      />
+      
+      <Button 
+        variant="default" 
+        onClick={joinRoom}
+        disabled={!roomCode.trim()}
+        class="w-full"
+      >
+        Join Room
+      </Button>
+    </div>
+  </CardContent>
+</Card>

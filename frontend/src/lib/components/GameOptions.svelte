@@ -1,6 +1,8 @@
 <script>
   import Select from './Select.svelte';
   import Button from './Button.svelte';
+  import { Card, CardContent, CardHeader, CardTitle } from './index.js';
+  import { Settings } from 'lucide-svelte';
 
   const gameTypeOptions = [
     { value: 'chess/chess', label: 'Chess' },
@@ -40,77 +42,40 @@
   }
 </script>
 
-<div class="game-options">
-  <h2 class="section-title">Custom Game</h2>
-  
-  <div class="option-group">
-    <label class="option-label">Game Type</label>
-    <Select
-      bind:value={selectedGameType}
-      options={gameTypeOptions}
-      fullWidth={true}
-    />
-  </div>
+<Card>
+  <CardHeader class="pb-3">
+    <CardTitle class="flex items-center gap-2">
+      <Settings class="w-5 h-5" />
+      Custom Game
+    </CardTitle>
+  </CardHeader>
+  <CardContent>
+    <div class="space-y-4">
+      <div class="space-y-2">
+        <label class="text-sm font-medium text-foreground">Game Type</label>
+        <Select
+          bind:value={selectedGameType}
+          options={gameTypeOptions}
+          fullWidth={true}
+        />
+      </div>
 
-  <div class="option-group">
-    <label class="option-label">Time Control</label>
-    <Select
-      bind:value={selectedTime}
-      options={timeOptions}
-      fullWidth={true}
-    />
-  </div>
+      <div class="space-y-2">
+        <label class="text-sm font-medium text-foreground">Time Control</label>
+        <Select
+          bind:value={selectedTime}
+          options={timeOptions}
+          fullWidth={true}
+        />
+      </div>
 
-  <Button 
-    variant="primary" 
-    onClick={createNewRoom}
-    size="large"
-  >
-    Create Room
-  </Button>
-</div>
-
-<style>
-  .game-options {
-    background-color: #262522;
-    border-radius: 8px;
-    padding: 20px;
-    margin-bottom: 20px;
-  }
-
-  .section-title {
-    color: #ffffff;
-    font-size: 18px;
-    font-weight: 600;
-    margin-bottom: 16px;
-    text-align: center;
-  }
-
-  .option-group {
-    margin-bottom: 16px;
-  }
-
-  .option-label {
-    display: block;
-    color: #ffffff;
-    font-size: 14px;
-    font-weight: 500;
-    margin-bottom: 6px;
-  }
-
-  @media (max-width: 768px) {
-    .game-options {
-      padding: 16px;
-      margin-bottom: 16px;
-    }
-
-    .section-title {
-      font-size: 16px;
-      margin-bottom: 12px;
-    }
-
-    .option-group {
-      margin-bottom: 12px;
-    }
-  }
-</style>
+      <Button 
+        variant="default" 
+        onClick={createNewRoom}
+        class="w-full"
+      >
+        Create Room
+      </Button>
+    </div>
+  </CardContent>
+</Card>

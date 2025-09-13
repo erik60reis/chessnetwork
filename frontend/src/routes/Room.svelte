@@ -7,8 +7,11 @@
         GameStatus, 
         MoveInput, 
         PromotionPopup,
-        Button 
+        Button,
+        Card,
+        CardContent
     } from '../lib/components';
+    import { cn } from '../lib/utils.js';
 
     export let roomId;
 
@@ -26,8 +29,8 @@
     let globalYourTeam = "white";
     let globalOtherTeam = "black";
     let isViewOnlyMode = false;
-    let yourTime = 1800;
-    let otherTime = 1800;
+    let yourTime = 0;
+    let otherTime = 0;
     let gameStatus = "Waiting for opponent...";
     let showPromotionPopup = false;
     let pendingMove = null;
@@ -261,8 +264,8 @@
         }
 
         // Update times
-        yourTime = gameInfo[yourTeam + "Time"] || yourTime;
-        otherTime = gameInfo[globalOtherTeam + "Time"] || otherTime;
+        yourTime = gameInfo[yourTeam + "Time"] || 0;
+        otherTime = gameInfo[globalOtherTeam + "Time"] || 0;
 
         // Update turn status
         isMyTurn = (yourTeam === 'white') === gameInfo.turn;
@@ -410,19 +413,36 @@
 </script>
 
 <Layout showLogo={false}>
-    <div class="game-container">
+    <div class="min-h-screen bg-background">
         <!-- Connection Status Indicator -->
         {#if connectionMessage}
-            <div class="connection-status" class:reconnecting={connectionStatus === 'reconnecting'} class:disconnected={connectionStatus === 'disconnected'}>
-                <div class="status-content">
+            <div class="fixed top-2 right-2 lg:top-4 lg:right-4 z-50">
+                <div class={cn(
+                    'flex items-center gap-2 px-3 py-1 lg:px-4 lg:py-2 rounded-lg text-xs lg:text-sm font-medium shadow-lg',
+                    connectionStatus === 'reconnecting' && 'bg-orange-500 text-white animate-pulse',
+                    connectionStatus === 'disconnected' && 'bg-red-500 text-white',
+                    connectionStatus === 'connecting' && 'bg-blue-500 text-white'
+                )}>
                     {#if connectionStatus === 'reconnecting'}
-                        <div class="spinner"></div>
+                        <div class="w-3 h-3 lg:w-4 lg:h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
                     {:else if connectionStatus === 'disconnected'}
-                        <div class="disconnect-icon">⚠️</div>
+                        <div class="w-3 h-3 lg:w-4 lg:h-4">⚠️</div>
                     {/if}
-                    <span>{connectionMessage}</span>
+                    <span class="hidden sm:inline">{connectionMessage}</span>
+                    <span class="sm:hidden">
+                        {#if connectionStatus === 'reconnecting'}
+                            Reconnecting...
+                        {:else if connectionStatus === 'disconnected'}
+                            Disconnected
+                        {:else if connectionStatus === 'connecting'}
+                            Connecting...
+                        {/if}
+                    </span>
                     {#if connectionStatus === 'disconnected' && gameStatus.includes('refresh')}
-                        <button class="reconnect-btn" on:click={manualReconnect}>
+                        <button 
+                            class="ml-1 lg:ml-2 px-1 py-0.5 lg:px-2 lg:py-1 bg-white/20 rounded text-xs hover:bg-white/30 transition-colors"
+                            on:click={manualReconnect}
+                        >
                             Retry
                         </button>
                     {/if}
@@ -430,66 +450,112 @@
             </div>
         {/if}
 
-        <div class="game-layout">
-            <!-- Left sidebar - Mobile hidden -->
-            <div class="left-sidebar">
-                <img 
-                    src="/assets/logobanner.png" 
-                    alt="O Xadrez" 
-                    class="sidebar-logo"
-                    on:click={() => window.location.href = '/'}
-                    on:keydown={(e) => e.key === 'Enter' && (window.location.href = '/')}
-                    tabindex="0"
-                />
-            </div>
-
-            <!-- Main game area -->
-            <div class="main-game-area">
-                <!-- Opponent info -->
-                <PlayerInfo {...otherPlayerInfo} />
-
-                <!-- Game board or image -->
-                <div class="board-container">
-                    {#if showBoard}
-                        <GameBoard config={boardConfig} isVisible={showBoard} />
-                    {:else}
-                        <img id="gameimage" src="" alt="Game board" class="game-image" />
-                    {/if}
+        <div class="container mx-auto px-2 py-2 h-screen max-h-screen overflow-hidden">
+            <div class="grid grid-cols-1 lg:grid-cols-4 gap-2 max-w-7xl mx-auto h-full">
+                <!-- Left sidebar - Navigation (Desktop only) -->
+                <div class="hidden lg:flex lg:col-span-1 flex-col">
+                    <Card class="flex-shrink-0">
+                        <CardContent class="p-3">
+                            <div class="text-center">
+                                <button 
+                                    class="bg-transparent border-none p-0 cursor-pointer transition-transform duration-200 hover:scale-105"
+                                    on:click={() => window.location.href = '/'}
+                                    on:keydown={(e) => e.key === 'Enter' && (window.location.href = '/')}
+                                    tabindex="0"
+                                >
+                                    <img 
+                                        src="/assets/logobanner.png" 
+                                        alt="O Xadrez" 
+                                        class="h-10 w-auto mx-auto"
+                                    />
+                                </button>
+                            </div>
+                        </CardContent>
+                    </Card>
                 </div>
 
-                <!-- Your player info -->
-                <PlayerInfo {...yourPlayerInfo} />
-
-                <!-- Move input for non-standard games -->
-                {#if showMoveInput}
-                    <MoveInput onMove={handleTextMove} />
-                {/if}
-            </div>
-
-            <!-- Right sidebar -->
-            <div class="right-sidebar">
-                <!-- Room Code Display -->
-                {#if !gameInfo.isStarted}
-                    <div class="room-code-display">
-                        <span class="room-code-label">Room Code:</span>
-                        <span class="room-code-value">{roomId}</span>
+                <!-- Main game area -->
+                <div class="lg:col-span-2 flex flex-col h-full">
+                    <!-- Mobile header with logo -->
+                    <div class="lg:hidden flex-shrink-0 mb-1">
+                        <Card>
+                            <CardContent class="p-1">
+                                <div class="text-center">
+                                    <button 
+                                        class="bg-transparent border-none p-0 cursor-pointer transition-transform duration-200 hover:scale-105"
+                                        on:click={() => window.location.href = '/'}
+                                        on:keydown={(e) => e.key === 'Enter' && (window.location.href = '/')}
+                                        tabindex="0"
+                                    >
+                                        <img 
+                                            src="/assets/logobanner.png" 
+                                            alt="O Xadrez" 
+                                            class="h-6 w-auto mx-auto"
+                                        />
+                                    </button>
+                                </div>
+                            </CardContent>
+                        </Card>
                     </div>
-                {/if}
-                
-                <GameStatus 
-                    {roomId} 
-                    status={gameStatus} 
-                    showQR={showQR && !gameInfo.isStarted}
-                    shareUrl={roomUrl}
-                />
-                
-                <Button 
-                    variant="danger" 
-                    onClick={handleResign}
-                    size="large"
-                >
-                    Resign
-                </Button>
+
+                    <div class="flex flex-col h-full space-y-2">
+                        <!-- Opponent info -->
+                        <div class="flex-shrink-0">
+                            <PlayerInfo {...otherPlayerInfo} />
+                        </div>
+
+                        <!-- Game board or image -->
+                        <div class="flex-1 min-h-0 max-h-[80vh]">
+                            <Card class="h-full">
+                                <CardContent class="p-1 lg:p-2 h-full">
+                                    <div class="h-full bg-card rounded-lg border border-border flex items-center justify-center">
+                                        {#if showBoard}
+                                            <GameBoard config={boardConfig} isVisible={showBoard} />
+                                        {:else}
+                                            <img id="gameimage" src="" alt="Game board" class="max-w-full max-h-full object-contain rounded" />
+                                        {/if}
+                                    </div>
+                                </CardContent>
+                            </Card>
+                        </div>
+
+                        <!-- Your player info -->
+                        <div class="flex-shrink-0">
+                            <PlayerInfo {...yourPlayerInfo} />
+                        </div>
+
+                        <!-- Move input for non-standard games -->
+                        {#if showMoveInput}
+                            <div class="flex-shrink-0">
+                                <MoveInput onMove={handleTextMove} />
+                            </div>
+                        {/if}
+                    </div>
+                </div>
+
+                <!-- Right sidebar -->
+                <div class="lg:col-span-1 flex flex-col">
+                    <div class="flex flex-col space-y-1 lg:space-y-2 h-full">
+                        <div class="flex-shrink-0">
+                            <GameStatus 
+                                {roomId} 
+                                status={gameStatus} 
+                                showQR={showQR && !gameInfo.isStarted}
+                                shareUrl={roomUrl}
+                            />
+                        </div>
+                        
+                        <div class="flex-shrink-0">
+                            <Button 
+                                variant="destructive" 
+                                onClick={handleResign}
+                                class="w-full"
+                            >
+                                Resign
+                            </Button>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -502,320 +568,3 @@
     />
 </Layout>
 
-<style>
-    .game-container {
-        height: 100vh;
-        overflow: hidden;
-        position: relative;
-    }
-
-    /* Connection Status Indicator */
-    .connection-status {
-        position: fixed;
-        top: 20px;
-        right: 20px;
-        background-color: #4CAF50;
-        color: white;
-        padding: 8px 16px;
-        border-radius: 20px;
-        font-size: 14px;
-        font-weight: 500;
-        z-index: 1000;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
-        transition: all 0.3s ease;
-    }
-
-    .connection-status.reconnecting {
-        background-color: #FF9800;
-        animation: pulse 2s infinite;
-    }
-
-    .connection-status.disconnected {
-        background-color: #f44336;
-    }
-
-    .status-content {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-    }
-
-    .spinner {
-        width: 16px;
-        height: 16px;
-        border: 2px solid rgba(255, 255, 255, 0.3);
-        border-top: 2px solid white;
-        border-radius: 50%;
-        animation: spin 1s linear infinite;
-    }
-
-    .disconnect-icon {
-        font-size: 16px;
-    }
-
-    .reconnect-btn {
-        background: rgba(255, 255, 255, 0.2);
-        border: 1px solid rgba(255, 255, 255, 0.4);
-        color: white;
-        padding: 4px 8px;
-        border-radius: 8px;
-        font-size: 12px;
-        cursor: pointer;
-        transition: background-color 0.2s ease;
-    }
-
-    .reconnect-btn:hover {
-        background: rgba(255, 255, 255, 0.3);
-    }
-
-    @keyframes spin {
-        0% { transform: rotate(0deg); }
-        100% { transform: rotate(360deg); }
-    }
-
-    @keyframes pulse {
-        0%, 100% { opacity: 1; }
-        50% { opacity: 0.7; }
-    }
-
-    .game-layout {
-        display: grid;
-        grid-template-columns: 1fr auto;
-        height: 100vh;
-        gap: 16px;
-        padding: 16px;
-        padding-left: 136px; /* 120px sidebar + 16px gap */
-        box-sizing: border-box;
-    }
-
-    .left-sidebar {
-        background-color: #262522;
-        border-radius: 8px;
-        padding: 16px;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        width: 120px;
-        position: fixed;
-        left: 16px;
-        top: 16px;
-        height: calc(100vh - 32px);
-        z-index: 10;
-    }
-
-    .sidebar-logo {
-        width: 100%;
-        height: auto;
-        cursor: pointer;
-        transition: transform 0.2s ease;
-    }
-
-    .sidebar-logo:hover {
-        transform: scale(1.05);
-    }
-
-    .main-game-area {
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-        align-items: center;
-        gap: 16px;
-        min-width: 0;
-    }
-
-    .board-container {
-        flex: 1;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        max-width: 100%;
-        max-height: 100%;
-        width: 100%;
-    }
-
-    .game-image {
-        max-width: 100%;
-        max-height: 100%;
-        object-fit: contain;
-        border-radius: 8px;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-    }
-
-    .right-sidebar {
-        background-color: #262522;
-        border-radius: 8px;
-        padding: 20px;
-        display: flex;
-        flex-direction: column;
-        gap: 16px;
-        width: 300px;
-        height: fit-content;
-        max-height: calc(100vh - 32px);
-        overflow-y: auto;
-    }
-
-    .room-code-display {
-        background-color: #3a3832;
-        border-radius: 8px;
-        padding: 12px 16px;
-        text-align: center;
-        border: 1px solid #4a463e;
-    }
-
-    .room-code-label {
-        color: #b8b4a8;
-        font-size: 14px;
-        font-weight: 500;
-        display: block;
-        margin-bottom: 4px;
-    }
-
-    .room-code-value {
-        color: #ffffff;
-        font-size: 18px;
-        font-weight: 700;
-        font-family: 'Courier New', monospace;
-        letter-spacing: 2px;
-    }
-
-    /* Tablet Layout */
-    @media (max-width: 1024px) {
-        .game-layout {
-            grid-template-columns: 1fr 280px;
-            gap: 12px;
-            padding: 12px;
-            padding-left: 12px; /* Reset padding since sidebar is hidden */
-        }
-
-        .left-sidebar {
-            display: none;
-        }
-
-        .right-sidebar {
-            width: 280px;
-            padding: 16px;
-        }
-    }
-
-    /* Mobile Layout */
-    @media (max-width: 768px) {
-        .game-container {
-            height: 100vh;
-        }
-
-        .connection-status {
-            top: 80px; /* Below the logo on mobile */
-            right: 10px;
-            left: 10px;
-            right: auto;
-            margin: 0 auto;
-            width: fit-content;
-            font-size: 12px;
-            padding: 6px 12px;
-        }
-
-        .game-layout {
-            grid-template-columns: 1fr;
-            grid-template-rows: 1fr auto;
-            gap: 8px;
-            padding: 8px;
-            padding-left: 8px; /* Reset padding since sidebar is repositioned */
-            padding-top: 80px; /* Space for top logo */
-        }
-
-        .left-sidebar {
-            position: fixed;
-            top: 8px;
-            left: 50%;
-            transform: translateX(-50%);
-            width: auto;
-            height: auto;
-            padding: 8px 16px;
-            flex-direction: row;
-            align-items: center;
-            justify-content: center;
-            border-radius: 8px;
-            z-index: 20;
-        }
-
-        .sidebar-logo {
-            width: 120px;
-            height: auto;
-        }
-
-        .main-game-area {
-            gap: 12px;
-        }
-
-        .board-container {
-            min-height: 240px; /* Reduced to account for top logo */
-        }
-
-        .right-sidebar {
-            width: auto;
-            padding: 12px;
-            background-color: transparent;
-            max-height: none;
-            order: 2;
-        }
-    }
-
-    /* Small Mobile */
-    @media (max-width: 480px) {
-        .game-layout {
-            padding: 4px;
-            padding-left: 4px; /* Reset padding since sidebar is repositioned */
-            padding-top: 70px; /* Reduced space for smaller screen */
-            gap: 6px;
-        }
-
-        .left-sidebar {
-            top: 4px;
-            padding: 6px 12px;
-        }
-
-        .sidebar-logo {
-            width: 100px;
-        }
-
-        .main-game-area {
-            gap: 8px;
-        }
-
-        .board-container {
-            min-height: 200px; /* Reduced for small mobile with top logo */
-        }
-
-        .right-sidebar {
-            padding: 8px;
-        }
-    }
-
-    /* Landscape Mobile */
-    @media (max-width: 768px) and (orientation: landscape) {
-        .game-layout {
-            grid-template-columns: 1fr 240px;
-            grid-template-rows: 1fr;
-            padding-left: 8px; /* Reset padding since sidebar is repositioned */
-            padding-top: 60px; /* Reduced space for landscape */
-        }
-
-        .left-sidebar {
-            top: 4px;
-            padding: 4px 12px;
-        }
-
-        .sidebar-logo {
-            width: 80px; /* Smaller logo for landscape */
-        }
-
-        .right-sidebar {
-            background-color: #262522;
-            order: 0;
-            width: 240px;
-            padding: 12px;
-            max-height: calc(100vh - 16px);
-            overflow-y: auto;
-        }
-    }
-</style>
